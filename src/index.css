@@ -1,0 +1,20 @@
+@import "tailwindcss";
+@plugin "daisyui"{
+  /* themes: light --default, dark --prefersdark; */
+  /* themes: emerald --default; */
+  themes: corporate --default;
+}
+
+
+
+/* Custom Drawer Utilities */
+.drawer-toggle:checked ~ .drawer-side .is-drawer-open\:w-64 { width: 16rem; }
+.drawer-toggle:not(:checked) ~ .drawer-side .is-drawer-close\:w-20 { width: 5rem; }
+
+
+.drawer-toggle:not(:checked) ~ .drawer-side .is-drawer-close\:hidden { display: none; }
+.drawer-toggle:not(:checked) ~ .drawer-side .is-drawer-open\:block { display: none; }
+
+.drawer-toggle:not(:checked) ~ .drawer-side .is-drawer-close\:tooltip { 
+  @apply tooltip tooltip-right;
+}
