@@ -60,7 +60,7 @@ const Login: React.FC = () => {
       <div className="card w-full max-w-sm shadow-lg bg-base-100">
         <form onSubmit={handleSubmit} className="card-body">
           <h1 className="text-3xl font-bold text-center mb-4 text-primary">Comencemos</h1>
-          
+
           <div className="form-control">
             <label className="label">
               <span className="label-text">Usuario</span>
@@ -71,7 +71,7 @@ const Login: React.FC = () => {
               value={formData.username}
               onChange={handleFormChange}
               placeholder="usuario@prueba.com"
-              className="input input-bordered"
+              className="input input-bordered w-full"
               required
             />
           </div>
@@ -86,7 +86,7 @@ const Login: React.FC = () => {
               value={formData.password}
               onChange={handleFormChange}
               placeholder="******"
-              className="input input-bordered"
+              className="input input-bordered w-full"
               required
             />
             <label className="label">
@@ -97,12 +97,13 @@ const Login: React.FC = () => {
           </div>
 
           <div className="form-control mt-6">
-            <button 
-              type="submit" 
-              className={`btn btn-primary ${isLoading ? 'loading' : ''}`}
+            <button
+              type="submit"
+              className={`btn btn-primary w-full`}
               disabled={isLoading}
             >
-              {isLoading ? <span className="loading loading-spinner"></span> : "Iniciar sesión"}
+              {isLoading && <span className="loading loading-spinner"></span>}
+              {isLoading ? "Iniciando sesión..." : "Iniciar sesión"}
             </button>
           </div>
         </form>
