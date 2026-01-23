@@ -147,11 +147,17 @@ La plataforma opera bajo un modelo SaaS de multi-tenencia. Un único _Superadmi
         
 *   **RF-AE-012: Configuración Avanzada por Pregunta:**
     
-    *   Asociación obligatoria a una **Competencia** específica que mide.
+    *   Asociación obligatoria a una **Competencia** específica que mide.
         
-    *   Asignación de un **Peso (Ponderación)** dentro de la evaluación total.
+    *   Asignación de un**Peso (Ponderación)**dentro de la evaluación total.
+
+    *   Asignación de un **Umbral** de calificación para la pregunta.
         
-    *   Configuración de "Ayuda IA": Definición de _keywords_, criterios de evaluación o una respuesta modelo para que la IA la utilice como referencia.
+    *   Configuración de "Ayuda IA": Definición de _keywords_, criterios de evaluación o una respuesta modelo para que la IA la utilice como referencia.
+
+    *   Asignación de contenido multimedia (video, audio, imágenes) para acompañar la pregunta.
+
+    *   Asignación de un contexto o información adicional que acompañe la pregunta (Opcional).
         
 *   **RF-AE-013: Versionamiento e Inmutabilidad:**
     
