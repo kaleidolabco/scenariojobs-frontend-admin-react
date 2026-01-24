@@ -5,6 +5,7 @@ import { jwtDecode, JwtPayload } from "jwt-decode";
 // Puedes extender JwtPayload si tu token tiene más propiedades
 interface User extends JwtPayload {
   [key: string]: any;
+  roles?: string[]; // Roles del usuario
 }
 
 interface AuthState {
@@ -12,11 +13,13 @@ interface AuthState {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  activeRole: string | null;
 
   login: (token: string) => Promise<void>;
   logout: () => void;
   validateToken: () => Promise<boolean>;
   checkAuth: () => boolean;
+  setActiveRole: (role: string) => void;
 }
 
 const useAuthStore = create<AuthState>()(
@@ -26,6 +29,7 @@ const useAuthStore = create<AuthState>()(
       user: null,
       isLoading: false,
       isAuthenticated: false,
+      activeRole: null,
 
       login: async (token: string) => {
         set({ isLoading: true });
@@ -33,11 +37,16 @@ const useAuthStore = create<AuthState>()(
         try {
           const userData = jwtDecode<User>(token);
           console.log("Datos del usuario decodificados:", userData);
+
+          // Asumir que el primer rol es el activo por defecto si existe
+          const initialRole = userData.roles && userData.roles.length > 0 ? userData.roles[0] : null;
+
           set({
             token,
             user: userData,
             isAuthenticated: true,
             isLoading: false,
+            activeRole: initialRole
           });
         } catch (error) {
           console.error("Error al procesar el token:", error);
@@ -83,6 +92,10 @@ const useAuthStore = create<AuthState>()(
       checkAuth: () => {
         return get().isAuthenticated;
       },
+
+      setActiveRole: (role: string) => {
+        set({ activeRole: role });
+      }
     }),
     {
       name: "auth-storage",

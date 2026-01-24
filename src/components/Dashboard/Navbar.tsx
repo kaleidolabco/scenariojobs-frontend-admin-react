@@ -1,13 +1,8 @@
 import React from 'react';
-import useAuthStore from '../../store/authStore';
+import RoleSwitcher from './RoleSwitcher';
+import UserDropdown from './UserDropdown';
 
 const Navbar: React.FC = () => {
-    const { logout } = useAuthStore();
-
-    const handleLogout = () => {
-        logout();
-    };
-
     return (
         <nav className="navbar bg-base-100 shadow-sm w-full z-10">
             <div className="flex-none">
@@ -17,13 +12,22 @@ const Navbar: React.FC = () => {
                 </label>
             </div>
 
-            <div className="flex-1 px-2 mx-2 lg:text-xl sm:text-sm font-bold text-primary">PANEL DE ADMINISTRACIÓN</div>
+            <div className="flex-1 px-2 mx-2 lg:text-xl lg:block hidden font-bold text-primary">PANEL DE ADMINISTRACIÓN</div>
 
-            <div className="flex-none hidden lg:block">
-                <ul className="menu menu-horizontal">
+            <div className="flex-1 px-2 mx-2 lg:hidden block">
+                <div className="flex justify-end">
+                    {/* Role Switcher */}
+                    <RoleSwitcher />
                     {/* Profile/Logout */}
-                    <li><button onClick={handleLogout}>Cerrar Sesión</button></li>
-                </ul>
+                    <UserDropdown />
+                </div>
+            </div>
+
+            <div className="flex-none hidden lg:block px-2">
+                {/* Role Switcher */}
+                <RoleSwitcher />
+                {/* Profile/Logout */}
+                <UserDropdown />
             </div>
         </nav>
     );

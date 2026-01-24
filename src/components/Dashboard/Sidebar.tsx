@@ -1,32 +1,101 @@
 import React from 'react';
-import SidebarItem from './SidebarItem';
 import useAuthStore from '../../store/authStore';
+import { ROUTES } from '../../constants/routes';
+import { UserRole } from '../../constants/roles';
+import SidebarItem from './SidebarItem';
 
-const SidebarItems = [
+// Helper for icons (using generic svg for now or specific ones if available)
+const Icon = ({ path }: { path: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={path} />
+    </svg>
+);
+
+interface MenuItem {
+    label: string;
+    to?: string;
+    icon?: React.ReactNode;
+    allowedRoles?: UserRole[] | 'ALL';
+    divider?: boolean; // Section divider
+}
+
+const SIDEBAR_CONFIG: MenuItem[] = [
     {
-        to: '/inicio',
         label: 'Inicio',
-        icon: <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" strokeLinejoin="round" strokeLinecap="round" strokeWidth="2" fill="none" stroke="currentColor" className="my-1.5 inline-block size-5"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+        to: ROUTES.HOME,
+        allowedRoles: 'ALL',
+        icon: <Icon path="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+    },
+
+    // --- ADMIN MODULE ---
+    { label: 'Organización', divider: true, allowedRoles: [UserRole.ADMIN] },
+    {
+        label: 'Configuración',
+        to: ROUTES.COMPANY_CONFIG,
+        allowedRoles: [UserRole.ADMIN],
+        icon: <Icon path="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
     },
     {
-        to: '/cargos',
-        label: 'Cargos',
-        icon: <svg xmlns="http://www.w3.org/2000/svg" className="my-1.5 inline-block size-5" viewBox="0 0 24 24"><path fill="currentColor" fillRule="evenodd" d="M17 7a3 3 0 0 0-3-3h-4a3 3 0 0 0-3 3H6a3 3 0 0 0-3 3v8a3 3 0 0 0 3 3h12a3 3 0 0 0 3-3v-8a3 3 0 0 0-3-3zm-3-1h-4a1 1 0 0 0-1 1h6a1 1 0 0 0-1-1M6 9h12a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1" clipRule="evenodd" /></svg>
-    },
-    {
-        to: '/competencias',
-        label: 'Competencias',
-        icon: <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 15" className="my-1.5 inline-block size-5"><path fill="currentColor" d="m4.076 6.47l.495.07zm-.01.07l-.495-.07zm6.858-.07l.495-.07zm.01.07l-.495.07zM9.5 12.5v.5a.5.5 0 0 0 .5-.5zm-4 0H5a.5.5 0 0 0 .5.5zm-.745-3.347l.396-.306zm5.49 0l-.396-.306zM6 15h3v-1H6zM3.58 6.4l-.01.07l.99.14l.01-.07zM7.5 3a3.96 3.96 0 0 0-3.92 3.4l.99.14A2.96 2.96 0 0 1 7.5 4zm3.92 3.4A3.96 3.96 0 0 0 7.5 3v1a2.96 2.96 0 0 1 2.93 2.54zm.01.07l-.01-.07l-.99.14l.01.07zm-.79 2.989c.63-.814.948-1.875.79-2.99l-.99.142a2.95 2.95 0 0 1-.59 2.236zM9 10.9v1.6h1v-1.599zm.5 1.1h-4v1h4zm-3.5.5v-1.599H5V12.5zM3.57 6.47a3.95 3.95 0 0 0 .79 2.989l.79-.612a2.95 2.95 0 0 1-.59-2.236zM6 10.9c0-.823-.438-1.523-.85-2.054l-.79.612c.383.495.64.968.64 1.442zm3.85-2.054C9.437 9.378 9 10.077 9 10.9h1c0-.474.257-.947.64-1.442zM7 0v2h1V0zM0 8h2V7H0zm13 0h2V7h-2zM3.354 3.646l-1.5-1.5l-.708.708l1.5 1.5zm9 .708l1.5-1.5l-.708-.708l-1.5 1.5z" /></svg>
-    },
-    {
-        to: '/usuarios',
         label: 'Usuarios',
-        icon: <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" strokeLinejoin="round" strokeLinecap="round" strokeWidth="2" fill="none" stroke="currentColor" className="my-1.5 inline-block size-5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-    }
-]
+        to: ROUTES.USERS,
+        allowedRoles: [UserRole.ADMIN],
+        icon: <Icon path="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+    },
+    {
+        label: 'Cargos',
+        to: ROUTES.POSITIONS,
+        allowedRoles: [UserRole.ADMIN],
+        icon: <Icon path="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+    },
+    {
+        label: 'Competencias',
+        to: ROUTES.COMPETENCIES,
+        allowedRoles: [UserRole.ADMIN],
+        icon: <Icon path="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    },
+
+    // --- HR MODULE ---
+    { label: 'Gestión Talento', divider: true, allowedRoles: [UserRole.HR_MANAGER] },
+    {
+        label: 'Evaluaciones',
+        to: ROUTES.ASSESSMENTS,
+        allowedRoles: [UserRole.HR_MANAGER],
+        icon: <Icon path="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+    },
+    {
+        label: 'Procesos',
+        to: ROUTES.PROCESSES,
+        allowedRoles: [UserRole.HR_MANAGER],
+        icon: <Icon path="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+    },
+    {
+        label: 'Analítica',
+        to: ROUTES.ANALYTICS_DASHBOARD,
+        allowedRoles: [UserRole.HR_MANAGER, UserRole.ADMIN],
+        icon: <Icon path="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" />
+    },
+
+    // --- EVALUATOR MODULE ---
+    { label: 'Evaluación', divider: true, allowedRoles: [UserRole.EVALUATOR] },
+    {
+        label: 'Por Calificar',
+        to: ROUTES.GRADING_PENDING,
+        allowedRoles: [UserRole.EVALUATOR],
+        icon: <Icon path="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+    },
+
+    // --- EMPLOYEE MODULE ---
+    { label: 'Mi Desarrollo', divider: true, allowedRoles: [UserRole.EMPLOYEE] },
+    {
+        label: 'Mis Evaluaciones',
+        to: ROUTES.MY_ASSESSMENTS,
+        allowedRoles: [UserRole.EMPLOYEE],
+        icon: <Icon path="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    },
+];
 
 const Sidebar: React.FC = () => {
-    const { logout } = useAuthStore();
+    const { activeRole } = useAuthStore();
 
     const handleItemClick = () => {
         // Solo cerrar el drawer en móvil (< 1024px)
@@ -38,29 +107,56 @@ const Sidebar: React.FC = () => {
         }
     };
 
+    // Filter items based on active role
+    const filteredItems = SIDEBAR_CONFIG.filter(item => {
+        if (!activeRole) return false;
+        if (item.allowedRoles === 'ALL') return true;
+        return item.allowedRoles?.includes(activeRole as UserRole);
+    });
+
     return (
         <div className="drawer-side z-20 is-drawer-close:overflow-visible">
             <label htmlFor="my-drawer" aria-label="close sidebar" className="drawer-overlay"></label>
 
             <div className="flex flex-col min-h-full bg-base-100 border-r border-base-200 transition-all duration-300 is-drawer-open:w-64 is-drawer-close:w-20">
                 <ul className="menu p-4 w-full grow text-base-content gap-1">
-                    {/* Sidebar content */}
-                    <li className="mb-4 text-center overflow-hidden h-10">
+                    <li className="mb-4 text-center overflow-hidden h-10 flex items-center justify-center">
                         <h2 className="text-2xl font-bold text-primary truncate is-drawer-close:hidden">Scenariojobs</h2>
+                        <span className="text-2xl font-bold text-primary hidden is-drawer-close:block">SJ</span>
                     </li>
 
-                    {SidebarItems.map((item, index) => (
-                        <SidebarItem
-                            key={index}
-                            to={item.to}
-                            label={item.label}
-                            onClick={handleItemClick}
-                            icon={item.icon}
-                        />
+                    {filteredItems.map((item, index) => (
+                        item.divider ? (
+                            <li key={index} className="menu-title mt-4 is-drawer-close:hidden">{item.label}</li>
+                        ) : (
+                            <SidebarItem
+                                key={index}
+                                to={item.to!}
+                                label={item.label}
+                                onClick={handleItemClick}
+                                icon={item.icon}
+                            />
+                        )
                     ))}
 
-                    <div className="divider lg:hidden"></div>
-                    <li className="lg:hidden"><button onClick={logout}>Cerrar Sesión</button></li>
+                    {/* <div className="divider lg:hidden"></div> */}
+                    <li className="mt-auto pt-4 is-drawer-close:hidden">
+                        <div className="bg-base-200 p-4 rounded-xl flex flex-col gap-3">
+                            <div className="flex items-center gap-2">
+                                <div className="p-2 bg-primary/10 rounded-lg text-primary">
+                                    <Icon path="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                </div>
+                                <span className="font-bold text-sm">Centro de Ayuda</span>
+                            </div>
+                            <p className="text-xs text-base-content/60">
+                                ¿Necesitas ayuda? Consulta nuestra documentación y tutoriales.
+                            </p>
+                            <button className="btn btn-primary btn-sm w-full normal-case">
+                                Ver Tutorial
+                            </button>
+                        </div>
+                    </li>
+
                 </ul>
             </div>
         </div>

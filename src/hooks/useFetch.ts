@@ -52,6 +52,7 @@ interface FetchOptions {
   params?: Record<string, string | number | boolean | null | undefined>; 
   headers?: Record<string, string>;
   token?: string | null;
+  mockData?: any; // Para simulación de backend
 }
 
 interface FetchResult<T> {
@@ -120,6 +121,14 @@ function useFetch<T>(): FetchResult<T> {
           }
         });
         userOptions.url = url.toString();
+      }
+
+      // SIMULACIÓN: Si se proporciona mockData, devolverlo emulando un retardo
+      if (userOptions.mockData !== undefined) {
+          await new Promise(resolve => setTimeout(resolve, 800)); // Simula latencia de red
+          setData(userOptions.mockData);
+          setLoading(false);
+          return userOptions.mockData;
       }
 
       // Realizar petición
