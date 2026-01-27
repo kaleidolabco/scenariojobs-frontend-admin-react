@@ -22,8 +22,8 @@ const UserDropdown = () => {
                 className="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 shadow">
                 <li className="px-4 py-2 mb-2 border-b border-base-200 pointer-events-none w-full">
                     <div className="flex flex-col w-full">
-                        <span className="font-bold text-sm truncate w-full max-w-full overflow-hidden text-ellipsis whitespace-nowrap">
-                            {user?.nombres} {user?.apellidos} ewadaw awd awd awd awdawd
+                        <span className="font-bold text-sm truncate w-full max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-center">
+                            {user?.nombres} {user?.apellidos}
                         </span>
                     </div>
                 </li>
