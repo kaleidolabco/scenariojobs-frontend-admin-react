@@ -120,11 +120,19 @@ La plataforma opera bajo un modelo SaaS de multi-tenencia. Un único _Superadmi
         
     *   **Asociación Cargo-Competencia:** Para cada cargo, se deben asignar las competencias requeridas y definir el **Nivel Esperado** de dominio para cada una.
         
+    *   **Funciones del Cargo:** Capacidad para detallar las *Funciones* específicas y responsabilidades inherentes al cargo.
+        
+        *   Almacenar las funciones como registros individuales en una tabla relacional vinculada al perfil laboral. Esto permite un CRUD granular, reordenamiento (orden de prioridad) y futurar reutilización de funciones similares entre cargos.
+        
 *   **RF-CONF-008: Directorio de Personal:**
     
     *   CRUD de empleados y candidatos (pool de talento).
         
     *   Sistema de **Etiquetado (Tags)** flexible para clasificación ágil (ej., "High Potential", "Candidato 2026", "Necesita Capacitación en Liderazgo").
+        
+    *   **Historial de Cargos (Career Path):** El sistema debe registrar automáticamente y permitir la visualización del historial de cargos ocupados por el empleado dentro de la organización.
+        
+        *   _Datos a persistir:_ Cargo ocupado, Fecha de Inicio, Fecha de Fin (si aplica), Tiempo total de ocupación, Jefe inmediato en ese periodo y motivo del cambio (promoción, lateral, etc.).
         
 
 ### **3.3 Módulo "Assessment Engine" (Motor de Evaluaciones)**
@@ -211,9 +219,41 @@ La plataforma opera bajo un modelo SaaS de multi-tenencia. Un único _Superadmi
 *   **RF-RES-025: Historial Consolidado:** Registro histórico y unificado de todas las evaluaciones en las que ha participado un empleado/candidato, permitiendo ver la evolución en el tiempo.
     
 
-### **3.7 Notificaciones (Arquitectura Preparada para Fase Futura)**
+### **3.8 Módulo de Gestión de Objetivos y Evidencias (Nuevo)**
 
-*   **RF-NOT-026: Motor de Eventos (Event-driven):**
+Este módulo introduce un nuevo paradigma de evaluación basado en resultados, complementario a la evaluación por competencias.
+
+*   **RF-OBJ-027: Gestión de Objetivos (OKR/KPI):**
+    
+    *   **Creación y Asignación:** Capacidad para que el empleado o sus superiores definan objetivos claros a alcanzar en ventanas de tiempo específicas (Q1, Semestral, Anual).
+        
+    *   **Seguimiento de Avance:** 
+        
+        *   _Autoevaluación:_ El empleado puede actualizar el porcentaje de avance (0-100%) en cualquier momento.
+            
+        *   _Validación:_ El superior/líder revisa y asigna un "Porcentaje Validado" para contrastar la percepción del empleado con la realidad observada.
+            
+*   **RF-OBJ-028: Gestión de Evidencias de Avance:**
+    
+    *   Permite al empleado sustentar su progreso mediante la carga de archivos multimedia (documentos, imágenes, presentaciones) asociados a un objetivo específico.
+        
+    *   **Bitácora de Avances:** Interfaz tipo "Diario" donde el usuario describe la dinámica de trabajo y los logros del periodo.
+        
+*   **RF-OBJ-029: Soporte de Voz y Video con Transcripción (IA):**
+    
+    *   Funcionalidad para que el usuario grabe testimonios de avance en audio o video directamente en la plataforma.
+        
+    *   **Transcripción Automática (Speech-to-Text):** El sistema procesará automáticamente el audio para generar un texto plano del testimonio, facilitando la revisión y búsqueda futura por parte de los supervisores sin necesidad de reproducir todo el archivo.
+        
+*   **RF-OBJ-030: Reportes y Calificación por Objetivos:**
+    
+    *   Generación de reportes de desempeño basados en el cumplimiento de objetivos (Promedio de cumplimiento % vs. Tiempo).
+    *   Integración futura con planes de trabajo y mejora.
+    
+
+### **3.9 Notificaciones (Arquitectura Preparada para Fase Futura)**
+
+*   **RF-NOT-031: Motor de Eventos (Event-driven):**
     *   El sistema debe generar y exponer eventos internos (_triggers_) estandarizados cuando ocurren acciones clave (ej., "Evaluación Asignada", "Evaluación Completada por Participante", "Calificación Pendiente por Revisar"). Esta arquitectura permitirá la futura integración con sistemas de notificación por email, push en la app, o conectores con Slack/MS Teams.
 
 **4\. LÓGICA DE NEGOCIO CRÍTICA: RELACIÓN EVALUACIÓN-COMPETENCIA-CARGO Y EL ANÁLISIS DE BRECHAS**
@@ -250,13 +290,27 @@ Para garantizar que el sistema genere información estratégica y accionable —
         
     *   **Nivel Obtenido (en la Evaluación):** 4.0
         
+        
     *   **Brecha de Competencia Identificada:** -1.0Esta brecha cuantificada y desglosada por competencia se convierte en el insumo fundamental para los reportes de talento, sustentando de manera objetiva decisiones estratégicas de **capacitación, planes de desarrollo, promociones o acciones de reclutamiento**.
+
+**4.2 Modelo Dual de Evaluación (Versatilidad)**
+------------------------------------------------
+
+El sistema evoluciona hacia una plataforma integral que permite medir el desempeño desde dos dimensiones complementarias:
+
+1.  **Evaluación por Competencias (El "CÓMO"):** Mide comportamientos, habilidades y conocimientos (Hard & Soft Skills) necesarios para el cargo.
+    
+2.  **Evaluación por Objetivos (El "QUÉ"):** Mide resultados tangibles y el cumplimiento de metas específicas definidas en el módulo de Objetivos.
+
+*   _Impacto en Reportes:_ Las evaluaciones de desempeño finales pueden configurarse para ponderar ambos factores (ej., 60% Objetivos, 40% Competencias), ofreciendo una visión holística del empleado.
         
 
-**4.2 Valor Generado: De la Calificación a la Decisión**
+**4.3 Valor Generado: De la Calificación a la Decisión**
 --------------------------------------------------------
 
-Esta arquitectura garantiza que la plataforma no sea un simple administrador de pruebas, sino un sistema de gestión del talento basado en evidencia. La relación tripartita **Cargo → Evaluación (vía Competencias) → Proceso** permite transformar datos crudos de evaluación en **insights accionables**, cerrando el ciclo entre la medición del desempeño y la gestión estratégica del capital humano.
+Esta arquitectura garantiza que la plataforma no sea un simple administrador de pruebas, sino un sistema de gestión del talento basado en evidencia. La relación tripartita **Cargo → Evaluación (vía Competencias) → Proceso**, sumada a la nueva dimensión de **Objetivos**, permite transformar datos crudos en **insights accionables**.
+
+Al integrar la medición de objetivos, el sistema permite correlacionar el **desarrollo de habilidades (Competencias/INPUT)** con los **resultados tangibles del negocio (Objetivos/OUTPUT)**. Esto facilita identificar escenarios complejos, como empleados que tienen las competencias pero fallan en la ejecución (problema conductual/motivacional) o aquellos que cumplen sus objetivos pero carecen de las bases técnicas sostenibles (alto riesgo a largo plazo). Esta visión 360° guía intervenciones de liderazgo y planes de carrera mucho más precisos.
 
 **5\. REQUERIMIENTOS NO FUNCIONALES (TÉCNICOS Y DE CALIDAD)**
 -------------------------------------------------------------
@@ -296,6 +350,8 @@ Esta arquitectura garantiza que la plataforma no sea un simple administrador de 
     *   **ORM:** Prisma. Proporciona un cliente de base de datos _type-safe_, facilitando las migraciones, la integridad referencial y reduciendo errores en tiempo de desarrollo.
         
     *   **Base de Datos Principal:** PostgreSQL. Base de datos relacional robusta y adecuada para manejar el modelo de datos complejo, transaccional y con múltiples relaciones del sistema.
+
+    *   **Servicios Cogntivos/IA:** Integración con proveedores (ej. OpenAI Whisper, Google Speech-to-Text) para los servicios de transcripción automática de audio/video en el módulo de objetivos.
         
 *   **Frontend (Aplicación Web):**
     
