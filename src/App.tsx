@@ -60,14 +60,20 @@ function App() {
 
           <Route path={ROUTES.ANALYTICS_DASHBOARD} element={<PageAnimation key={location.pathname}><UnderConstruction title="Analítica y Reportes" /></PageAnimation>} />
           <Route path={ROUTES.GAP_ANALYSIS} element={<PageAnimation key={location.pathname}><UnderConstruction title="Análisis de Brechas" /></PageAnimation>} />
+          <Route path={ROUTES.OBJECTIVES_REPORT} element={<PageAnimation key={location.pathname}><UnderConstruction title="Reporte de Objetivos" /></PageAnimation>} />
 
           {/* Módulo Evaluador */}
           <Route path={ROUTES.GRADING_PENDING} element={<PageAnimation key={location.pathname}><UnderConstruction title="Calificaciones Pendientes" /></PageAnimation>} />
           <Route path="/calificacion/:id" element={<PageAnimation key={location.pathname}><UnderConstruction title="Calificar Evaluación" /></PageAnimation>} />
+          <Route path={ROUTES.MY_TEAM} element={<PageAnimation key={location.pathname}><UnderConstruction title="Mi Equipo" /></PageAnimation>} />
+          <Route path="/mi-equipo/:userId/objetivos" element={<PageAnimation key={location.pathname}><UnderConstruction title="Objetivos del Colaborador" /></PageAnimation>} />
+          <Route path="/objetivos-equipo/:id/validar" element={<PageAnimation key={location.pathname}><UnderConstruction title="Validar Objetivos" /></PageAnimation>} />
 
           {/* Módulo Empleado */}
           <Route path={ROUTES.MY_ASSESSMENTS} element={<PageAnimation key={location.pathname}><UnderConstruction title="Mis Evaluaciones" /></PageAnimation>} />
           <Route path="/mis-evaluaciones/:id/realizar" element={<PageAnimation key={location.pathname}><UnderConstruction title="Realizar Evaluación" /></PageAnimation>} />
+          <Route path={ROUTES.MY_OBJECTIVES} element={<PageAnimation key={location.pathname}><UnderConstruction title="Mis Objetivos" /></PageAnimation>} />
+          <Route path="/mis-objetivos/:id" element={<PageAnimation key={location.pathname}><UnderConstruction title="Detalle de Objetivo" /></PageAnimation>} />
         </Route>
 
         {/* Ruta por defecto para 404 */}

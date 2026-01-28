@@ -31,8 +31,16 @@ export const ROUTES = {
     // Execution (Employee/Candidate)
     MY_ASSESSMENTS: '/mis-evaluaciones',
     TAKE_ASSESSMENT: (id: string) => `/mis-evaluaciones/${id}/realizar`,
+    MY_OBJECTIVES: '/mis-objetivos',
+    MY_OBJECTIVE_DETAIL: (id: string) => `/mis-objetivos/${id}`,
+
+    // Team Management (Evaluator/Leader)
+    MY_TEAM: '/mi-equipo',
+    TEAM_MEMBER_OBJECTIVES: (userId: string) => `/mi-equipo/${userId}/objetivos`,
+    OBJECTIVE_REVIEW: (id: string) => `/objetivos-equipo/${id}/validar`, // Puede mantenerse para acceso directo o refactorizar
 
     // Analytics (Admin/HR)
     ANALYTICS_DASHBOARD: '/analisis',
     GAP_ANALYSIS: '/analisis/brechas',
+    OBJECTIVES_REPORT: '/analisis/objetivos',
 };
