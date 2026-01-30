@@ -4,6 +4,7 @@ import { Pagination } from '../../services/responseType';
 import CompetencyForm from '../../components/Competencies/CompetencyForm';
 import PageContainer from '../../components/Common/PageContainer';
 import GenericModal from '../../components/Common/GenericModal';
+import ConfirmationModal from '../../components/Common/ConfirmationModal';
 import FilterBar, { FilterDefinition } from '../../components/Common/FilterBar';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -15,6 +16,8 @@ const CompetenciesPage: React.FC = () => {
     const [pagination, setPagination] = useState<Pagination | null>(null);
     const [modalOpen, setModalOpen] = useState(false);
     const [editingCompetency, setEditingCompetency] = useState<Competency | null>(null);
+    const [deleteCompetence, setDeleteCompetence] = useState<Competency | null>(null);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [searchInput, setSearchInput] = useState('');
 
     // Estado unificado para todos los parámetros de consulta
@@ -104,12 +107,20 @@ const CompetenciesPage: React.FC = () => {
     };
 
     // Función para eliminar una competencia
-    const handleDelete = async (id: string) => {
-        if (window.confirm("¿Estás seguro de eliminar esta competencia?")) {
-            const success = await deleteCompetency(id);
+    // Función para manejar la solicitud de eliminación
+    const handleDeleteClick = (comp: Competency) => {
+        setDeleteCompetence(comp);
+        setShowDeleteModal(true);
+    };
+
+    // Función para confirmar la eliminación
+    const handleConfirmDelete = async () => {
+        if (deleteCompetence) {
+            const success = await deleteCompetency(deleteCompetence.id);
             if (success) {
-                setCompetencies(competencies.filter(c => c.id !== id));
+                setCompetencies(competencies.filter(c => c.id !== deleteCompetence.id));
             }
+            setDeleteCompetence(null);
         }
     };
 
@@ -225,7 +236,7 @@ const CompetenciesPage: React.FC = () => {
                                                     </button>
                                                     <button
                                                         className="btn btn-square btn-outline btn-sm btn-error"
-                                                        onClick={() => handleDelete(comp.id)}
+                                                        onClick={() => handleDeleteClick(comp)}
                                                     >
                                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                                     </button>
@@ -288,6 +299,16 @@ const CompetenciesPage: React.FC = () => {
                     onCancel={closeModal}
                 />
             </GenericModal>
+
+            <ConfirmationModal
+                isOpen={showDeleteModal}
+                onClose={() => setShowDeleteModal(false)}
+                onConfirm={handleConfirmDelete}
+                title="Eliminar Competencia"
+                message={deleteCompetence ? `¿Estás seguro de que deseas eliminar la competencia "${deleteCompetence.nombre}"? Esta acción no se puede deshacer.` : ""}
+                confirmText="Eliminar"
+                variant="danger"
+            />
         </PageContainer>
     );
 };
