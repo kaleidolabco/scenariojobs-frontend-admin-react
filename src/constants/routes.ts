@@ -44,3 +44,24 @@ export const ROUTES = {
     GAP_ANALYSIS: '/analisis/brechas',
     OBJECTIVES_REPORT: '/analisis/objetivos',
 };
+
+export const ROUTE_LABELS: Record<string, string> = {
+    [ROUTES.HOME]: 'Inicio',
+    [ROUTES.COMPANY_CONFIG]: 'Configuración Empresa',
+    [ROUTES.USERS]: 'Usuarios',
+    [ROUTES.ROLES]: 'Roles',
+    [ROUTES.COMPETENCIES]: 'Competencias',
+    [ROUTES.POSITIONS]: 'Cargos',
+    [ROUTES.STAFF_DIRECTORY]: 'Directorio',
+    [ROUTES.ASSESSMENTS]: 'Evaluaciones',
+    [ROUTES.ASSESSMENT_CREATE]: 'Crear Evaluación',
+    [ROUTES.PROCESSES]: 'Procesos',
+    [ROUTES.PROCESS_CREATE]: 'Crear Proceso',
+    [ROUTES.GRADING_PENDING]: 'Calificación',
+    [ROUTES.MY_ASSESSMENTS]: 'Mis Evaluaciones',
+    [ROUTES.MY_OBJECTIVES]: 'Mis Objetivos',
+    [ROUTES.MY_TEAM]: 'Mi Equipo',
+    [ROUTES.ANALYTICS_DASHBOARD]: 'Analítica',
+    [ROUTES.GAP_ANALYSIS]: 'Brechas',
+    [ROUTES.OBJECTIVES_REPORT]: 'Reporte Objetivos',
+};

@@ -125,10 +125,17 @@ function useFetch<T>(): FetchResult<T> {
 
       // SIMULACIÓN: Si se proporciona mockData, devolverlo emulando un retardo
       if (userOptions.mockData !== undefined) {
-          await new Promise(resolve => setTimeout(resolve, 800)); // Simula latencia de red
-          setData(userOptions.mockData);
-          setLoading(false);
-          return userOptions.mockData;
+        await new Promise(resolve => setTimeout(resolve, 800)); // Simula latencia de red
+
+        if(userOptions.mockData.success === false){
+          throw new Error(
+            userOptions.mockData.message || `HTTP Error simulated`
+          );
+        }
+
+        setData(userOptions.mockData);
+        setLoading(false);
+        return userOptions.mockData;
       }
 
       // Realizar petición

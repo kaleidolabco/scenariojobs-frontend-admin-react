@@ -14,6 +14,7 @@ import PrivateRoute from './components/Auth/PrivateRoute';
 //Pages
 import NotFound from "./pages/NotFound/NotFound";
 import Login from "./pages/Login/Login";
+import CompetenciesPage from "./pages/Admin/CompetenciesPage";
 import UnderConstruction from "./components/Common/UnderConstruction";
 import { ROUTES } from "./constants/routes";
 
@@ -45,7 +46,7 @@ function App() {
           <Route path={ROUTES.COMPANY_CONFIG} element={<PageAnimation key={location.pathname}><UnderConstruction title="Configuración Empresa" /></PageAnimation>} />
           <Route path={ROUTES.USERS} element={<PageAnimation key={location.pathname}><UnderConstruction title="Gestión de Usuarios" /></PageAnimation>} />
           <Route path={ROUTES.ROLES} element={<PageAnimation key={location.pathname}><UnderConstruction title="Roles y Permisos" /></PageAnimation>} />
-          <Route path={ROUTES.COMPETENCIES} element={<PageAnimation key={location.pathname}><UnderConstruction title="Biblioteca de Competencias" /></PageAnimation>} />
+          <Route path={ROUTES.COMPETENCIES} element={<PageAnimation key={location.pathname}><CompetenciesPage /></PageAnimation>} />
           <Route path={ROUTES.POSITIONS} element={<PageAnimation key={location.pathname}><UnderConstruction title="Gestión de Cargos" /></PageAnimation>} />
           <Route path={ROUTES.STAFF_DIRECTORY} element={<PageAnimation key={location.pathname}><UnderConstruction title="Directorio de Personal" /></PageAnimation>} />
 
