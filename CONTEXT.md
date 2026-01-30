@@ -123,6 +123,15 @@ La plataforma opera bajo un modelo SaaS de multi-tenencia. Un único _Superadmi
     *   **Funciones del Cargo:** Capacidad para detallar las *Funciones* específicas y responsabilidades inherentes al cargo.
         
         *   Almacenar las funciones como registros individuales en una tabla relacional vinculada al perfil laboral. Esto permite un CRUD granular, reordenamiento (orden de prioridad) y futurar reutilización de funciones similares entre cargos.
+
+*   **RF-CONF-007b: Gestión de Departamentos y Áreas:**
+    *   Creación y gestión de una estructura de Departamentos o Áreas Funcionales (ej. "Tecnología", "Recursos Humanos", "Ventas").
+    *   Capacidad de asignar un cargo a un departamento específico.
+
+*   **RF-CONF-007c: Clasificación Adicional de Cargos (Sugerido):**
+    *   **Nivel Jerárquico:** Clasificación del cargo según su seniority o nivel de responsabilidad (ej. "Jr", "Sr", "Liderazgo", "Ejecutivo"). Ayuda en la creación de planes de carrera y equidad salarial.
+    *   **Modalidad de Trabajo:** Definición del esquema de trabajo (Presencial, Remoto, Híbrido).
+    *   **Criticidad:** Identificación de cargos críticos para la operación del negocio (Alta/Media/Baja) para priorizar planes de sucesión.
         
 *   **RF-CONF-008: Directorio de Personal:**
     
