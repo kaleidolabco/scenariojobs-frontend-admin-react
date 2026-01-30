@@ -10,8 +10,14 @@ export const ROUTES = {
     COMPANY_CONFIG: '/configuracion/empresa',
     USERS: '/usuarios',
     ROLES: '/configuracion/roles',
+    
+    // Organizational Structure (New Module)
+    ORG_UNITS: '/organizacion/unidades',
+    ORG_POSITIONS: '/organizacion/puestos',
+
+    // Talent Config
+    JOBS: '/cargos', // Renamed from POSITIONS (Perfiles Funcionales)
     COMPETENCIES: '/competencias',
-    POSITIONS: '/cargos',
     STAFF_DIRECTORY: '/personal',
 
     // Assessment Engine (HR Manager)
@@ -50,8 +56,10 @@ export const ROUTE_LABELS: Record<string, string> = {
     [ROUTES.COMPANY_CONFIG]: 'Configuración Empresa',
     [ROUTES.USERS]: 'Usuarios',
     [ROUTES.ROLES]: 'Roles',
+    [ROUTES.ORG_UNITS]: 'Unidades Org.',
+    [ROUTES.ORG_POSITIONS]: 'Puestos',
+    [ROUTES.JOBS]: 'Cargos (Perfiles)',
     [ROUTES.COMPETENCIES]: 'Competencias',
-    [ROUTES.POSITIONS]: 'Cargos',
     [ROUTES.STAFF_DIRECTORY]: 'Directorio',
     [ROUTES.ASSESSMENTS]: 'Evaluaciones',
     [ROUTES.ASSESSMENT_CREATE]: 'Crear Evaluación',

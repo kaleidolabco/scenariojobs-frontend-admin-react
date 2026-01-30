@@ -42,12 +42,18 @@ function App() {
           <Route path="/" element={<Navigate to={ROUTES.HOME} />} />
           <Route path={ROUTES.HOME} element={<PageAnimation key={location.pathname}><div>INICIO</div></PageAnimation>} />
 
-          {/* Módulo Admin */}
+          {/* Módulo Configuración Global */}
           <Route path={ROUTES.COMPANY_CONFIG} element={<PageAnimation key={location.pathname}><UnderConstruction title="Configuración Empresa" /></PageAnimation>} />
           <Route path={ROUTES.USERS} element={<PageAnimation key={location.pathname}><UnderConstruction title="Gestión de Usuarios" /></PageAnimation>} />
           <Route path={ROUTES.ROLES} element={<PageAnimation key={location.pathname}><UnderConstruction title="Roles y Permisos" /></PageAnimation>} />
+
+          {/* Módulo Estructura Organizacional (Nuevo) */}
+          <Route path={ROUTES.ORG_UNITS} element={<PageAnimation key={location.pathname}><UnderConstruction title="Unidades Organizacionales" /></PageAnimation>} />
+          <Route path={ROUTES.ORG_POSITIONS} element={<PageAnimation key={location.pathname}><UnderConstruction title="Gestión de Puestos" /></PageAnimation>} />
+
+          {/* Módulo Gestión de Talento */}
+          <Route path={ROUTES.JOBS} element={<PageAnimation key={location.pathname}><UnderConstruction title="Cargos y Perfiles" /></PageAnimation>} />
           <Route path={ROUTES.COMPETENCIES} element={<PageAnimation key={location.pathname}><CompetenciesPage /></PageAnimation>} />
-          <Route path={ROUTES.POSITIONS} element={<PageAnimation key={location.pathname}><UnderConstruction title="Gestión de Cargos" /></PageAnimation>} />
           <Route path={ROUTES.STAFF_DIRECTORY} element={<PageAnimation key={location.pathname}><UnderConstruction title="Directorio de Personal" /></PageAnimation>} />
 
           {/* Módulo HR (Evaluaciones) */}
