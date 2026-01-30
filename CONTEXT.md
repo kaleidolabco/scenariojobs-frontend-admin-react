@@ -100,11 +100,28 @@ La plataforma opera bajo un modelo SaaS de multi-tenencia. Un único _Superadmi
 *   **RF-SA-003: Dashboard Global:** Panel de control que visualice métricas agregadas de uso de la plataforma (usuarios activos, evaluaciones ejecutadas, consumo de almacenamiento) y el estado de las suscripciones de todos los clientes.
     
 
-### **3.2 Módulo de Configuración Organizacional (por Entidad)**
+### **3.2 Módulo de Estructura Organizacional**
+
+Este módulo define la arquitectura jerárquica de la empresa, separando la estructura (lugares) de las personas y de los perfiles funcionales.
+
+*   **RF-ORG-001: Gestión de Unidades Organizacionales:**
+    *   **Concepto de Unidad:** Representa cualquier nodo de agrupación en la empresa (ej. "Gerencia General", "Dirección de TI", "Célula Ágil A").
+    *   **Estructura Jerárquica (Árbol):** Las unidades se organizan en una estructura de árbol con profundidad ilimitada.
+    *   **Flexibilidad:** Permite la creación, movimiento y reestructuración de ramas completas de la organización.
+
+*   **RF-ORG-002: Gestión de Puestos (Positions):**
+    *   **Concepto de Puesto:** Es el "asiento" o lugar específico dentro de una Unidad Organizacional (ej. "Analista de Calidad - Equipo B").
+    *   **Separación Persona-Puesto:** El puesto existe independientemente de quién lo ocupe. Puede estar "Vacante" u "Ocupado".
+    *   **Relación Jerárquica Real:** Cada Puesto reporta a un **Puesto Supervisor** (Jefe). Esto garantiza que la jerarquía se mantenga estable aunque cambien las personas.
+    *   **Vinculación al Cargo:** Cada Puesto está tipificado por un **Cargo** (RF-CONF-007), heredando sus competencias y funciones base.
+    *   Cada Puesto pertenece a una única Unidad Organizacional.
+    *   Una Unidad Organizacional puede contener múltiples Puestos.
+
+### **3.3 Módulo de Configuración de Talento**
 
 *   **RF-CONF-004: Perfil Corporativo:** Configuración de los datos básicos de la empresa (nombre, logo, información de contacto).
     
-*   **RF-CONF-005: Gestión de Usuarios y Roles (RBAC):** CRUD de usuarios y asignación granular de permisos basada en roles (Role-Based Access Control). Un usuario puede tener múltiples roles.
+*   **RF-CONF-005: Gestión de Usuarios y Roles (RBAC):** CRUD de usuarios y asignación granular de permisos basada en roles del sistema (Admin, Gestor, Evaluador).
     
 *   **RF-CONF-006: Biblioteca de Competencias:**
     
@@ -114,37 +131,32 @@ La plataforma opera bajo un modelo SaaS de multi-tenencia. Un único _Superadmi
         
     *   Definición de una escala de medición estandarizada para cada competencia (ej., del 1 al 5).
         
-*   **RF-CONF-007: Gestión de Cargos (Perfiles de Puesto):**
+*   **RF-CONF-007: Gestión de Cargos (Perfiles Funcionales):**
     
-    *   Definición de cargos dentro de la organización (ej., "Gerente de Ventas", "Desarrollador Backend Senior").
+    *   Definición de **Cargos** como plantillas de requisitos (ej., "Gerente de Ventas", "Dev Senior").
         
-    *   **Asociación Cargo-Competencia:** Para cada cargo, se deben asignar las competencias requeridas y definir el **Nivel Esperado** de dominio para cada una.
+    *   **El Cargo define:** Competencias requeridas, niveles esperados, funciones genéricas y bandas salariales. **NO define** jefe ni ubicación en el organigrama (eso es rol del Puesto).
         
-    *   **Funciones del Cargo:** Capacidad para detallar las *Funciones* específicas y responsabilidades inherentes al cargo.
+    *   **Funciones del Cargo:** Detalle de responsabilidades inherentes al perfil.
         
-        *   Almacenar las funciones como registros individuales en una tabla relacional vinculada al perfil laboral. Esto permite un CRUD granular, reordenamiento (orden de prioridad) y futurar reutilización de funciones similares entre cargos.
-
-*   **RF-CONF-007b: Gestión de Departamentos y Áreas:**
-    *   Creación y gestión de una estructura de Departamentos o Áreas Funcionales (ej. "Tecnología", "Recursos Humanos", "Ventas").
-    *   Capacidad de asignar un cargo a un departamento específico.
-
 *   **RF-CONF-007c: Clasificación Adicional de Cargos (Sugerido):**
-    *   **Nivel Jerárquico:** Clasificación del cargo según su seniority o nivel de responsabilidad (ej. "Jr", "Sr", "Liderazgo", "Ejecutivo"). Ayuda en la creación de planes de carrera y equidad salarial.
-    *   **Modalidad de Trabajo:** Definición del esquema de trabajo (Presencial, Remoto, Híbrido).
-    *   **Criticidad:** Identificación de cargos críticos para la operación del negocio (Alta/Media/Baja) para priorizar planes de sucesión.
+    *   **Nivel Jerárquico:** Clasificación del cargo según su seniority (ej. "Jr", "Sr", "Liderazgo").
+    *   **Modalidad y Criticidad:** Definición de esquema de trabajo y nivel de impacto en el negocio.
         
 *   **RF-CONF-008: Directorio de Personal:**
     
-    *   CRUD de empleados y candidatos (pool de talento).
+    *   CRUD de empleados y candidatos (Legajo Virtual).
         
-    *   Sistema de **Etiquetado (Tags)** flexible para clasificación ágil (ej., "High Potential", "Candidato 2026", "Necesita Capacitación en Liderazgo").
+    *   **Asignación a Puestos:** Vinculación de la persona a uno o más **Puestos** activos (RF-ORG-002). Esto absorbe automáticamente la jerarquía y el cargo del puesto. La relación entre Personas y Puestos se gestiona mediante una entidad de Asignación, que permite múltiples asignaciones simultáneas o históricas.
         
-    *   **Historial de Cargos (Career Path):** El sistema debe registrar automáticamente y permitir la visualización del historial de cargos ocupados por el empleado dentro de la organización.
+    *   **Historial de Trayectoria (Carrera):** Registro automático basado en los cambios de Puesto.
         
-        *   _Datos a persistir:_ Cargo ocupado, Fecha de Inicio, Fecha de Fin (si aplica), Tiempo total de ocupación, Jefe inmediato en ese periodo y motivo del cambio (promoción, lateral, etc.).
+        *   _Datos a persistir:_ Puesto ocupado, Unidad, Fecha Inicio/Fin, Jefe en ese momento y motivo del movimiento.
+        
+    *   Sistema de **Etiquetado (Tags)** flexible.
         
 
-### **3.3 Módulo "Assessment Engine" (Motor de Evaluaciones)**
+### **3.4 Módulo "Assessment Engine" (Motor de Evaluaciones)**
 
 *   **RF-AE-009: Constructor de Evaluaciones:** Interfaz intuitiva de "drag & drop" o por pasos para crear exámenes o encuestas de evaluación.
     
@@ -183,18 +195,18 @@ La plataforma opera bajo un modelo SaaS de multi-tenencia. Un único _Superadmi
     *   Debe existir la opción de **"Clonar"** una evaluación o crear una **"Nueva Versión"** para realizar modificaciones, manteniendo el histórico.
         
 
-### **3.4 Módulo de Procesos y Asignación**
+### **3.5 Módulo de Procesos y Asignación**
 
 *   **RF-PROC-014: Gestión de Procesos:** Creación de campañas o procesos de evaluación (ej., "Evaluación de Desempeño Q1 2026", "Proceso de Selección: Dev Junior").
     
 *   **RF-PROC-015: Asignación de Evaluaciones a Procesos:** Vincular una o varias evaluaciones previamente creadas a un proceso específico. Los procesos pueden categorizarse (Selección, Desempeño, Clima Laboral).
     
-*   **RF-PROC-016: Asignación de Participantes:** Seleccionar los empleados o candidatos que realizarán la evaluación. La asignación puede ser individual, por cargo, departamento o mediante el uso de **etiquetas (tags)**.
+*   **RF-PROC-016: Asignación de Participantes:** Seleccionar los empleados o candidatos que realizarán la evaluación. La asignación puede realizarse de forma individual, por Unidad Organizacional, por Cargo (a través de los Puestos activos asociados) o mediante el uso de **etiquetas (tags)**.
     
 *   **RF-PROC-017: Asignación de Evaluadores y Flujo de Aprobación:** Designar los usuarios que calificarán las respuestas subjetivas de un proceso. El sistema debe soportar un flujo donde los puntajes pasen por un estado de **"Revisión"** antes de ser **"Publicados"** para el empleado, permitiendo auditorías y ajustes por parte de RRHH.
     
 
-### **3.5 Módulo de Ejecución y Calificación (Grading)**
+### **3.6 Módulo de Ejecución y Calificación (Grading)**
 
 *   **RF-GRD-018: Calificación Automática:** Para preguntas objetivas (selección múltiple), el sistema asigna el puntaje definido automáticamente. Esta característica debe ser configurable a nivel de pregunta: el creador puede decidir si la calificación es automática o si solo se sugiere un valor para validación manual.
     
@@ -215,7 +227,7 @@ La plataforma opera bajo un modelo SaaS de multi-tenencia. Un único _Superadmi
 *   **RF-GRD-021: Ponderación y Cálculo de Resultados:** Cálculo automático de la nota final del participante, aplicando los pesos configurados para cada sección y pregunta. El sistema debe **desagregar los puntajes por competencia**, no solo mostrar un promedio general.
     
 
-### **3.6 Módulo de Resultados y Analítica**
+### **3.7 Módulo de Resultados y Analítica**
 
 *   **RF-RES-022: Control de Visibilidad (Release):** Los resultados de una evaluación **no son visibles** para el empleado/candidato hasta que un administrador o gestor autorizado cambie el estado del proceso a **"Publicado"**.
     
@@ -281,7 +293,7 @@ Para garantizar que el sistema genere información estratégica y accionable —
     
     *   **El instrumento:** Una o más evaluaciones específicas.
         
-    *   **El sujeto:** Empleados (asociados a su cargo actual) o candidatos (asociados a un cargo objetivo).
+    *   **El sujeto:** Empleados (asociados a su puesto activo principal, del cual se deriva el cargo) o candidatos (asociados a un cargo objetivo).
         
     *   **Los evaluadores:** Usuarios designados para calificar.
         
