@@ -16,6 +16,7 @@ import NotFound from "./pages/NotFound/NotFound";
 import Login from "./pages/Login/Login";
 import CompetenciesPage from "./pages/Admin/CompetenciesPage";
 import UnderConstruction from "./components/Common/UnderConstruction";
+import OrgUnitsPage from "./pages/Admin/OrgUnitsPage";
 import { ROUTES } from "./constants/routes";
 
 function App() {
@@ -48,7 +49,7 @@ function App() {
           <Route path={ROUTES.ROLES} element={<PageAnimation key={location.pathname}><UnderConstruction title="Roles y Permisos" /></PageAnimation>} />
 
           {/* Módulo Estructura Organizacional (Nuevo) */}
-          <Route path={ROUTES.ORG_UNITS} element={<PageAnimation key={location.pathname}><UnderConstruction title="Unidades Organizacionales" /></PageAnimation>} />
+          <Route path={ROUTES.ORG_UNITS} element={<PageAnimation key={location.pathname}><OrgUnitsPage /></PageAnimation>} />
           <Route path={ROUTES.ORG_POSITIONS} element={<PageAnimation key={location.pathname}><UnderConstruction title="Gestión de Puestos" /></PageAnimation>} />
 
           {/* Módulo Gestión de Talento */}

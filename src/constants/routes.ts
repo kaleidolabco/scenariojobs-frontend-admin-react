@@ -7,13 +7,13 @@ export const ROUTES = {
     HOME: '/inicio',
 
     // Admin / Config (Tenant Admin)
-    COMPANY_CONFIG: '/configuracion/empresa',
+    COMPANY_CONFIG: '/empresa',
     USERS: '/usuarios',
-    ROLES: '/configuracion/roles',
+    ROLES: '/roles',
     
     // Organizational Structure (New Module)
-    ORG_UNITS: '/organizacion/unidades',
-    ORG_POSITIONS: '/organizacion/puestos',
+    ORG_UNITS: '/unidades',
+    ORG_POSITIONS: '/puestos',
 
     // Talent Config
     JOBS: '/cargos', // Renamed from POSITIONS (Perfiles Funcionales)
