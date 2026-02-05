@@ -15,6 +15,7 @@ import PrivateRoute from './components/Auth/PrivateRoute';
 import NotFound from "./pages/NotFound/NotFound";
 import Login from "./pages/Login/Login";
 import CompetenciesPage from "./pages/Admin/CompetenciesPage";
+import JobsPage from "./pages/Admin/JobsPage";
 import UnderConstruction from "./components/Common/UnderConstruction";
 import OrgUnitsPage from "./pages/Admin/OrgUnitsPage";
 import { ROUTES } from "./constants/routes";
@@ -53,7 +54,7 @@ function App() {
           <Route path={ROUTES.ORG_POSITIONS} element={<PageAnimation key={location.pathname}><UnderConstruction title="Gestión de Puestos" /></PageAnimation>} />
 
           {/* Módulo Gestión de Talento */}
-          <Route path={ROUTES.JOBS} element={<PageAnimation key={location.pathname}><UnderConstruction title="Cargos y Perfiles" /></PageAnimation>} />
+          <Route path={ROUTES.JOBS} element={<PageAnimation key={location.pathname}><JobsPage /></PageAnimation>} />
           <Route path={ROUTES.COMPETENCIES} element={<PageAnimation key={location.pathname}><CompetenciesPage /></PageAnimation>} />
           <Route path={ROUTES.STAFF_DIRECTORY} element={<PageAnimation key={location.pathname}><UnderConstruction title="Directorio de Personal" /></PageAnimation>} />
 
