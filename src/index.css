@@ -18,3 +18,32 @@
 .drawer-toggle:not(:checked) ~ .drawer-side .is-drawer-close\:tooltip { 
   @apply tooltip tooltip-right;
 }
+
+@layer utilities {
+  /* Caja del tooltip */
+  .tooltip-left-up::before {
+    top: auto !important;
+    bottom: 100% !important;
+
+    left: auto !important;
+    right: 0 !important;
+
+    transform: translateX(-0.5rem) translateY(-0.5rem) !important;
+
+    max-width: 180px;
+    white-space: normal;
+    text-align: center;
+    word-break: break-word;
+  }
+
+  /* Flecha */
+  .tooltip-left-up::after {
+    top: auto !important;
+    bottom: calc(100% - 0) !important;
+
+    left: auto !important;
+    right: 0.75rem !important;
+
+    transform: rotate(0) !important;
+  }
+}

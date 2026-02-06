@@ -96,11 +96,11 @@ function GenericTable<T>({
                                     </td>
                                 ))}
                                 {actions && actions.length > 0 && (
-                                    <td className="flex justify-center gap-2">
+                                    <td className="hover">
                                         {actions.map((action, idx) => (
                                             <button
                                                 key={idx}
-                                                className={`btn btn-${action.variant || 'ghost'} btn-xs tooltip`}
+                                                className={`btn btn-${action.variant || 'ghost'} btn-xs tooltip tooltip-left-up`}
                                                 data-tip={action.tooltip || action.label}
                                                 onClick={() => action.onClick(item)}
                                             >
