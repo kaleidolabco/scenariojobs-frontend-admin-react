@@ -125,10 +125,26 @@ Este módulo define la arquitectura jerárquica de la empresa, separando la estr
     
 *   **RF-CONF-006: Biblioteca de Competencias:**
     
-    *   Creación y gestión de competencias (ej., "Liderazgo", "Python", "Inglés").
+    *   Creación y gestión de competencias (ej., "Liderazgo", "Python", "Inglés", "Normativa ISO 9001").
         
-    *   Categorización (Competencias Blandas, Técnicas, Idiomas).
+    *   **Categorización ampliada:**
         
+        *   **Competencias Blandas (Soft Skills):** Habilidades interpersonales y comportamentales (ej., Liderazgo, Trabajo en Equipo, Comunicación Efectiva, Resolución de Conflictos).
+            
+        *   **Competencias Técnicas (Hard Skills):** Habilidades técnicas y especializadas (ej., Programación, Análisis de Datos, Diseño Gráfico, Contabilidad).
+            
+        *   **Idiomas:** Dominio de lenguas extranjeras (ej., Inglés, Francés, Mandarín, Alemán).
+            
+        *   **Conocimientos Específicos:** Conocimientos formales requeridos para el desempeño del cargo:
+            
+            *   _Normativas y Certificaciones:_ ISO 9001, GDPR, SOX, HACCP, Normas de Seguridad Industrial.
+                
+            *   _Herramientas y Software:_ SAP, Salesforce, AutoCAD, Tableau, Power BI.
+                
+            *   _Metodologías y Frameworks:_ Scrum, Lean, Six Sigma, ITIL, PMBOK.
+                
+            *   _Conocimientos de Dominio:_ Derecho Laboral, Tributación, Farmacología, Ingeniería Civil.
+                
     *   Definición de una escala de medición estandarizada para cada competencia (ej., del 1 al 5).
         
 *   **RF-CONF-007: Gestión de Cargos (Perfiles Funcionales):**
