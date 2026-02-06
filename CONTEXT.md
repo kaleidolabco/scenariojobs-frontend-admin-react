@@ -117,6 +117,77 @@ Este módulo define la arquitectura jerárquica de la empresa, separando la estr
     *   Cada Puesto pertenece a una única Unidad Organizacional.
     *   Una Unidad Organizacional puede contener múltiples Puestos.
 
+#### **Diagrama: Arquitectura de Datos Organizacionales**
+
+El siguiente diagrama ilustra la relación fundamental entre los conceptos clave del sistema:
+
+```mermaid
+classDiagram
+    class Competencia {
+        +String nombre
+        +String categoría
+        +Int escalaMin
+        +Int escalaMax
+        +String descripción
+    }
+    
+    class Cargo {
+        +String nombre
+        +String nivel
+        +String[] funciones
+        +String bandaSalarial
+        +String modalidad
+        +String criticidad
+    }
+    
+    class Puesto {
+        +String nombre
+        +String estado
+        +Date fechaCreación
+    }
+    
+    class UnidadOrganizacional {
+        +String nombre
+        +String tipo
+        +Int nivel
+    }
+    
+    class Asignacion {
+        +Date fechaInicio
+        +Date fechaFin
+        +String tipo
+        +String estado
+        +String motivoMovimiento
+    }
+    
+    class Persona {
+        +String nombres
+        +String apellidos
+        +String email
+        +String[] tags
+        +String tipoPersona
+    }
+    
+    Competencia "*" --> "*" Cargo : define niveles esperados
+    Cargo "1" --> "*" Puesto : se instancia en
+    Puesto "*" --> "1" UnidadOrganizacional : pertenece a
+    Puesto "0..1" --> "1" Puesto : reporta a (Jefe)
+    Puesto "1" --> "*" Asignacion : ocupado mediante
+    Asignacion "*" --> "1" Persona : vincula a
+    
+    note for Competencia "Define habilidades y conocimientos medibles\n(Soft Skills, Hard Skills, Idiomas, Conocimientos)"
+    note for Cargo "Plantilla de requisitos\n(ej. 'Gerente de Ventas', 'Dev Senior')"
+    note for Puesto "Instancia específica en el organigrama\nPuede estar Vacante u Ocupado"
+    note for Persona "Empleado o Candidato\nHereda: cargo, competencias, jefe, ubicación"
+```
+
+**Flujo de Información:**
+1. Las **Competencias** definen qué se debe medir (ej. "Liderazgo Nivel 5").
+2. Los **Cargos** agrupan competencias requeridas en perfiles funcionales.
+3. Los **Puestos** instancian cargos en ubicaciones específicas del organigrama.
+4. Las **Asignaciones** vinculan personas a puestos en períodos de tiempo.
+5. Las **Personas** heredan automáticamente: cargo, competencias esperadas, jefe y ubicación organizacional.
+
 ### **3.3 Módulo de Configuración de Talento**
 
 *   **RF-CONF-004: Perfil Corporativo:** Configuración de los datos básicos de la empresa (nombre, logo, información de contacto).
@@ -221,6 +292,55 @@ Este módulo define la arquitectura jerárquica de la empresa, separando la estr
     
 *   **RF-PROC-017: Asignación de Evaluadores y Flujo de Aprobación:** Designar los usuarios que calificarán las respuestas subjetivas de un proceso. El sistema debe soportar un flujo donde los puntajes pasen por un estado de **"Revisión"** antes de ser **"Publicados"** para el empleado, permitiendo auditorías y ajustes por parte de RRHH.
     
+
+#### **Diagrama: Flujo de Gestión de Procesos de Evaluación**
+
+El siguiente diagrama muestra el flujo completo desde la creación de una campaña de evaluación hasta la generación de reportes:
+
+```mermaid
+flowchart TD
+    A["1. Inicio de Campaña<br/>(Proceso de Evaluación)"] --> B["2. Configuración del Proceso<br/>- Tipo: Desempeño/Selección<br/>- Evaluaciones a aplicar<br/>- Fechas y plazos"]
+    
+    B --> C["3. Selección de Alcance<br/>Opciones:<br/>• Personas individuales<br/>• Puestos específicos<br/>• Unidades Organizacionales<br/>• Cargos (todos los puestos)<br/>• Tags (etiquetas)"]
+    
+    C --> D["4. Resolución a Puestos<br/>(solo puestos activos)"]
+    
+    D --> E["5. Resolución a Personas<br/>(asignaciones activas)"]
+    
+    E --> F["6. Determinar Cargo de Referencia<br/>Persona → Puesto → Cargo"]
+    
+    F --> G["7. Cargar Estándares<br/>• Competencias del Cargo<br/>• Niveles Esperados<br/>• Objetivos (si aplica)"]
+    
+    G --> H["8. Asignación de Evaluadores<br/>• Autoevaluación<br/>• Evaluación por Jefe<br/>• Evaluación por Pares<br/>• Evaluación 360°"]
+    
+    H --> I["9. Ejecución de Evaluaciones<br/>(Evaluados responden)"]
+    
+    I --> J["10. Calificación<br/>• Automática (IA/Reglas)<br/>• Manual (Evaluadores)<br/>• Asistida por IA"]
+    
+    J --> K["11. Revisión y Validación<br/>Estado: 'En Revisión'<br/>RRHH audita y ajusta"]
+    
+    K --> L["12. Cálculo de Resultados<br/>• Desagregación por Competencia<br/>• Ponderación por pesos<br/>• Cálculo de Objetivos"]
+    
+    L --> M["13. Análisis de Brechas<br/>Resultado Obtenido vs<br/>Estándar del Cargo<br/>(Gap Analysis)"]
+    
+    M --> N["14. Publicación de Resultados<br/>Estado: 'Publicado'<br/>Visible para el evaluado"]
+    
+    N --> O["15. Generación de Reportes<br/>Vistas disponibles:<br/>• Por Persona (Individual)<br/>• Por Puesto<br/>• Por Cargo (Agregado)<br/>• Por Unidad Organizacional<br/>• Por Competencia<br/>• Histórico y Evolución"]
+    
+    style A fill:#e1f5ff
+    style G fill:#fff4e1
+    style K fill:#ffe1e1
+    style M fill:#fff4e1
+    style N fill:#e1ffe1
+    style O fill:#f0e1ff
+```
+
+**Notas Clave del Flujo:**
+- El **Cargo** actúa como referencia para determinar los estándares de competencias esperados.
+- El sistema permite múltiples tipos de evaluadores (360°, jefe, pares, auto).
+- Existe un estado intermedio de **"Revisión"** antes de publicar resultados.
+- Los reportes pueden agregarse en múltiples dimensiones (persona, puesto, cargo, unidad).
+- El análisis de brechas es automático al comparar resultados vs. estándares del cargo.
 
 ### **3.6 Módulo de Ejecución y Calificación (Grading)**
 
