@@ -282,7 +282,7 @@ const OrgPositionDetailPage: React.FC = () => {
                         <span>Versión simplificada. En el futuro se integrará con el Directorio de Personal.</span>
                     </div>
 
-                    <div className="form-control">
+                    <div className="form-control flex flex-col">
                         <label className="label">
                             <span className="label-text font-medium">Nombre de la Persona</span>
                         </label>
