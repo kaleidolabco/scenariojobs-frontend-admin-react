@@ -5,6 +5,7 @@ import { useJobService, Job } from '../../services/jobService';
 import PageContainer from '../../components/Common/PageContainer';
 import GenericModal from '../../components/Common/GenericModal';
 import ConfirmationModal from '../../components/Common/ConfirmationModal';
+import Avatar from '../../components/Common/Avatar';
 import PositionForm from '../../components/Positions/PositionForm';
 import { ROUTES } from '../../constants/routes';
 
@@ -178,11 +179,11 @@ const OrgPositionDetailPage: React.FC = () => {
                                 </div>
                             ) : (
                                 <div className="flex items-center gap-4 mt-4 p-4 bg-base-200 rounded-lg">
-                                    <div className="avatar placeholder">
-                                        <div className="bg-primary text-primary-content rounded-full w-16 flex items-center justify-center">
-                                            <span className="text-2xl">{position.persona_nombre?.charAt(0)}</span>
-                                        </div>
-                                    </div>
+                                    <Avatar
+                                        name={position.persona_nombre}
+                                        size="lg"
+                                        placeholderClass="bg-primary text-primary-content"
+                                    />
                                     <div className="flex-1">
                                         <h4 className="font-semibold text-lg">{position.persona_nombre}</h4>
                                         <p className="text-sm text-base-content/70">Asignado al puesto</p>

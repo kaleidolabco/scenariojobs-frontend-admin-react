@@ -6,6 +6,7 @@ import PageContainer from '../../components/Common/PageContainer';
 import GenericModal from '../../components/Common/GenericModal';
 import ConfirmationModal from '../../components/Common/ConfirmationModal';
 import GenericTable, { TableColumn, TableAction } from '../../components/Common/GenericTable';
+import Avatar from '../../components/Common/Avatar';
 import OrgUnitForm from '../../components/OrgUnits/OrgUnitForm';
 import OrgUnitNode from '../../components/OrgUnits/OrgUnitNode';
 import PositionForm from '../../components/Positions/PositionForm';
@@ -139,11 +140,10 @@ const OrgUnitDetailPage: React.FC = () => {
             label: 'Persona Asignada',
             render: (pos) => pos.persona_nombre ? (
                 <div className="flex items-center gap-2">
-                    <div className="avatar placeholder">
-                        <div className="bg-neutral text-neutral-content rounded-full w-8 flex items-center justify-center">
-                            <span className="text-xs">{pos.persona_nombre.charAt(0)}</span>
-                        </div>
-                    </div>
+                    <Avatar
+                        name={pos.persona_nombre}
+                        size="sm"
+                    />
                     <span>{pos.persona_nombre}</span>
                 </div>
             ) : (

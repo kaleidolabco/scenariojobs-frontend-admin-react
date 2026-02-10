@@ -114,12 +114,20 @@ function useFetch<T>(): FetchResult<T> {
 
       // Construir URL con query params si existen
       if ((userOptions.method === 'GET' || !userOptions.method) && userOptions.params) {
-        const url = new URL(userOptions.url);
+        // Fix: userOptions.url might be relative (e.g. '/api/users'), so we need a base
+        const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost';
+        const url = new URL(userOptions.url, baseUrl);
+        
         Object.entries(userOptions.params).forEach(([key, value]) => {
           if (value !== undefined && value !== null && value !== '') {
             url.searchParams.append(key, String(value));
           }
         });
+        
+        // If the original URL was relative, we might want to keep it relative, 
+        // but fetch accepts absolute URLs too. 
+        // userOptions.url = url.toString() returns absolute.
+        // To be safe for mockData matching (if relied on URL strings later), absolute is usually fine.
         userOptions.url = url.toString();
       }
 

@@ -20,6 +20,8 @@ import UnderConstruction from "./components/Common/UnderConstruction";
 import OrgChartPage from "./pages/Admin/OrgChartPage";
 import OrgUnitDetailPage from "./pages/Admin/OrgUnitDetailPage";
 import OrgPositionDetailPage from "./pages/Admin/OrgPositionDetailPage";
+import UsersPage from "./pages/Admin/UsersPage";
+import StaffDirectoryPage from "./pages/Admin/StaffDirectoryPage";
 import { ROUTES } from "./constants/routes";
 
 function App() {
@@ -48,7 +50,7 @@ function App() {
 
           {/* Módulo Configuración Global */}
           <Route path={ROUTES.COMPANY_CONFIG} element={<PageAnimation key={location.pathname}><UnderConstruction title="Configuración Empresa" /></PageAnimation>} />
-          <Route path={ROUTES.USERS} element={<PageAnimation key={location.pathname}><UnderConstruction title="Gestión de Usuarios" /></PageAnimation>} />
+          <Route path={ROUTES.USERS} element={<PageAnimation key={location.pathname}><UsersPage /></PageAnimation>} />
           <Route path={ROUTES.ROLES} element={<PageAnimation key={location.pathname}><UnderConstruction title="Roles y Permisos" /></PageAnimation>} />
 
           {/* Módulo Estructura Organizacional (Nuevo) */}
@@ -59,7 +61,7 @@ function App() {
           {/* Módulo Gestión de Talento */}
           <Route path={ROUTES.JOBS} element={<PageAnimation key={location.pathname}><JobsPage /></PageAnimation>} />
           <Route path={ROUTES.COMPETENCIES} element={<PageAnimation key={location.pathname}><CompetenciesPage /></PageAnimation>} />
-          <Route path={ROUTES.STAFF_DIRECTORY} element={<PageAnimation key={location.pathname}><UnderConstruction title="Directorio de Personal" /></PageAnimation>} />
+          <Route path={ROUTES.STAFF_DIRECTORY} element={<PageAnimation key={location.pathname}><StaffDirectoryPage /></PageAnimation>} />
 
           {/* Módulo HR (Evaluaciones) */}
           <Route path={ROUTES.ASSESSMENTS} element={<PageAnimation key={location.pathname}><UnderConstruction title="Evaluaciones (Assessment Engine)" /></PageAnimation>} />

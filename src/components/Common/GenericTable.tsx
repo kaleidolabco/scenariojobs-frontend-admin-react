@@ -34,6 +34,7 @@ interface GenericTableProps<T> {
 
     // Empty state
     emptyMessage?: string;
+    isLoading?: boolean;
 }
 
 function GenericTable<T>({
@@ -48,7 +49,8 @@ function GenericTable<T>({
     onPageSizeChange,
     sortConfig,
     onSort,
-    emptyMessage = 'No se encontraron registros'
+    emptyMessage = 'No se encontraron registros',
+    isLoading = false
 }: GenericTableProps<T>) {
 
     const renderSortIcon = (columnKey: string) => {
@@ -66,7 +68,12 @@ function GenericTable<T>({
 
     return (
         <div className="overflow-x-auto bg-base-100 rounded-lg shadow">
-            <table className="table table-zebra w-full">
+            {isLoading && (
+                <div className="absolute inset-0 bg-base-100/50 z-10 flex items-center justify-center">
+                    <span className="loading loading-spinner loading-lg text-primary"></span>
+                </div>
+            )}
+            <table className={`table table-zebra w-full ${isLoading ? 'opacity-50 pointer-events-none' : ''}`}>
                 <thead>
                     <tr className="bg-secondary text-secondary-content">
                         {columns.map((column) => (
