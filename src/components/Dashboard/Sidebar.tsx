@@ -45,16 +45,10 @@ const SIDEBAR_CONFIG: MenuItem[] = [
     // --- ORG STRUCTURE MODULE (New) ---
     { label: 'Estructura Org.', divider: true, allowedRoles: [UserRole.ADMIN] },
     {
-        label: 'Unidades',
-        to: ROUTES.ORG_UNITS,
+        label: 'Organigrama',
+        to: ROUTES.ORG_CHART,
         allowedRoles: [UserRole.ADMIN],
         icon: <Icon path="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" />
-    },
-    {
-        label: 'Puestos',
-        to: ROUTES.ORG_POSITIONS,
-        allowedRoles: [UserRole.ADMIN],
-        icon: <Icon path="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
     },
 
     // --- TALENT MODULE ---

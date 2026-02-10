@@ -13,12 +13,14 @@ export interface OrgUnit {
     descripcion?: string;
     subnodos?: OrgUnit[]; // Recursive structure for UI
     nivel?: number; // Helper for indentation if needed
+    position_count?: number; // Number of positions in this unit
 }
 
 // Mock Data Structure (Flat or Tree? Let's use Flat for API simulation, Tree for UI)
 // Actually API usually returns flat list with parent_ids or a nested tree. 
 // For this Mock, let's return a Tree because it's easier for the UI to consume directly if the backend supports it.
 // If not, we will transform it. Let's assume Backend returns a Tree for the "Get Full Tree" endpoint.
+
 
 const MOCK_ORG_TREE: OrgUnit[] = [
     {
@@ -27,18 +29,23 @@ const MOCK_ORG_TREE: OrgUnit[] = [
         tipo: 'DIVISION',
         padre_id: null,
         descripcion: 'Máxima autoridad ejecutiva',
+        position_count: 0,
         subnodos: [
             {
                 id: '11',
                 nombre: 'Dirección de Tecnología',
                 tipo: 'AREA',
                 padre_id: '1',
+                descripcion: 'Responsable de toda la infraestructura tecnológica',
+                position_count: 1,
                 subnodos: [
                     {
                         id: '111',
                         nombre: 'Arquitectura',
                         tipo: 'DEPARTAMENTO',
                         padre_id: '11',
+                        descripcion: 'Diseño y arquitectura de sistemas',
+                        position_count: 1,
                         subnodos: []
                     },
                     {
@@ -46,12 +53,16 @@ const MOCK_ORG_TREE: OrgUnit[] = [
                         nombre: 'Desarrollo de Producto',
                         tipo: 'DEPARTAMENTO',
                         padre_id: '11',
+                        descripcion: 'Desarrollo de productos digitales',
+                        position_count: 0,
                         subnodos: [
                              {
                                 id: '1121',
                                 nombre: 'Frontend Team',
                                 tipo: 'EQUIPO',
                                 padre_id: '112',
+                                descripcion: 'Equipo especializado en desarrollo frontend',
+                                position_count: 2,
                                 subnodos: []
                              }
                         ]
@@ -63,12 +74,16 @@ const MOCK_ORG_TREE: OrgUnit[] = [
                 nombre: 'Dirección de RRHH',
                 tipo: 'AREA',
                 padre_id: '1',
+                descripcion: 'Gestión del talento humano',
+                position_count: 0,
                 subnodos: [
                     {
                         id: '121',
                         nombre: 'Talento y Cultura',
                         tipo: 'DEPARTAMENTO',
                         padre_id: '12',
+                        descripcion: 'Desarrollo organizacional y cultura',
+                        position_count: 1,
                         subnodos: []
                     }
                 ]
@@ -150,8 +165,40 @@ export const useOrgUnitService = () => {
         }
     };
 
+    // GET Unit by ID (with details)
+    const getUnitById = async (id: string): Promise<FetchResponse | null> => {
+        try {
+            // Helper to find unit in tree
+            const findUnit = (units: OrgUnit[], targetId: string): OrgUnit | null => {
+                for (const unit of units) {
+                    if (unit.id === targetId) return unit;
+                    if (unit.subnodos) {
+                        const found = findUnit(unit.subnodos, targetId);
+                        if (found) return found;
+                    }
+                }
+                return null;
+            };
+
+            const unit = findUnit(MOCK_ORG_TREE, id);
+            if (!unit) {
+                throw new Error('Unidad no encontrada');
+            }
+
+            return (await fetchData({
+                url: `/api/org-units/${id}`,
+                mockData: successMock({ unidad: unit })
+            })) as FetchResponse | null;
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            openAlert(errorMessage, 'error');
+            return null;
+        }
+    };
+
     return {
         getOrgTree,
+        getUnitById,
         createUnit,
         updateUnit,
         deleteUnit,

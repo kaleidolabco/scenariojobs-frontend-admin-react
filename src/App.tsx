@@ -17,7 +17,9 @@ import Login from "./pages/Login/Login";
 import CompetenciesPage from "./pages/Admin/CompetenciesPage";
 import JobsPage from "./pages/Admin/JobsPage";
 import UnderConstruction from "./components/Common/UnderConstruction";
-import OrgUnitsPage from "./pages/Admin/OrgUnitsPage";
+import OrgChartPage from "./pages/Admin/OrgChartPage";
+import OrgUnitDetailPage from "./pages/Admin/OrgUnitDetailPage";
+import OrgPositionDetailPage from "./pages/Admin/OrgPositionDetailPage";
 import { ROUTES } from "./constants/routes";
 
 function App() {
@@ -50,8 +52,9 @@ function App() {
           <Route path={ROUTES.ROLES} element={<PageAnimation key={location.pathname}><UnderConstruction title="Roles y Permisos" /></PageAnimation>} />
 
           {/* Módulo Estructura Organizacional (Nuevo) */}
-          <Route path={ROUTES.ORG_UNITS} element={<PageAnimation key={location.pathname}><OrgUnitsPage /></PageAnimation>} />
-          <Route path={ROUTES.ORG_POSITIONS} element={<PageAnimation key={location.pathname}><UnderConstruction title="Gestión de Puestos" /></PageAnimation>} />
+          <Route path={ROUTES.ORG_CHART} element={<PageAnimation key={location.pathname}><OrgChartPage /></PageAnimation>} />
+          <Route path="/organizacion/unidades/:id" element={<PageAnimation key={location.pathname}><OrgUnitDetailPage /></PageAnimation>} />
+          <Route path="/organizacion/puestos/:id" element={<PageAnimation key={location.pathname}><OrgPositionDetailPage /></PageAnimation>} />
 
           {/* Módulo Gestión de Talento */}
           <Route path={ROUTES.JOBS} element={<PageAnimation key={location.pathname}><JobsPage /></PageAnimation>} />

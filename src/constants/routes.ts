@@ -11,9 +11,12 @@ export const ROUTES = {
     USERS: '/usuarios',
     ROLES: '/roles',
     
+    
     // Organizational Structure (New Module)
-    ORG_UNITS: '/unidades',
-    ORG_POSITIONS: '/puestos',
+    ORG_CHART: '/organizacion', // Main org chart view
+    ORG_UNIT_DETAIL: (id: string) => `/organizacion/unidades/${id}`, // Unit detail
+    ORG_POSITION_DETAIL: (id: string) => `/organizacion/puestos/${id}`, // Position detail
+    ORG_POSITIONS: '/puestos', // Legacy/direct access (not in sidebar)
 
     // Talent Config
     JOBS: '/cargos', // Renamed from POSITIONS (Perfiles Funcionales)
@@ -56,7 +59,7 @@ export const ROUTE_LABELS: Record<string, string> = {
     [ROUTES.COMPANY_CONFIG]: 'Configuración Empresa',
     [ROUTES.USERS]: 'Usuarios',
     [ROUTES.ROLES]: 'Roles',
-    [ROUTES.ORG_UNITS]: 'Unidades Org.',
+    [ROUTES.ORG_CHART]: 'Organigrama',
     [ROUTES.ORG_POSITIONS]: 'Puestos',
     [ROUTES.JOBS]: 'Cargos (Perfiles)',
     [ROUTES.COMPETENCIES]: 'Competencias',

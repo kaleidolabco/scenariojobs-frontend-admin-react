@@ -5,14 +5,17 @@
 */
 
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import PageContainer from '../../components/Common/PageContainer';
 import GenericModal from '../../components/Common/GenericModal';
 import ConfirmationModal from '../../components/Common/ConfirmationModal';
 import { useOrgUnitService, OrgUnit } from '../../services/orgUnitService';
 import OrgUnitNode from '../../components/OrgUnits/OrgUnitNode';
 import OrgUnitForm from '../../components/OrgUnits/OrgUnitForm';
+import { ROUTES } from '../../constants/routes';
 
-const OrgUnitsPage: React.FC = () => {
+const OrgChartPage: React.FC = () => {
+    const navigate = useNavigate();
     const { getOrgTree, createUnit, updateUnit, deleteUnit, loading } = useOrgUnitService();
 
     // State
@@ -72,6 +75,11 @@ const OrgUnitsPage: React.FC = () => {
         setDeleteModalOpen(true);
     };
 
+    // 5. Navigate to Unit Detail
+    const handleViewDetails = (unit: OrgUnit) => {
+        navigate(ROUTES.ORG_UNIT_DETAIL(unit.id));
+    };
+
     // --- Submits ---
 
     const handleFormSubmit = async (formData: any) => {
@@ -108,8 +116,8 @@ const OrgUnitsPage: React.FC = () => {
 
     return (
         <PageContainer
-            title="Unidades Organizacionales"
-            subtitle="Defina la estructura jerárquica de la empresa (Divisions, Áreas, Departamentos)."
+            title="Estructura Organizacional"
+            subtitle="Visualice y gestione la jerarquía completa de la empresa. Haga clic en una unidad para ver sus detalles y puestos."
             actions={
                 <button className="btn btn-primary w-full sm:w-auto" onClick={handleAddRoot}>
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
@@ -117,7 +125,7 @@ const OrgUnitsPage: React.FC = () => {
                 </button>
             }
         >
-            <div className="bg-base-100/50 p-6 rounded-xl border border-base-200 min-h-[400px] overflow-auto">
+            <div className="bg-base-100/50 p-6 rounded-xl border border-base-200 min-h-[200px] overflow-auto">
                 {loading && !treeData.length ? (
                     <div className="flex justify-center p-10"><span className="loading loading-spinner loading-lg"></span></div>
                 ) : (
@@ -136,6 +144,7 @@ const OrgUnitsPage: React.FC = () => {
                                         onEdit={handleEdit}
                                         onAddChild={handleAddChild}
                                         onDelete={handleDeleteClick}
+                                        onViewDetails={handleViewDetails}
                                     />
                                 ))}
                             </div>
@@ -178,4 +187,4 @@ const OrgUnitsPage: React.FC = () => {
     );
 };
 
-export default OrgUnitsPage;
+export default OrgChartPage;
