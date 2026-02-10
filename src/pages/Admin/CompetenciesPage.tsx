@@ -6,6 +6,7 @@ import PageContainer from '../../components/Common/PageContainer';
 import GenericModal from '../../components/Common/GenericModal';
 import ConfirmationModal from '../../components/Common/ConfirmationModal';
 import FilterBar, { FilterDefinition } from '../../components/Common/FilterBar';
+import LoadingIndicator from '../../components/Common/LoadingIndicator';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const ITEMS_PER_PAGE = 9;
@@ -200,7 +201,7 @@ const CompetenciesPage: React.FC = () => {
             />
 
             {loading && !competencies.length ? (
-                <div className="flex justify-center p-10"><span className="loading loading-spinner loading-lg"></span></div>
+                <LoadingIndicator />
             ) : (
                 <>
                     {competencies.length === 0 ? (

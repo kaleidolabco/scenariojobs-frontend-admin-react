@@ -6,6 +6,7 @@ import GenericModal from '../../components/Common/GenericModal';
 import ConfirmationModal from '../../components/Common/ConfirmationModal';
 import FilterBar from '../../components/Common/FilterBar';
 import Avatar from '../../components/Common/Avatar';
+import LoadingIndicator from '../../components/Common/LoadingIndicator';
 import { usePersonService, Person } from '../../services/personService';
 import PersonForm from '../../components/Staff/PersonForm';
 import { ROUTES } from '../../constants/routes';
@@ -216,7 +217,7 @@ const StaffDirectoryPage: React.FC = () => {
             />
 
             {loading && !people.length ? (
-                <div className="flex justify-center p-10"><span className="loading loading-spinner loading-lg"></span></div>
+                <LoadingIndicator />
             ) : (
                 <GenericTable
                     data={people}

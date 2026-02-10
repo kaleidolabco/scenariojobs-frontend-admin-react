@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { usePositionService, Position } from '../../services/positionService';
-import { useJobService, Job } from '../../services/jobService';
 import PageContainer from '../../components/Common/PageContainer';
 import GenericModal from '../../components/Common/GenericModal';
 import ConfirmationModal from '../../components/Common/ConfirmationModal';
-import Avatar from '../../components/Common/Avatar';
+import LoadingIndicator from '../../components/Common/LoadingIndicator';
+import { usePositionService, Position } from '../../services/positionService';
+import { useJobService, Job } from '../../services/jobService';
 import PositionForm from '../../components/Positions/PositionForm';
+import Avatar from '../../components/Common/Avatar';
 import { ROUTES } from '../../constants/routes';
 
 const OrgPositionDetailPage: React.FC = () => {
@@ -82,9 +83,7 @@ const OrgPositionDetailPage: React.FC = () => {
     if (!position) {
         return (
             <PageContainer title="Cargando..." subtitle="">
-                <div className="flex justify-center p-10">
-                    <span className="loading loading-spinner loading-lg"></span>
-                </div>
+                <LoadingIndicator />
             </PageContainer>
         );
     }
@@ -260,7 +259,7 @@ const OrgPositionDetailPage: React.FC = () => {
                 onClose={() => setDeleteModalOpen(false)}
                 onConfirm={handleDelete}
                 title="Eliminar Puesto"
-                message={`¿Está seguro de eliminar el puesto "${position.nombre}"? ${!isVacant ? 'La persona asignada quedará sin puesto.' : ''}`}
+                message={`¿Está seguro de eliminar el puesto "${position.nombre}" ? ${!isVacant ? 'La persona asignada quedará sin puesto.' : ''} `}
                 confirmText="Eliminar"
                 variant="danger"
             />

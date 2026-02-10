@@ -6,6 +6,7 @@ import GenericModal from '../../components/Common/GenericModal';
 import ConfirmationModal from '../../components/Common/ConfirmationModal';
 import FilterBar, { FilterDefinition } from '../../components/Common/FilterBar';
 import GenericTable, { TableColumn, TableAction } from '../../components/Common/GenericTable';
+import LoadingIndicator from '../../components/Common/LoadingIndicator';
 import JobForm from '../../components/Jobs/JobForm';
 
 const ITEMS_PER_PAGE = 10;
@@ -277,9 +278,7 @@ const JobsPage: React.FC = () => {
             />
 
             {loading && !jobs.length ? (
-                <div className="flex justify-center p-10">
-                    <span className="loading loading-spinner loading-lg"></span>
-                </div>
+                <LoadingIndicator />
             ) : (
                 <GenericTable
                     data={jobs}

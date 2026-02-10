@@ -1,4 +1,5 @@
 import React from 'react';
+import LoadingIndicator from './LoadingIndicator';
 
 export interface TableColumn<T> {
     key: keyof T | string;
@@ -70,7 +71,7 @@ function GenericTable<T>({
         <div className="overflow-x-auto bg-base-100 rounded-lg shadow">
             {isLoading && (
                 <div className="absolute inset-0 bg-base-100/50 z-10 flex items-center justify-center">
-                    <span className="loading loading-spinner loading-lg text-primary"></span>
+                    <LoadingIndicator padding="p-0" />
                 </div>
             )}
             <table className={`table table-zebra w-full ${isLoading ? 'opacity-50 pointer-events-none' : ''}`}>

@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import PageContainer from '../../components/Common/PageContainer';
 import GenericModal from '../../components/Common/GenericModal';
 import ConfirmationModal from '../../components/Common/ConfirmationModal';
+import LoadingIndicator from '../../components/Common/LoadingIndicator';
 import { useOrgUnitService, OrgUnit } from '../../services/orgUnitService';
 import OrgUnitNode from '../../components/OrgUnits/OrgUnitNode';
 import OrgUnitForm from '../../components/OrgUnits/OrgUnitForm';
@@ -127,7 +128,7 @@ const OrgChartPage: React.FC = () => {
         >
             <div className="bg-base-100/50 p-6 rounded-xl border border-base-200 min-h-[200px] overflow-auto">
                 {loading && !treeData.length ? (
-                    <div className="flex justify-center p-10"><span className="loading loading-spinner loading-lg"></span></div>
+                    <LoadingIndicator />
                 ) : (
                     <>
                         {treeData.length === 0 ? (

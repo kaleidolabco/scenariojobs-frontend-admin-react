@@ -6,6 +6,7 @@ import GenericModal from '../../components/Common/GenericModal';
 import ConfirmationModal from '../../components/Common/ConfirmationModal';
 import FilterBar from '../../components/Common/FilterBar';
 import Avatar from '../../components/Common/Avatar';
+import LoadingIndicator from '../../components/Common/LoadingIndicator';
 import { useUserService, SystemUser } from '../../services/userService';
 import UserForm from '../../components/Users/UserForm';
 import { ROUTES } from '../../constants/routes';
@@ -250,7 +251,7 @@ const UsersPage: React.FC = () => {
             />
 
             {loading && !users.length ? (
-                <div className="flex justify-center p-10"><span className="loading loading-spinner loading-lg"></span></div>
+                <LoadingIndicator />
             ) : (
                 <GenericTable
                     data={users}

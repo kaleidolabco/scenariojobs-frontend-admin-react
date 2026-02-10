@@ -10,6 +10,7 @@ import Avatar from '../../components/Common/Avatar';
 import OrgUnitForm from '../../components/OrgUnits/OrgUnitForm';
 import OrgUnitNode from '../../components/OrgUnits/OrgUnitNode';
 import PositionForm from '../../components/Positions/PositionForm';
+import LoadingIndicator from '../../components/Common/LoadingIndicator';
 import { ROUTES } from '../../constants/routes';
 
 const OrgUnitDetailPage: React.FC = () => {
@@ -115,9 +116,7 @@ const OrgUnitDetailPage: React.FC = () => {
     if (!unit) {
         return (
             <PageContainer title="Cargando..." subtitle="">
-                <div className="flex justify-center p-10">
-                    <span className="loading loading-spinner loading-lg"></span>
-                </div>
+                <LoadingIndicator />
             </PageContainer>
         );
     }
