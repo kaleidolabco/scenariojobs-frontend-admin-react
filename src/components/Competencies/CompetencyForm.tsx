@@ -85,7 +85,8 @@ const CompetencyForm: React.FC<CompetencyFormProps> = ({ initialData, onSubmit, 
     const categoryOptions = [
         { value: 'HABILIDAD_BLANDA', label: 'Competencia Blanda (Soft Skill)' },
         { value: 'HABILIDAD_TECNICA', label: 'Competencia Técnica (Hard Skill)' },
-        { value: 'IDIOMA', label: 'Idioma' }
+        { value: 'IDIOMA', label: 'Idioma' },
+        { value: 'CONOCIMIENTO_ESPECIFICO', label: 'Conocimiento Específico' }
     ];
 
     return (

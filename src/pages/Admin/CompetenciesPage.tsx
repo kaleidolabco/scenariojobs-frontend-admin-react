@@ -161,6 +161,7 @@ const CompetenciesPage: React.FC = () => {
                 { label: 'Blanda (Soft)', value: 'HABILIDAD_BLANDA' },
                 { label: 'Técnica (Hard)', value: 'HABILIDAD_TECNICA' },
                 { label: 'Idioma', value: 'IDIOMA' },
+                { label: 'Conocimiento Específico', value: 'CONOCIMIENTO_ESPECIFICO' },
             ]
         }
     ];
@@ -170,6 +171,7 @@ const CompetenciesPage: React.FC = () => {
             case 'HABILIDAD_BLANDA': return <div className="badge badge-primary badge-outline">Blanda</div>;
             case 'HABILIDAD_TECNICA': return <div className="badge badge-secondary badge-outline">Técnica</div>;
             case 'IDIOMA': return <div className="badge badge-accent badge-outline">Idioma</div>;
+            case 'CONOCIMIENTO_ESPECIFICO': return <div className="badge badge-info badge-outline">Conocimiento</div>;
             default: return <div className="badge badge-ghost">Otro</div>;
         }
     };

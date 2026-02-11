@@ -23,7 +23,7 @@ export interface Competency {
     id: string;
     nombre: string;
     descripcion: string;
-    categoria: 'HABILIDAD_BLANDA' | 'HABILIDAD_TECNICA' | 'IDIOMA';
+    categoria: 'HABILIDAD_BLANDA' | 'HABILIDAD_TECNICA' | 'IDIOMA' | 'CONOCIMIENTO_ESPECIFICO';
     escala: number; // e.g., 5 means 1-5 scale
     definiciones_niveles?: CompetencyLevel[];
 }
@@ -227,9 +227,39 @@ const MOCK_COMPETENCIES: FetchResponse = successMock(
                 categoria: 'IDIOMA', 
                 escala: 5 
             },
+
+            // Conocimientos Específicos
+            {
+                id: '25',
+                nombre: 'ISO 9001:2015',
+                descripcion: 'Conocimiento profundo de los requisitos del sistema de gestión de calidad.',
+                categoria: 'CONOCIMIENTO_ESPECIFICO',
+                escala: 5
+            },
+            {
+                id: '26',
+                nombre: 'Metodología Scrum',
+                descripcion: 'Marco de trabajo ágil para el desarrollo y mantenimiento de productos complejos.',
+                categoria: 'CONOCIMIENTO_ESPECIFICO',
+                escala: 5
+            },
+            {
+                id: '27',
+                nombre: 'Gestión de Salesforce',
+                descripcion: 'Administración y personalización de la plataforma CRM Salesforce.',
+                categoria: 'CONOCIMIENTO_ESPECIFICO',
+                escala: 5
+            },
+            {
+                id: '28',
+                nombre: 'Normativa GDPR',
+                descripcion: 'Reglamento General de Protección de Datos de la Unión Europea.',
+                categoria: 'CONOCIMIENTO_ESPECIFICO',
+                escala: 5
+            }
         ],
         paginacion: {
-            total_items: 24,
+            total_items: 28,
             total_paginas: 1,
             cantidad_por_pagina: 50,
             pagina_actual: 1
