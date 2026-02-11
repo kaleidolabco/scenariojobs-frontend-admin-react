@@ -243,10 +243,52 @@ export const useCompetencyService = () => {
 
     const getCompetencies = async ( params?: competenciesQueryParams ): Promise<FetchResponse | null> => {
         try {
+            let filtered = [...(MOCK_COMPETENCIES.data.competencias as Competency[])];
+
+            // Apply filters
+            if (params?.filtro) {
+                const lowerSearch = params.filtro.toLowerCase();
+                filtered = filtered.filter(c => 
+                    c.nombre.toLowerCase().includes(lowerSearch) ||
+                    c.descripcion.toLowerCase().includes(lowerSearch)
+                );
+            }
+
+            if (params?.categoria) {
+                filtered = filtered.filter(c => c.categoria === params.categoria);
+            }
+
+            // Sorting
+            if (params?.orden_por) {
+                filtered.sort((a, b) => {
+                    const aVal = (a as any)[params.orden_por!] || '';
+                    const bVal = (b as any)[params.orden_por!] || '';
+                    const comparison = aVal > bVal ? 1 : -1;
+                    return params.orden === 'desc' ? -comparison : comparison;
+                });
+            }
+
+            // Pagination
+            const page = params?.pagina || 1;
+            const pageSize = params?.items_por_pagina || 10;
+            const totalItems = filtered.length;
+            const totalPages = Math.ceil(totalItems / pageSize);
+            const startIndex = (page - 1) * pageSize;
+            const endIndex = startIndex + pageSize;
+            const paginatedCompetencies = filtered.slice(startIndex, endIndex);
+
             const response = (await fetchData({
                 url: '/api/competencies',
-                body: params,
-                mockData: MOCK_COMPETENCIES
+                params: params as any,
+                mockData: successMock({
+                    competencias: paginatedCompetencies,
+                    paginacion: {
+                        pagina_actual: page,
+                        items_por_pagina: pageSize,
+                        total_items: totalItems,
+                        total_paginas: totalPages
+                    }
+                })
             })) as FetchResponse | null;
 
             if(response?.success === false){

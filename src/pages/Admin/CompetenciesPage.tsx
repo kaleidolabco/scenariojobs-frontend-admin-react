@@ -251,8 +251,26 @@ const CompetenciesPage: React.FC = () => {
                     )}
 
                     {/* Pagination */}
-                    {pagination && pagination?.total_paginas > 1 && (
-                        <div className="flex justify-center mt-8">
+                    {pagination && (
+                        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-8">
+                            {/* Page size selector */}
+                            <div className="flex items-center gap-2 text-sm">
+                                <span className="text-base-content/60">Mostrar:</span>
+                                <select
+                                    className="select select-bordered select-sm w-20"
+                                    value={queryParams.items_por_pagina}
+                                    onChange={(e) => updateQueryParams({ items_por_pagina: Number(e.target.value), pagina: 1 })}
+                                    disabled={loading}
+                                >
+                                    <option value={6}>6</option>
+                                    <option value={9}>9</option>
+                                    <option value={12}>12</option>
+                                    <option value={18}>18</option>
+                                </select>
+                                <span className="text-base-content/60">por página</span>
+                            </div>
+
+                            {/* Pagination controls */}
                             <div className="join">
                                 <button
                                     className="join-item btn btn-sm"
@@ -281,6 +299,11 @@ const CompetenciesPage: React.FC = () => {
                                 >
                                     »
                                 </button>
+                            </div>
+
+                            {/* Pagination info */}
+                            <div className="text-sm text-base-content/60">
+                                Mostrando {(((queryParams.pagina || 1) - 1) * (queryParams.items_por_pagina || ITEMS_PER_PAGE)) + 1} - {Math.min((queryParams.pagina || 1) * (queryParams.items_por_pagina || ITEMS_PER_PAGE), pagination.total_items)} de {pagination.total_items}
                             </div>
                         </div>
                     )}
