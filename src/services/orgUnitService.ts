@@ -16,73 +16,256 @@ export interface OrgUnit {
     position_count?: number; // Number of positions in this unit
 }
 
-// Mock Data Structure (Flat or Tree? Let's use Flat for API simulation, Tree for UI)
-// Actually API usually returns flat list with parent_ids or a nested tree. 
-// For this Mock, let's return a Tree because it's easier for the UI to consume directly if the backend supports it.
-// If not, we will transform it. Let's assume Backend returns a Tree for the "Get Full Tree" endpoint.
-
-
+// Organizational Hierarchy based on CSV data
 const MOCK_ORG_TREE: OrgUnit[] = [
     {
-        id: '1',
+        id: 'org_1',
         nombre: 'Gerencia General',
         tipo: 'DIVISION',
         padre_id: null,
-        descripcion: 'Máxima autoridad ejecutiva',
-        position_count: 0,
+        descripcion: 'Máxima autoridad ejecutiva de la organización',
+        position_count: 1,
         subnodos: [
+            // ADMINISTRACION
             {
-                id: '11',
-                nombre: 'Dirección de Tecnología',
+                id: 'org_10',
+                nombre: 'Dirección Administrativa',
                 tipo: 'AREA',
-                padre_id: '1',
-                descripcion: 'Responsable de toda la infraestructura tecnológica',
+                padre_id: 'org_1',
+                descripcion: 'Responsable de la gestión administrativa, financiera y de recursos',
                 position_count: 1,
                 subnodos: [
                     {
-                        id: '111',
-                        nombre: 'Arquitectura',
+                        id: 'org_101',
+                        nombre: 'Talento Humano',
                         tipo: 'DEPARTAMENTO',
-                        padre_id: '11',
-                        descripcion: 'Diseño y arquitectura de sistemas',
+                        padre_id: 'org_10',
+                        descripcion: 'Gestión del talento, reclutamiento y desarrollo organizacional',
                         position_count: 1,
                         subnodos: []
                     },
                     {
-                        id: '112',
-                        nombre: 'Desarrollo de Producto',
+                        id: 'org_102',
+                        nombre: 'Contabilidad',
                         tipo: 'DEPARTAMENTO',
-                        padre_id: '11',
-                        descripcion: 'Desarrollo de productos digitales',
-                        position_count: 0,
-                        subnodos: [
-                             {
-                                id: '1121',
-                                nombre: 'Frontend Team',
-                                tipo: 'EQUIPO',
-                                padre_id: '112',
-                                descripcion: 'Equipo especializado en desarrollo frontend',
-                                position_count: 2,
-                                subnodos: []
-                             }
-                        ]
+                        padre_id: 'org_10',
+                        descripcion: 'Gestión contable y financiera',
+                        position_count: 1,
+                        subnodos: []
+                    },
+                    {
+                        id: 'org_103',
+                        nombre: 'Gestión Organizacional',
+                        tipo: 'DEPARTAMENTO',
+                        padre_id: 'org_10',
+                        descripcion: 'Desarrollo organizacional, cultura y procesos',
+                        position_count: 2,
+                        subnodos: []
+                    },
+                    {
+                        id: 'org_104',
+                        nombre: 'Servicios Generales',
+                        tipo: 'DEPARTAMENTO',
+                        padre_id: 'org_10',
+                        descripcion: 'Servicios de apoyo y mantenimiento',
+                        position_count: 1,
+                        subnodos: []
+                    },
+                    {
+                        id: 'org_105',
+                        nombre: 'Administración',
+                        tipo: 'DEPARTAMENTO',
+                        padre_id: 'org_10',
+                        descripcion: 'Procesos administrativos generales',
+                        position_count: 1,
+                        subnodos: []
                     }
                 ]
             },
+            // COMERCIAL
             {
-                id: '12',
-                nombre: 'Dirección de RRHH',
+                id: 'org_20',
+                nombre: 'Dirección Comercial',
                 tipo: 'AREA',
-                padre_id: '1',
-                descripcion: 'Gestión del talento humano',
+                padre_id: 'org_1',
+                descripcion: 'Liderazgo de la estrategia comercial y de ventas',
+                position_count: 1,
+                subnodos: [
+                    {
+                        id: 'org_201',
+                        nombre: 'Preventa',
+                        tipo: 'DEPARTAMENTO',
+                        padre_id: 'org_20',
+                        descripcion: 'Soporte técnico en procesos de preventa',
+                        position_count: 1,
+                        subnodos: []
+                    },
+                    {
+                        id: 'org_202',
+                        nombre: 'Marketing',
+                        tipo: 'DEPARTAMENTO',
+                        padre_id: 'org_20',
+                        descripcion: 'Estrategias de marketing y comunicación',
+                        position_count: 1,
+                        subnodos: []
+                    },
+                    {
+                        id: 'org_203',
+                        nombre: 'Cuentas Clave',
+                        tipo: 'DEPARTAMENTO',
+                        padre_id: 'org_20',
+                        descripcion: 'Gestión de clientes estratégicos',
+                        position_count: 1,
+                        subnodos: []
+                    }
+                ]
+            },
+            // OPERACIONES
+            {
+                id: 'org_30',
+                nombre: 'Dirección de Operaciones',
+                tipo: 'AREA',
+                padre_id: 'org_1',
+                descripcion: 'Gestión de operaciones técnicas y de servicio',
                 position_count: 0,
                 subnodos: [
                     {
-                        id: '121',
-                        nombre: 'Talento y Cultura',
+                        id: 'org_301',
+                        nombre: 'Desarrollo',
                         tipo: 'DEPARTAMENTO',
-                        padre_id: '12',
-                        descripcion: 'Desarrollo organizacional y cultura',
+                        padre_id: 'org_30',
+                        descripcion: 'Desarrollo de software y aplicaciones',
+                        position_count: 0,
+                        subnodos: [
+                            {
+                                id: 'org_3011',
+                                nombre: 'Desarrollo Fullstack',
+                                tipo: 'EQUIPO',
+                                padre_id: 'org_301',
+                                descripcion: 'Equipo de desarrollo fullstack',
+                                position_count: 15,
+                                subnodos: []
+                            },
+                            {
+                                id: 'org_3012',
+                                nombre: 'QA',
+                                tipo: 'EQUIPO',
+                                padre_id: 'org_301',
+                                descripcion: 'Equipo de aseguramiento de calidad',
+                                position_count: 1,
+                                subnodos: []
+                            }
+                        ]
+                    },
+                    {
+                        id: 'org_302',
+                        nombre: 'Infraestructura',
+                        tipo: 'DEPARTAMENTO',
+                        padre_id: 'org_30',
+                        descripcion: 'Gestión de infraestructura tecnológica',
+                        position_count: 0,
+                        subnodos: [
+                            {
+                                id: 'org_3021',
+                                nombre: 'AWS',
+                                tipo: 'EQUIPO',
+                                padre_id: 'org_302',
+                                descripcion: 'Infraestructura cloud en AWS',
+                                position_count: 2,
+                                subnodos: []
+                            },
+                            {
+                                id: 'org_3022',
+                                nombre: 'Ciberseguridad',
+                                tipo: 'EQUIPO',
+                                padre_id: 'org_302',
+                                descripcion: 'Seguridad informática',
+                                position_count: 1,
+                                subnodos: []
+                            }
+                        ]
+                    },
+                    {
+                        id: 'org_303',
+                        nombre: 'Soporte',
+                        tipo: 'DEPARTAMENTO',
+                        padre_id: 'org_30',
+                        descripcion: 'Soporte técnico y atención a usuarios',
+                        position_count: 4,
+                        subnodos: [
+                            {
+                                id: 'org_3031',
+                                nombre: 'Mesa de Ayuda',
+                                tipo: 'EQUIPO',
+                                padre_id: 'org_303',
+                                descripcion: 'Atención de primer nivel',
+                                position_count: 9,
+                                subnodos: []
+                            },
+                            {
+                                id: 'org_3032',
+                                nombre: 'Help Desk',
+                                tipo: 'EQUIPO',
+                                padre_id: 'org_303',
+                                descripcion: 'Soporte técnico especializado',
+                                position_count: 2,
+                                subnodos: []
+                            },
+                            {
+                                id: 'org_3033',
+                                nombre: 'Soporte Especializado',
+                                tipo: 'EQUIPO',
+                                padre_id: 'org_303',
+                                descripcion: 'Soporte de alto nivel',
+                                position_count: 2,
+                                subnodos: []
+                            }
+                        ]
+                    },
+                    {
+                        id: 'org_304',
+                        nombre: 'Proyectos',
+                        tipo: 'DEPARTAMENTO',
+                        padre_id: 'org_30',
+                        descripcion: 'Gestión de proyectos tecnológicos',
+                        position_count: 3,
+                        subnodos: []
+                    },
+                    {
+                        id: 'org_305',
+                        nombre: 'Soluciones',
+                        tipo: 'DEPARTAMENTO',
+                        padre_id: 'org_30',
+                        descripcion: 'Diseño y entrega de soluciones',
+                        position_count: 1,
+                        subnodos: []
+                    },
+                    {
+                        id: 'org_306',
+                        nombre: 'Operaciones',
+                        tipo: 'DEPARTAMENTO',
+                        padre_id: 'org_30',
+                        descripcion: 'Gestión operativa',
+                        position_count: 4,
+                        subnodos: []
+                    }
+                ]
+            },
+            // DIAGEO (Cliente específico)
+            {
+                id: 'org_40',
+                nombre: 'Dirección DIAGEO',
+                tipo: 'AREA',
+                padre_id: 'org_1',
+                descripcion: 'Operaciones dedicadas al cliente DIAGEO',
+                position_count: 0,
+                subnodos: [
+                    {
+                        id: 'org_401',
+                        nombre: 'Análisis de Datos',
+                        tipo: 'DEPARTAMENTO',
+                        padre_id: 'org_40',
+                        descripcion: 'Análisis de datos para DIAGEO',
                         position_count: 1,
                         subnodos: []
                     }

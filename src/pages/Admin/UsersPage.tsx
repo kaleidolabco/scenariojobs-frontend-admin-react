@@ -11,6 +11,9 @@ import { useUserService, SystemUser } from '../../services/userService';
 import UserForm from '../../components/Users/UserForm';
 import { ROUTES } from '../../constants/routes';
 import useUIStore from '../../store/uiStore';
+import { Pagination } from '../../services/responseType';
+
+const ITEMS_PER_PAGE = 10;
 
 const UsersPage: React.FC = () => {
     const { getUsers, createUser, updateUser, deleteUser, resetPassword, loading } = useUserService();
@@ -18,11 +21,15 @@ const UsersPage: React.FC = () => {
 
     // State
     const [users, setUsers] = useState<SystemUser[]>([]);
+    const [pagination, setPagination] = useState<Pagination | null>(null);
+
     // State for FilterBar
     const [queryParams, setQueryParams] = useState<any>({
         search: '',
         rol: undefined,
-        estado: undefined
+        estado: undefined,
+        pagina: 1,
+        items_por_pagina: ITEMS_PER_PAGE
     });
 
     // Modals
@@ -41,6 +48,7 @@ const UsersPage: React.FC = () => {
         const response = await getUsers(queryParams);
         if (response && response.success) {
             setUsers(response.data.usuarios);
+            setPagination(response.data.paginacion);
         }
     };
 
@@ -114,19 +122,29 @@ const UsersPage: React.FC = () => {
     };
 
     const handleFilterChange = (key: string, value: any) => {
-        setQueryParams((prev: any) => ({ ...prev, [key]: value }));
+        setQueryParams((prev: any) => ({ ...prev, [key]: value, pagina: 1 }));
     };
 
     const handleSearch = (term: string) => {
-        setQueryParams((prev: any) => ({ ...prev, search: term }));
+        setQueryParams((prev: any) => ({ ...prev, search: term, pagina: 1 }));
     };
 
     const clearFilters = () => {
         setQueryParams({
             search: '',
             rol: undefined,
-            estado: undefined
+            estado: undefined,
+            pagina: 1,
+            items_por_pagina: ITEMS_PER_PAGE
         });
+    };
+
+    const updateQueryParam = (key: string, value: any) => {
+        setQueryParams((prev: any) => ({ ...prev, [key]: value }));
+    };
+
+    const updateQueryParams = (updates: any) => {
+        setQueryParams((prev: any) => ({ ...prev, ...updates }));
     };
 
     // Table Config
@@ -155,7 +173,7 @@ const UsersPage: React.FC = () => {
                     <span className="text-primary font-medium hover:underline cursor-pointer">
                         {user.persona.nombres} {user.persona.apellidos}
                     </span>
-                    <span className="badge badge-xs badge-ghost ml-1">Link</span>
+                    <span className="badge badge-xs badge-primary ml-1">Link</span>
                 </div>
             ) : (
                 <span className="text-base-content/40 italic text-sm">Sin vincular</span>
@@ -258,11 +276,11 @@ const UsersPage: React.FC = () => {
                     columns={columns}
                     actions={actions}
                     keyExtractor={(user) => user.id}
-                    currentPage={1}
-                    totalPages={1}
-                    pageSize={10}
-                    onPageChange={() => { }}
-                    onPageSizeChange={() => { }}
+                    currentPage={queryParams.pagina || 1}
+                    totalPages={pagination?.total_paginas || 1}
+                    pageSize={queryParams.items_por_pagina || ITEMS_PER_PAGE}
+                    onPageChange={(page) => updateQueryParam('pagina', page)}
+                    onPageSizeChange={(size) => updateQueryParams({ items_por_pagina: size, pagina: 1 })}
                     emptyMessage="No se encontraron usuarios"
                     isLoading={loading}
                 />

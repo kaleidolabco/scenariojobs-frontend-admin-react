@@ -12,6 +12,9 @@ import OrgUnitNode from '../../components/OrgUnits/OrgUnitNode';
 import PositionForm from '../../components/Positions/PositionForm';
 import LoadingIndicator from '../../components/Common/LoadingIndicator';
 import { ROUTES } from '../../constants/routes';
+import { Pagination } from '../../services/responseType';
+
+const ITEMS_PER_PAGE = 10;
 
 const OrgUnitDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -21,7 +24,14 @@ const OrgUnitDetailPage: React.FC = () => {
 
     const [unit, setUnit] = useState<OrgUnit | null>(null);
     const [positions, setPositions] = useState<Position[]>([]);
+    const [pagination, setPagination] = useState<Pagination | null>(null);
     const [activeTab, setActiveTab] = useState<'info' | 'subunits' | 'positions'>('positions');
+
+    // Filters for positions table
+    const [queryParams, setQueryParams] = useState<any>({
+        pagina: 1,
+        items_por_pagina: ITEMS_PER_PAGE
+    });
 
     // Modals
     const [editUnitModalOpen, setEditUnitModalOpen] = useState(false);
@@ -37,6 +47,13 @@ const OrgUnitDetailPage: React.FC = () => {
             loadUnitData();
             loadPositions();
         }
+    }, [id, queryParams.pagina, queryParams.items_por_pagina]);
+
+    // Reset pagination when id changes
+    useEffect(() => {
+        if (id) {
+            setQueryParams((prev: any) => ({ ...prev, pagina: 1 }));
+        }
     }, [id]);
 
     const loadUnitData = async () => {
@@ -49,9 +66,10 @@ const OrgUnitDetailPage: React.FC = () => {
 
     const loadPositions = async () => {
         if (!id) return;
-        const response = await getPositions({ unidad_id: id });
+        const response = await getPositions({ ...queryParams, unidad_id: id });
         if (response && response.success) {
             setPositions(response.data.puestos);
+            setPagination(response.data.paginacion);
         }
     };
 
@@ -111,6 +129,14 @@ const OrgUnitDetailPage: React.FC = () => {
             setAddSubunitModalOpen(false);
             loadUnitData();
         }
+    };
+
+    const updateQueryParam = (key: string, value: any) => {
+        setQueryParams((prev: any) => ({ ...prev, [key]: value }));
+    };
+
+    const updateQueryParams = (updates: any) => {
+        setQueryParams((prev: any) => ({ ...prev, ...updates }));
     };
 
     if (!unit) {
@@ -268,12 +294,13 @@ const OrgUnitDetailPage: React.FC = () => {
                         columns={positionColumns}
                         actions={positionActions}
                         keyExtractor={(pos) => pos.id}
-                        currentPage={1}
-                        totalPages={1}
-                        pageSize={positions.length}
-                        onPageChange={() => { }}
-                        onPageSizeChange={() => { }}
+                        currentPage={queryParams.pagina || 1}
+                        totalPages={pagination?.total_paginas || 1}
+                        pageSize={queryParams.items_por_pagina || ITEMS_PER_PAGE}
+                        onPageChange={(page) => updateQueryParam('pagina', page)}
+                        onPageSizeChange={(size) => updateQueryParams({ items_por_pagina: size, pagina: 1 })}
                         emptyMessage="No hay puestos en esta unidad"
+                        isLoading={positionLoading}
                     />
                 </div>
             )}

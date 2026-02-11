@@ -10,17 +10,24 @@ import LoadingIndicator from '../../components/Common/LoadingIndicator';
 import { usePersonService, Person } from '../../services/personService';
 import PersonForm from '../../components/Staff/PersonForm';
 import { ROUTES } from '../../constants/routes';
+import { Pagination } from '../../services/responseType';
+
+const ITEMS_PER_PAGE = 10;
 
 const StaffDirectoryPage: React.FC = () => {
     const { getPeople, createPerson, updatePerson, deletePerson, loading } = usePersonService();
 
     // State
     const [people, setPeople] = useState<Person[]>([]);
+    const [pagination, setPagination] = useState<Pagination | null>(null);
+
     // State for FilterBar
     const [queryParams, setQueryParams] = useState<any>({
         search: '',
         departamento: undefined,
-        estado: undefined
+        estado: undefined,
+        pagina: 1,
+        items_por_pagina: ITEMS_PER_PAGE
     });
 
     // Modals
@@ -37,6 +44,7 @@ const StaffDirectoryPage: React.FC = () => {
         const response = await getPeople(queryParams);
         if (response && response.success) {
             setPeople(response.data.personas);
+            setPagination(response.data.paginacion);
         }
     };
 
@@ -97,19 +105,29 @@ const StaffDirectoryPage: React.FC = () => {
     };
 
     const handleFilterChange = (key: string, value: any) => {
-        setQueryParams((prev: any) => ({ ...prev, [key]: value }));
+        setQueryParams((prev: any) => ({ ...prev, [key]: value, pagina: 1 }));
     };
 
     const handleSearch = (term: string) => {
-        setQueryParams((prev: any) => ({ ...prev, search: term }));
+        setQueryParams((prev: any) => ({ ...prev, search: term, pagina: 1 }));
     };
 
     const clearFilters = () => {
         setQueryParams({
             search: '',
             departamento: undefined,
-            estado: undefined
+            estado: undefined,
+            pagina: 1,
+            items_por_pagina: ITEMS_PER_PAGE
         });
+    };
+
+    const updateQueryParam = (key: string, value: any) => {
+        setQueryParams((prev: any) => ({ ...prev, [key]: value }));
+    };
+
+    const updateQueryParams = (updates: any) => {
+        setQueryParams((prev: any) => ({ ...prev, ...updates }));
     };
 
     // Table Config
@@ -224,11 +242,11 @@ const StaffDirectoryPage: React.FC = () => {
                     columns={columns}
                     actions={actions}
                     keyExtractor={(person) => person.id}
-                    currentPage={1}
-                    totalPages={1}
-                    pageSize={10}
-                    onPageChange={() => { }}
-                    onPageSizeChange={() => { }}
+                    currentPage={queryParams.pagina || 1}
+                    totalPages={pagination?.total_paginas || 1}
+                    pageSize={queryParams.items_por_pagina || ITEMS_PER_PAGE}
+                    onPageChange={(page) => updateQueryParam('pagina', page)}
+                    onPageSizeChange={(size) => updateQueryParams({ items_por_pagina: size, pagina: 1 })}
                     emptyMessage="No se encontraron colaboradores"
                     isLoading={loading}
                 />
