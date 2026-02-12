@@ -46,7 +46,7 @@ function App() {
           </AuthLoader>
         }>
           <Route path="/" element={<Navigate to={ROUTES.HOME} />} />
-          <Route path={ROUTES.HOME} element={<PageAnimation key={location.pathname}><div>INICIO</div></PageAnimation>} />
+          <Route path={ROUTES.HOME} element={<PageAnimation key={location.pathname}><UnderConstruction title="Evaluaciones (Assessment Engine)" /></PageAnimation>} />
 
           {/* Módulo Configuración Global */}
           <Route path={ROUTES.COMPANY_CONFIG} element={<PageAnimation key={location.pathname}><UnderConstruction title="Configuración Empresa" /></PageAnimation>} />
