@@ -94,10 +94,10 @@ const OrgPositionDetailPage: React.FC = () => {
         { label: 'Inicio', to: ROUTES.HOME },
         { label: 'Organigrama', to: ROUTES.ORG_CHART },
         {
-            label: position ? position.unidad_nombre : 'Unidad',
+            label: position?.unidad_nombre || 'Unidad',
             to: position ? ROUTES.ORG_UNIT_DETAIL(position.unidad_id) : undefined
         },
-        { label: position ? position.nombre : 'Cargando...', to: undefined }
+        { label: position?.nombre || 'Cargando...', to: undefined }
     ];
 
     return (

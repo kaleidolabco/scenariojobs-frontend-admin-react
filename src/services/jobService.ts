@@ -560,15 +560,15 @@ const MOCK_JOBS: Job[] = [
     }
 ];
 
-const MOCK_JOBS_RESPONSE: FetchResponse = successMock({
-    cargos: MOCK_JOBS,
-    paginacion: {
-        total_items: MOCK_JOBS.length,
-        total_paginas: Math.ceil(MOCK_JOBS.length / 10),
-        cantidad_por_pagina: 10,
-        pagina_actual: 1
-    }
-});
+// const MOCK_JOBS_RESPONSE: FetchResponse = successMock({
+//     cargos: MOCK_JOBS,
+//     paginacion: {
+//         total_items: MOCK_JOBS.length,
+//         total_paginas: Math.ceil(MOCK_JOBS.length / 10),
+//         cantidad_por_pagina: 10,
+//         pagina_actual: 1
+//     }
+// });
 
 export const useJobService = () => {
     const { fetchData, loading, error } = useFetch<FetchResponse>();

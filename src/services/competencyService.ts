@@ -1,5 +1,5 @@
 import useFetch from '../hooks/useFetch';
-import { FetchResponse, successMock, errorMock } from './responseType';
+import { FetchResponse, successMock } from './responseType';
 
 // Stores
 import useUIStore from '../store/uiStore';
@@ -28,7 +28,7 @@ export interface Competency {
     definiciones_niveles?: CompetencyLevel[];
 }
 
-const MOCK_COMPETENCIES_ERROR: FetchResponse = errorMock('Error al obtener las competencias');
+// const MOCK_COMPETENCIES_ERROR: FetchResponse = errorMock('Error al obtener las competencias');
 
 const MOCK_COMPETENCIES: FetchResponse = successMock(
     {
