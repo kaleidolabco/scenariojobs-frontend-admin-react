@@ -408,9 +408,23 @@ Este módulo introduce un nuevo paradigma de evaluación basado en resultados, c
     *   Integración futura con planes de trabajo y mejora.
     
 
-### **3.9 Notificaciones (Arquitectura Preparada para Fase Futura)**
+### **3.9 Módulo de Desarrollo y Capacitación (Fase Futura)**
+    
+Este módulo utiliza los resultados del Análisis de Brechas (Gap Analysis) y del seguimiento de Objetivos para cerrar las brechas de talento identificadas en la organización.
 
-*   **RF-NOT-031: Motor de Eventos (Event-driven):**
+*   **RF-CAP-032: Identificación Automática de Necesidades de Capacitación:** El sistema debe agrupar a los colaboradores que presenten brechas similares en competencias críticas para sugerir cohortes de capacitación.
+
+*   **RF-CAP-033: Planes de Desarrollo Individual (PDI) Sugeridos por IA:** Basado en los resultados de las evaluaciones y el cargo objetivo del colaborador, la IA generará una propuesta de ruta de aprendizaje (cursos, mentorías, lecturas).
+
+*   **RF-CAP-034: Chat Mentor IA para el Colaborador:** Interfaz de chat donde el colaborador puede consultar sobre sus brechas, pedir recomendaciones personalizadas y elaborar un plan de mejora interactuando con un modelo de IA entrenado en el catálogo de competencias de la empresa.
+
+*   **RF-CAP-035: Gestión de Catálogo de Recursos:** Administración de una biblioteca de recursos (cursos internos, enlaces a plataformas externas, certificaciones) vinculados a las competencias de la biblioteca global.
+
+*   **RF-CAP-036: Seguimiento de Impacto:** Correlación entre la finalización de planes de capacitación y la mejora en los puntajes de las evaluaciones de desempeño subsiguientes.
+
+### **3.10 Notificaciones (Arquitectura Preparada para Fase Futura)**
+
+*   **RF-NOT-037: Motor de Eventos (Event-driven):**
     *   El sistema debe generar y exponer eventos internos (_triggers_) estandarizados cuando ocurren acciones clave (ej., "Evaluación Asignada", "Evaluación Completada por Participante", "Calificación Pendiente por Revisar"). Esta arquitectura permitirá la futura integración con sistemas de notificación por email, push en la app, o conectores con Slack/MS Teams.
 
 **4\. LÓGICA DE NEGOCIO CRÍTICA: RELACIÓN EVALUACIÓN-COMPETENCIA-CARGO Y EL ANÁLISIS DE BRECHAS**
