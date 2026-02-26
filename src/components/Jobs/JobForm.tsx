@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Job, SeniorityLevel } from '../../services/jobService';
+import { Job, SeniorityLevel, CompetencyRequirement } from '../../services/jobService';
 import InputField from '../Common/Forms/InputField';
 import SelectField from '../Common/Forms/SelectField';
 import TextAreaField from '../Common/Forms/TextAreaField';
 import NumberInputField from '../Common/Forms/NumberInputField';
 import FormSection from '../Common/Forms/FormSection';
+import JobCompetencySelector from './JobCompetencySelector';
 
 interface JobFormProps {
     initialData?: Job | null;
@@ -29,6 +30,7 @@ const JobForm: React.FC<JobFormProps> = ({ initialData, isLoading, onSubmit, onC
     const [bandaSalarialMin, setBandaSalarialMin] = useState<number | undefined>();
     const [bandaSalarialMax, setBandaSalarialMax] = useState<number | undefined>();
     const [funcionesText, setFuncionesText] = useState('');
+    const [competencias, setCompetencias] = useState<CompetencyRequirement[]>([]);
 
     useEffect(() => {
         if (initialData) {
@@ -38,6 +40,7 @@ const JobForm: React.FC<JobFormProps> = ({ initialData, isLoading, onSubmit, onC
             setBandaSalarialMin(initialData.banda_salarial_min);
             setBandaSalarialMax(initialData.banda_salarial_max);
             setFuncionesText(initialData.funciones.join('\n'));
+            setCompetencias(initialData.competencias_requeridas || []);
         } else {
             setNombre('');
             setDescripcion('');
@@ -45,6 +48,7 @@ const JobForm: React.FC<JobFormProps> = ({ initialData, isLoading, onSubmit, onC
             setBandaSalarialMin(undefined);
             setBandaSalarialMax(undefined);
             setFuncionesText('');
+            setCompetencias([]);
         }
     }, [initialData]);
 
@@ -60,7 +64,7 @@ const JobForm: React.FC<JobFormProps> = ({ initialData, isLoading, onSubmit, onC
             nombre,
             descripcion,
             nivel_jerarquico: nivelJerarquico,
-            competencias_requeridas: initialData?.competencias_requeridas || [],
+            competencias_requeridas: competencias,
             funciones,
             banda_salarial_min: bandaSalarialMin,
             banda_salarial_max: bandaSalarialMax
@@ -142,13 +146,15 @@ const JobForm: React.FC<JobFormProps> = ({ initialData, isLoading, onSubmit, onC
                 </div>
             </FormSection>
 
-            {/* Note about competencies */}
-            <div className="alert alert-info text-sm py-2">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="stroke-current shrink-0 w-6 h-6">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <span>La asignación de competencias requeridas se habilitará en una versión futura.</span>
-            </div>
+            <FormSection
+                title="Competencias Requeridas"
+                description="Asigne las competencias y niveles esperados para este cargo."
+            >
+                <JobCompetencySelector
+                    value={competencias}
+                    onChange={setCompetencias}
+                />
+            </FormSection>
 
             {/* Actions */}
             <div className="sticky bottom-0 bg-base-100 border-t border-base-300 p-4 md:relative md:border-t-0 md:p-0 md:pt-4">
