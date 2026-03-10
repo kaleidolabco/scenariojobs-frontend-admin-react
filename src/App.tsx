@@ -22,6 +22,8 @@ import OrgUnitDetailPage from "./pages/Admin/OrgUnitDetailPage";
 import OrgPositionDetailPage from "./pages/Admin/OrgPositionDetailPage";
 import UsersPage from "./pages/Admin/UsersPage";
 import StaffDirectoryPage from "./pages/Admin/StaffDirectoryPage";
+import AssessmentsPage from "./pages/RRHH/AssessmentPage";
+import AssessmentBuilderPage from "./pages/RRHH/AssessmentBuilderPage";
 import { ROUTES } from "./constants/routes";
 
 function App() {
@@ -64,8 +66,8 @@ function App() {
           <Route path={ROUTES.STAFF_DIRECTORY} element={<PageAnimation key={location.pathname}><StaffDirectoryPage /></PageAnimation>} />
 
           {/* Módulo HR (Evaluaciones) */}
-          <Route path={ROUTES.ASSESSMENTS} element={<PageAnimation key={location.pathname}><UnderConstruction title="Evaluaciones (Assessment Engine)" /></PageAnimation>} />
-          <Route path={ROUTES.ASSESSMENT_CREATE} element={<PageAnimation key={location.pathname}><UnderConstruction title="Crear Evaluación" /></PageAnimation>} />
+          <Route path={ROUTES.ASSESSMENTS} element={<PageAnimation key={location.pathname}><AssessmentsPage /></PageAnimation>} />
+          <Route path={ROUTES.ASSESSMENT_CREATE} element={<PageAnimation key={location.pathname}><AssessmentBuilderPage /></PageAnimation>} />
           <Route path="/evaluaciones/:id/editar" element={<PageAnimation key={location.pathname}><UnderConstruction title="Editar Evaluación" /></PageAnimation>} />
 
           <Route path={ROUTES.PROCESSES} element={<PageAnimation key={location.pathname}><UnderConstruction title="Procesos de Evaluación" /></PageAnimation>} />
