@@ -194,18 +194,20 @@ classDiagram
     
 *   **RF-CONF-005: Gestión de Usuarios y Roles (RBAC):** CRUD de usuarios y asignación granular de permisos basada en roles del sistema (Admin, Gestor, Evaluador).
     
-*   **RF-CONF-006: Biblioteca de Competencias:**
+*   **RF-CONF-006: Familias y Biblioteca de Competencias:**
     
-    *   Creación y gestión de competencias (ej., "Liderazgo", "Python", "Inglés", "Normativa ISO 9001").
-        
-    *   **Categorización ampliada:**
+    *   **Familias de Competencias:** Capacidad para crear y administrar familias de competencias (agrupadores mayores), que permiten clasificar y organizar la información.
+    
+    *   Creación y administración de competencias específicas (ej., "Liderazgo", "Python", "Inglés", "Normativa ISO 9001") dentro de cada familia.
+    
+    *   **Categorización basada en Familias (Ejemplos):**
         
         *   **Competencias Blandas (Soft Skills):** Habilidades interpersonales y comportamentales (ej., Liderazgo, Trabajo en Equipo, Comunicación Efectiva, Resolución de Conflictos).
-            
+        
         *   **Competencias Técnicas (Hard Skills):** Habilidades técnicas y especializadas (ej., Programación, Análisis de Datos, Diseño Gráfico, Contabilidad).
-            
+        
         *   **Idiomas:** Dominio de lenguas extranjeras (ej., Inglés, Francés, Mandarín, Alemán).
-            
+        
         *   **Conocimientos Específicos:** Conocimientos formales requeridos para el desempeño del cargo:
             
             *   _Normativas y Certificaciones:_ ISO 9001, GDPR, SOX, HACCP, Normas de Seguridad Industrial.
@@ -216,11 +218,15 @@ classDiagram
                 
             *   _Conocimientos de Dominio:_ Derecho Laboral, Tributación, Farmacología, Ingeniería Civil.
                 
-    *   Definición de una escala de medición estandarizada para cada competencia (ej., del 1 al 5).
+    *   Definición de una escala de medición estandarizada para cada competencia (ej., del 1 al 5). En este proceso de definición de niveles de calificación y comportamientos esperados, el sistema ofrecerá:
+        *   **Plantillas Predefinidas:** Modelos y catálogos base de competencias que permiten realizar copias y modificaciones rápidas de acuerdo al nuevo contexto.
+        *   **Asistencia de IA:** Recomendaciones semánticas y sugerencias generadas por la IA para definir con precisión los niveles de calificación y realizar parametrización de datos en general, automatizando y evitando ingresos manuales excesivos.
         
 *   **RF-CONF-007: Gestión de Cargos (Perfiles Funcionales):**
     
     *   Definición de **Cargos** como plantillas de requisitos (ej., "Gerente de Ventas", "Dev Senior").
+        
+    *   **Sugerencia de Competencias Asistida por IA:** Al perfilar un cargo, la Inteligencia Artificial analizará el contexto del mismo y ofrecerá una sugerencia de competencias ideales (blandas, técnicas, conocimientos) y la parametrización de sus niveles esperados y datos asociados para acelerar su definición.
         
     *   **El Cargo define:** Competencias requeridas, niveles esperados, funciones genéricas y bandas salariales. **NO define** jefe ni ubicación en el organigrama (eso es rol del Puesto).
         
@@ -245,7 +251,8 @@ classDiagram
 
 ### **3.4 Módulo "Assessment Engine" (Motor de Evaluaciones)**
 
-*   **RF-AE-009: Constructor de Evaluaciones:** Interfaz intuitiva de "drag & drop" o por pasos para crear exámenes o encuestas de evaluación.
+*   **RF-AE-009: Constructor de Evaluaciones e Inteligencia Copiloto:** Interfaz intuitiva de "drag & drop" o por pasos para crear exámenes o encuestas de evaluación.
+    *   **Asistencia de IA en Configuración:** Soporte proactivo de Inteligencia Artificial para las diferentes etapas de creación de las encuestas o preguntas, donde la IA puede sugerir parámetros, campos de formulario u opciones de respuesta basándose en el contexto de la parametrización o en plantillas ya predefinidas.
     
 *   **RF-AE-010: Secciones y Momentos:** Capacidad de dividir la evaluación en bloques lógicos o temporales (ej., "Sección Psicotécnica", "Entrevista Virtual", "Caso Práctico").
     
@@ -284,7 +291,8 @@ classDiagram
 
 ### **3.5 Módulo de Procesos y Asignación**
 
-*   **RF-PROC-014: Gestión de Procesos:** Creación de campañas o procesos de evaluación (ej., "Evaluación de Desempeño Q1 2026", "Proceso de Selección: Dev Junior").
+*   **RF-PROC-014: Gestión de Procesos y Diseño Asistido:** Creación de campañas o procesos de evaluación (ej., "Evaluación de Desempeño Q1 2026", "Proceso de Selección: Dev Junior").
+    *   **Sugerencias Cognitivas (IA):** Durante la definición de diferentes etapas de los procesos, la IA ofrecerá recomendaciones de plantillas y sugerirá parámetros para organizar a los participantes, evaluadores y tipos de evaluaciones según el contexto específico.
     
 *   **RF-PROC-015: Asignación de Evaluaciones a Procesos:** Vincular una o varias evaluaciones previamente creadas a un proceso específico. Los procesos pueden categorizarse (Selección, Desempeño, Clima Laboral).
     
