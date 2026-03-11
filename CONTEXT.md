@@ -30,6 +30,10 @@ El sistema abarcará desde la configuración administrativa inicial de cada enti
     
 *   Módulo avanzado de calificación con soporte manual, automático y asistido por IA.
     
+*   Asistente virtual de Inteligencia Artificial omnisciente, capaz de interactuar mediante voz o texto para asistir en la configuración y gestión integral del sistema.
+    
+*   Gestión avanzada de comunicaciones y notificaciones por correo electrónico personalizables.
+    
 *   Paneles analíticos para la toma de decisiones basada en datos.
     
 *   Panel de control para el superadministrador de la plataforma.
@@ -300,6 +304,8 @@ classDiagram
     
 *   **RF-PROC-017: Asignación de Evaluadores y Flujo de Aprobación:** Designar los usuarios que calificarán las respuestas subjetivas de un proceso. El sistema debe soportar un flujo donde los puntajes pasen por un estado de **"Revisión"** antes de ser **"Publicados"** para el empleado, permitiendo auditorías y ajustes por parte de RRHH.
     
+*   **RF-PROC-018: Personalización de Comunicaciones del Proceso:** Durante la creación y configuración de un proceso, el administrador debe poder parametrizar los correos electrónicos de notificación específicos para dicho proceso. Se debe permitir editar el remitente, asunto, cuerpo del correo (incluyendo variables dinámicas, imágenes y logos de la entidad), posibilitando la creación de plantillas diferenciadas y contextuales para evaluadores (ej. invitación a calificar, recordatorios) y para evaluados (ej. invitación a realizar la prueba, recordatorios de vencimiento).
+
 
 #### **Diagrama: Flujo de Gestión de Procesos de Evaluación**
 
@@ -430,10 +436,33 @@ Este módulo utiliza los resultados del Análisis de Brechas (Gap Analysis) y de
 
 *   **RF-CAP-036: Seguimiento de Impacto:** Correlación entre la finalización de planes de capacitación y la mejora en los puntajes de las evaluaciones de desempeño subsiguientes.
 
-### **3.10 Notificaciones (Arquitectura Preparada para Fase Futura)**
+### **3.10 Módulo de Notificaciones y Comunicaciones**
 
 *   **RF-NOT-037: Motor de Eventos (Event-driven):**
-    *   El sistema debe generar y exponer eventos internos (_triggers_) estandarizados cuando ocurren acciones clave (ej., "Evaluación Asignada", "Evaluación Completada por Participante", "Calificación Pendiente por Revisar"). Esta arquitectura permitirá la futura integración con sistemas de notificación por email, push en la app, o conectores con Slack/MS Teams.
+    *   El sistema debe generar y exponer eventos internos (_triggers_) estandarizados cuando ocurren acciones clave (ej., "Evaluación Asignada", "Evaluación Completada por Participante", "Calificación Pendiente por Revisar"). Esta arquitectura permitirá la integración con sistemas de notificación por email, push en la app, o conectores con Slack/MS Teams.
+
+*   **RF-NOT-038: Gestión Centralizada de Plantillas de Correo Electrónico:**
+    *   **Administración Global de Plantillas:** La plataforma debe contar con un espacio para parametrizar las plantillas base institucionales (marca, colores, tipografía, logos).
+    *   **Escenarios de Aplicación Exhaustivos:** El sistema debe soportar la personalización de notificaciones para los siguientes escenarios clave:
+        *   _Creación de Usuarios:_ Correos de bienvenida, asignación de credenciales y recuperación de contraseñas.
+        *   _Asignación en Procesos:_ Notificaciones de invitación para realizar evaluaciones y alertas para evaluadores con pruebas pendientes de revisión.
+        *   _Recordatorios y Vencimientos:_ Avisos automáticos previos al cierre de un proceso o evaluación.
+        *   _Publicación de Resultados:_ Notificación al evaluado cuando sus resultados han sido liberados y están disponibles en la plataforma.
+    *   **Campos Editables:** Para cada escenario, se permitirá la personalización del remitente (nombre y correo autorizado), asunto, y descripción del mensaje, utilizando variables dinámicas (ej. `[Nombre_Usuario]`, `[Link_Evaluación]`).
+
+### **3.11 Módulo de Asistente Virtual Inteligente (Copiloto Global)**
+
+Para democratizar y facilitar la adopción tecnológica, el sistema contará con una IA conversacional integrada de forma transversal en toda la plataforma.
+
+*   **RF-IA-039: Asistente Omnipresente (Voz y Texto):** Un widget o interfaz siempre accesible a lo largo del sistema donde el usuario puede comunicarse con la IA escribiendo o hablando. Esta IA está entrenada con toda la base de conocimiento, directrices y la lógica estandarizada del sistema.
+    
+*   **RF-IA-040: Creación y Configuración Guiada (Wizard Conversacional):** Ante una petición del usuario (ej. "Necesito crear un proceso de evaluación para Dev Junior" o "Ayúdame a crear un assessment de liderazgo"), la IA interactuará realizando las preguntas dinámicas necesarias para recolectar la información. Con esa información, la IA automatizará o asistirá en la creación de entidades complejas tales como:
+    *   Procesos de selección y evaluación de desempeño.
+    *   Cargos, perfiles funcionales, y competencias recomendadas.
+    *   Usuarios, departamentos y estructuras organizacionales.
+    *   Evaluaciones (assessments) generando bancos de preguntas relevantes a la competencia.
+    
+*   **RF-IA-041: Soporte Operativo y "How-To":** El asistente actuará como soporte in-app, resolviendo dudas sobre el uso de cualquier herramienta del módulo o recomendando mejores prácticas para la gestión del talento basadas en la parametrización de cada cuenta.
 
 **4\. LÓGICA DE NEGOCIO CRÍTICA: RELACIÓN EVALUACIÓN-COMPETENCIA-CARGO Y EL ANÁLISIS DE BRECHAS**
 ------------------------------------------------------------------------------------------------
