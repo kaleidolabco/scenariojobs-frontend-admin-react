@@ -24,6 +24,11 @@ import UsersPage from "./pages/Admin/UsersPage";
 import StaffDirectoryPage from "./pages/Admin/StaffDirectoryPage";
 import AssessmentsPage from "./pages/RRHH/AssessmentPage";
 import AssessmentBuilderPage from "./pages/RRHH/AssessmentBuilderPage";
+import DesempenoPage from "./pages/RRHH/DesempenoPage";
+import EvaluationEditorPage from "./pages/RRHH/EvaluationEditorPage";
+import EvaluadoPage from "./pages/Colaborador/EvaluadoPage";
+import EvaluadoEvaluacionPage from "./pages/Colaborador/EvaluadoEvaluacionPage";
+
 import { ROUTES } from "./constants/routes";
 
 function App() {
@@ -70,6 +75,10 @@ function App() {
           <Route path={ROUTES.ASSESSMENT_CREATE} element={<PageAnimation key={location.pathname}><AssessmentBuilderPage /></PageAnimation>} />
           <Route path="/evaluaciones/:id/editar" element={<PageAnimation key={location.pathname}><UnderConstruction title="Editar Evaluación" /></PageAnimation>} />
 
+          {/* Módulo Desempeño (Objetivos) */}
+          <Route path={ROUTES.PERFORMANCE} element={<PageAnimation key={location.pathname}><DesempenoPage /></PageAnimation>} />
+          <Route path={ROUTES.EVALUATION_EDITOR(":evaluacionId")} element={<PageAnimation key={location.pathname}><EvaluationEditorPage/></PageAnimation>} />
+
           <Route path={ROUTES.PROCESSES} element={<PageAnimation key={location.pathname}><UnderConstruction title="Procesos de Evaluación" /></PageAnimation>} />
           <Route path={ROUTES.PROCESS_CREATE} element={<PageAnimation key={location.pathname}><UnderConstruction title="Crear Proceso" /></PageAnimation>} />
           <Route path="/procesos/:id/editar" element={<PageAnimation key={location.pathname}><UnderConstruction title="Editar Proceso" /></PageAnimation>} />
@@ -86,7 +95,10 @@ function App() {
           <Route path="/objetivos-equipo/:id/validar" element={<PageAnimation key={location.pathname}><UnderConstruction title="Validar Objetivos" /></PageAnimation>} />
 
           {/* Módulo Empleado */}
-          <Route path={ROUTES.MY_ASSESSMENTS} element={<PageAnimation key={location.pathname}><UnderConstruction title="Mis Evaluaciones" /></PageAnimation>} />
+          <Route path={ROUTES.MY_ASSESSMENTS} element={<PageAnimation key={location.pathname}><EvaluadoPage /></PageAnimation>} />
+          <Route path="/mi-desempeno/:evaluacionId" element={<PageAnimation key={location.pathname}><EvaluadoEvaluacionPage /></PageAnimation>} />
+
+          {/* <Route path={ROUTES.MY_ASSESSMENTS} element={<PageAnimation key={location.pathname}><UnderConstruction title="Mis Evaluaciones" /></PageAnimation>} /> */}
           <Route path="/mis-evaluaciones/:id/realizar" element={<PageAnimation key={location.pathname}><UnderConstruction title="Realizar Evaluación" /></PageAnimation>} />
           <Route path={ROUTES.MY_OBJECTIVES} element={<PageAnimation key={location.pathname}><UnderConstruction title="Mis Objetivos" /></PageAnimation>} />
           <Route path="/mis-objetivos/:id" element={<PageAnimation key={location.pathname}><UnderConstruction title="Detalle de Objetivo" /></PageAnimation>} />

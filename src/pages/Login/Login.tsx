@@ -1,6 +1,9 @@
 import React, { useEffect, useState, ChangeEvent, FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 
+// Assets
+import logo from "../../assets/logos/scenario-logo-color.png";
+
 // Stores
 import useAuthStore from "../../store/authStore";
 import useUIStore from "../../store/uiStore";
@@ -59,6 +62,9 @@ const Login: React.FC = () => {
     <div className="h-full flex items-center justify-center">
       <div className="card w-full max-w-sm shadow-lg bg-base-100">
         <form onSubmit={handleSubmit} className="card-body">
+          <div className="flex justify-center mb-6">
+            <img src={logo} alt="Scenario Logo" className="h-16" />
+          </div>
           <h1 className="text-3xl font-bold text-center mb-4 text-primary">Comencemos</h1>
 
           <div className="form-control">

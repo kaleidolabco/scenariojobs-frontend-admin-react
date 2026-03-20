@@ -52,6 +52,9 @@ export const ROUTES = {
     ANALYTICS_DASHBOARD: '/analisis',
     GAP_ANALYSIS: '/analisis/brechas',
     OBJECTIVES_REPORT: '/analisis/objetivos',
+    // Performance Evaluation (Objectives)
+    PERFORMANCE: '/desempeno',
+    EVALUATION_EDITOR: (id: string) => `/desempeno/${id}`,
 };
 
 export const ROUTE_LABELS: Record<string, string> = {
@@ -75,4 +78,5 @@ export const ROUTE_LABELS: Record<string, string> = {
     [ROUTES.ANALYTICS_DASHBOARD]: 'Analítica',
     [ROUTES.GAP_ANALYSIS]: 'Brechas',
     [ROUTES.OBJECTIVES_REPORT]: 'Reporte Objetivos',
+    [ROUTES.PERFORMANCE]: 'Desempeño',
 };
