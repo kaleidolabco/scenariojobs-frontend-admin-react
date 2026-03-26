@@ -55,6 +55,10 @@ export const ROUTES = {
     // Performance Evaluation (Objectives)
     PERFORMANCE: '/desempeno',
     EVALUATION_EDITOR: (id: string) => `/desempeno/${id}`,
+
+    // Competency Evaluation (Competencies)
+    COMPETENCIES_EVAL: '/evaluaciones-competencias',
+    COMPETENCY_EVAL_DETAIL: (id: string) => `/evaluaciones-competencias/${id}`,
 };
 
 export const ROUTE_LABELS: Record<string, string> = {
@@ -79,4 +83,5 @@ export const ROUTE_LABELS: Record<string, string> = {
     [ROUTES.GAP_ANALYSIS]: 'Brechas',
     [ROUTES.OBJECTIVES_REPORT]: 'Reporte Objetivos',
     [ROUTES.PERFORMANCE]: 'Desempeño',
+    [ROUTES.COMPETENCIES_EVAL]: 'Evaluación de Competencias',
 };

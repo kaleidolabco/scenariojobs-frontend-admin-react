@@ -61,6 +61,27 @@ let _db: Category[] = [
         slug: 'CONOCIMIENTO_ESPECIFICO',
         color: 'info',
     },
+    {
+        id: 'cat-5',
+        nombre: 'Competencias Organizacionales',
+        descripcion: 'Factor de Competencias Organizacionales (20%) - Orientación al Servicio, Resultados, Trabajo en Equipo, Comunicación y Proactividad.',
+        slug: 'COMPETENCIA_ORGANIZACIONAL',
+        color: 'warning',
+    },
+    {
+        id: 'cat-6',
+        nombre: 'Entorno Laboral',
+        descripcion: 'Factor de Entorno Laboral (20%) - Compromiso, Relaciones Interpersonales, Disciplina, Organización y Responsabilidad.',
+        slug: 'COMPETENCIA_ENTORNO_LABORAL',
+        color: 'error',
+    },
+    {
+        id: 'cat-7',
+        nombre: 'Productividad',
+        descripcion: 'Factor de Productividad (60%) - Oportunidad, Efectividad y Calidad en la ejecución de funciones.',
+        slug: 'COMPETENCIA_PRODUCTIVIDAD',
+        color: 'success',
+    },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

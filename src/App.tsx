@@ -28,6 +28,9 @@ import DesempenoPage from "./pages/RRHH/DesempenoPage";
 import EvaluationEditorPage from "./pages/RRHH/EvaluationEditorPage";
 import EvaluadoPage from "./pages/Colaborador/EvaluadoPage";
 import EvaluadoEvaluacionPage from "./pages/Colaborador/EvaluadoEvaluacionPage";
+import EvaluationCompetencyPage from "./pages/RRHH/EvaluationCompetencyPage";
+import CompetencyEvalDetailPage from "./pages/RRHH/CompetencyEvalDetailPage";
+import CalificationListPage from "./pages/Evaluador/CalificationListPage";
 
 import { ROUTES } from "./constants/routes";
 
@@ -71,9 +74,11 @@ function App() {
           <Route path={ROUTES.STAFF_DIRECTORY} element={<PageAnimation key={location.pathname}><StaffDirectoryPage /></PageAnimation>} />
 
           {/* Módulo HR (Evaluaciones) */}
+          <Route path={ROUTES.COMPETENCIES_EVAL} element={<PageAnimation key={location.pathname}><EvaluationCompetencyPage /></PageAnimation>} />
+          <Route path={ROUTES.COMPETENCY_EVAL_DETAIL(":id")} element={<PageAnimation key={location.pathname}><CompetencyEvalDetailPage /></PageAnimation>} />
           <Route path={ROUTES.ASSESSMENTS} element={<PageAnimation key={location.pathname}><AssessmentsPage /></PageAnimation>} />
           <Route path={ROUTES.ASSESSMENT_CREATE} element={<PageAnimation key={location.pathname}><AssessmentBuilderPage /></PageAnimation>} />
-          <Route path="/evaluaciones/:id/editar" element={<PageAnimation key={location.pathname}><UnderConstruction title="Editar Evaluación" /></PageAnimation>} />
+          <Route path={ROUTES.ASSESSMENT_EDIT(":id")} element={<PageAnimation key={location.pathname}><UnderConstruction title="Editar Evaluación" /></PageAnimation>} />
 
           {/* Módulo Desempeño (Objetivos) */}
           <Route path={ROUTES.PERFORMANCE} element={<PageAnimation key={location.pathname}><DesempenoPage /></PageAnimation>} />
@@ -88,7 +93,7 @@ function App() {
           <Route path={ROUTES.OBJECTIVES_REPORT} element={<PageAnimation key={location.pathname}><UnderConstruction title="Reporte de Objetivos" /></PageAnimation>} />
 
           {/* Módulo Evaluador */}
-          <Route path={ROUTES.GRADING_PENDING} element={<PageAnimation key={location.pathname}><UnderConstruction title="Calificaciones Pendientes" /></PageAnimation>} />
+          <Route path={ROUTES.GRADING_PENDING} element={<PageAnimation key={location.pathname}><CalificationListPage /></PageAnimation>} />
           <Route path="/calificacion/:id" element={<PageAnimation key={location.pathname}><UnderConstruction title="Calificar Evaluación" /></PageAnimation>} />
           <Route path={ROUTES.MY_TEAM} element={<PageAnimation key={location.pathname}><UnderConstruction title="Mi Equipo" /></PageAnimation>} />
           <Route path="/mi-equipo/:userId/objetivos" element={<PageAnimation key={location.pathname}><UnderConstruction title="Objetivos del Colaborador" /></PageAnimation>} />
