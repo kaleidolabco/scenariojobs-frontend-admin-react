@@ -90,6 +90,8 @@ export interface Objective extends ObjectiveBase {
     autocalificacion_evaluado?:  number;
     /** true cuando el evaluado envió su autoevaluación de este objetivo */
     autoevaluacion_enviada?:     boolean;
+    /** Valor numérico de 1-5 basado en el porcentaje de logro (< 70%=1, 70-99%=2, 100%=3, 101-109%=4, >109%=5) */
+    valor_logro_numerico?:   1 | 2 | 3 | 4 | 5;
 }
 
 export interface ObjectiveTemplate extends ObjectiveBase {
@@ -120,6 +122,8 @@ export interface EmployeeEvaluation {
     estado:                EmployeeEvaluationStatus;
     objetivos:             Objective[];
     puntaje_final?:        number;
+    /** Puntaje final numérico ponderado (calculado con valores_logro_numerico de cada objetivo) */
+    puntaje_final_numerico?: number;
     fecha_creacion:        string;
     fecha_completado?:     string;
     comentarios_generales?:          string;
@@ -164,6 +168,46 @@ export const calcPuntajeFinal = (objetivos: Objective[]): number | undefined => 
     const suma      = conLogro.reduce((acc, o) => acc + (o.calificacion_logro! * o.peso) / 100, 0);
     const pesoTotal = conLogro.reduce((acc, o) => acc + o.peso, 0);
     return pesoTotal > 0 ? (suma * 100) / pesoTotal : 0;
+};
+
+/** Calcula el valor numérico (1-5) basado en el porcentaje de logro */
+export const calcValorLogroNumerico = (porcentajeLogro: number | undefined): 1 | 2 | 3 | 4 | 5 | undefined => {
+    if (porcentajeLogro === undefined || porcentajeLogro === null) return undefined;
+    if (porcentajeLogro < 70) return 1;
+    if (porcentajeLogro < 100) return 2;
+    if (porcentajeLogro === 100) return 3;
+    if (porcentajeLogro < 110) return 4;
+    return 5;
+};
+
+/** Calcula el puntaje final numérico ponderado basado en los valores de logro numéricos */
+/* export const calcPuntajeFinalNumerico = (objetivos: Objective[]): number | undefined => {
+    const conValor = objetivos.filter(o => o.valor_logro_numerico !== undefined);
+    if (conValor.length === 0) return undefined;
+    const suma      = conValor.reduce((acc, o) => acc + (o.valor_logro_numerico! * o.peso) / 100, 0);
+    const pesoTotal = conValor.reduce((acc, o) => acc + o.peso, 0);
+    console.log("Puntaje Raw:", suma);
+    return pesoTotal > 0 ? suma : undefined;
+}; */
+export const calcPuntajeFinalNumerico = (objetivos: Objective[]): number | undefined => {
+    // 1. Filtramos objetivos que tengan un valor numérico asignado
+    const conValor = objetivos.filter(o => o.valor_logro_numerico !== undefined);
+    
+    if (conValor.length === 0) return undefined;
+
+    // 2. Calculamos la suma ponderada (Nota * Peso)
+    // Nota: Eliminamos el espacio en 'sumaPonderada'
+    const sumaPonderada = conValor.reduce((acc, o) => {
+        return acc + (o.valor_logro_numerico! * o.peso);
+    }, 0);
+
+    // 3. Obtenemos la suma de los pesos de los objetivos procesados
+    const pesoTotal = conValor.reduce((acc, o) => acc + o.peso, 0);
+
+    // 4. Dividimos la suma ponderada por el peso total para normalizar el puntaje
+    const puntajeNumerico = pesoTotal > 0 ? (sumaPonderada / pesoTotal) : 0;
+    console.log("Puntaje Raw:", puntajeNumerico);
+    return puntajeNumerico;
 };
 
 export const NOTA_LABELS: Record<number, string> = {
@@ -249,6 +293,7 @@ let _evaluations: EmployeeEvaluation[] = [
                 meta: 90,
                 resultado: 85,
                 calificacion_logro: 94.4,
+                valor_logro_numerico: 2,
                 nota: 4,
                 comentarios_evaluador: 'Buen desempeño general, algunos sprints afectados por dependencias externas.',
                 evidencias_evaluador: [
@@ -284,6 +329,7 @@ let _evaluations: EmployeeEvaluation[] = [
                 meta: 5,
                 resultado: 3,
                 calificacion_logro: 166.7,
+                valor_logro_numerico: 5,
                 nota: 5,
                 comentarios_evaluador: 'Excelente. Superó la meta significativamente.',
                 evidencias_evaluador: [],
@@ -321,6 +367,7 @@ let _evaluations: EmployeeEvaluation[] = [
             },
         ],
         puntaje_final: undefined,
+        puntaje_final_numerico: undefined,
     },
     {
         id: 'eval-2',
@@ -590,8 +637,22 @@ export const usePerformanceService = () => {
 
     const saveEvaluation = async (evaluation: EmployeeEvaluation): Promise<FetchResponse | null> => {
         try {
-            const puntaje = calcPuntajeFinal(evaluation.objetivos);
-            const updated: EmployeeEvaluation = { ...evaluation, puntaje_final: puntaje };
+            // Calcular valores numéricos para cada objetivo basados en su porcentaje de logro
+            const objetivosConValor = evaluation.objetivos.map(obj => ({
+                ...obj,
+                valor_logro_numerico: calcValorLogroNumerico(obj.calificacion_logro),
+            }));
+            
+            const puntaje = calcPuntajeFinal(objetivosConValor);
+            const puntajeNumerico = calcPuntajeFinalNumerico(objetivosConValor);
+            
+            const updated: EmployeeEvaluation = { 
+                ...evaluation, 
+                objetivos: objetivosConValor,
+                puntaje_final: puntaje,
+                puntaje_final_numerico: puntajeNumerico,
+            };
+            
             _evaluations = _evaluations.map(e => (e.id === updated.id ? updated : e));
             return (await fetchData({
                 url: `/api/performance/evaluations/${evaluation.id}`,
@@ -611,11 +672,20 @@ export const usePerformanceService = () => {
             if (!found) throw new Error('Evaluación no encontrada');
             const pesoTotal = found.objetivos.reduce((s, o) => s + o.peso, 0);
             if (pesoTotal !== 100) throw new Error(`El peso total de los objetivos es ${pesoTotal}%. Debe ser exactamente 100%.`);
+            
+            // Calcular valores numéricos para cada objetivo
+            const objetivosConValor = found.objetivos.map(obj => ({
+                ...obj,
+                valor_logro_numerico: calcValorLogroNumerico(obj.calificacion_logro),
+            }));
+            
             const updated: EmployeeEvaluation = {
                 ...found,
                 estado:           'COMPLETADA',
                 fecha_completado: new Date().toISOString().split('T')[0],
-                puntaje_final:    calcPuntajeFinal(found.objetivos),
+                objetivos:        objetivosConValor,
+                puntaje_final:    calcPuntajeFinal(objetivosConValor),
+                puntaje_final_numerico: calcPuntajeFinalNumerico(objetivosConValor),
             };
             _evaluations = _evaluations.map(e => (e.id === id ? updated : e));
             _cycles = _cycles.map(c =>

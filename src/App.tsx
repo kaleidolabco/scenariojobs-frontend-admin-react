@@ -31,6 +31,9 @@ import EvaluadoEvaluacionPage from "./pages/Colaborador/EvaluadoEvaluacionPage";
 import EvaluationCompetencyPage from "./pages/RRHH/EvaluationCompetencyPage";
 import CompetencyEvalDetailPage from "./pages/RRHH/CompetencyEvalDetailPage";
 import CalificationListPage from "./pages/Evaluador/CalificationListPage";
+import CompetencyEvaluationDetailPage from "./pages/Evaluador/CompetencyEvaluationDetailPage";
+import EvaluacionesIntegralPage from "./pages/RRHH/EvaluacionesIntegralPage";
+import EvaluacionesIntegralDetailPage from "./pages/RRHH/EvaluacionesIntegralDetailPage";
 
 import { ROUTES } from "./constants/routes";
 
@@ -74,6 +77,8 @@ function App() {
           <Route path={ROUTES.STAFF_DIRECTORY} element={<PageAnimation key={location.pathname}><StaffDirectoryPage /></PageAnimation>} />
 
           {/* Módulo HR (Evaluaciones) */}
+          <Route path={ROUTES.RRHH_EVALUACIONES_INTEGRAL} element={<PageAnimation key={location.pathname}><EvaluacionesIntegralPage /></PageAnimation>} />
+          <Route path={ROUTES.RRHH_EVALUACIONES_INTEGRAL_DETAIL(":id")} element={<PageAnimation key={location.pathname}><EvaluacionesIntegralDetailPage /></PageAnimation>} />
           <Route path={ROUTES.COMPETENCIES_EVAL} element={<PageAnimation key={location.pathname}><EvaluationCompetencyPage /></PageAnimation>} />
           <Route path={ROUTES.COMPETENCY_EVAL_DETAIL(":id")} element={<PageAnimation key={location.pathname}><CompetencyEvalDetailPage /></PageAnimation>} />
           <Route path={ROUTES.ASSESSMENTS} element={<PageAnimation key={location.pathname}><AssessmentsPage /></PageAnimation>} />
@@ -94,7 +99,7 @@ function App() {
 
           {/* Módulo Evaluador */}
           <Route path={ROUTES.GRADING_PENDING} element={<PageAnimation key={location.pathname}><CalificationListPage /></PageAnimation>} />
-          <Route path="/calificacion/:id" element={<PageAnimation key={location.pathname}><UnderConstruction title="Calificar Evaluación" /></PageAnimation>} />
+          <Route path="/calificacion/:processId" element={<PageAnimation key={location.pathname}><CompetencyEvaluationDetailPage /></PageAnimation>} />
           <Route path={ROUTES.MY_TEAM} element={<PageAnimation key={location.pathname}><UnderConstruction title="Mi Equipo" /></PageAnimation>} />
           <Route path="/mi-equipo/:userId/objetivos" element={<PageAnimation key={location.pathname}><UnderConstruction title="Objetivos del Colaborador" /></PageAnimation>} />
           <Route path="/objetivos-equipo/:id/validar" element={<PageAnimation key={location.pathname}><UnderConstruction title="Validar Objetivos" /></PageAnimation>} />

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     usePerformanceService,
@@ -11,6 +11,7 @@ import {
     calcPuntajeFinal,
     logroBadgeColor,
 } from '../../services/performanceService';
+import { useIntegralEvaluationService } from '../../services/integralEvaluationService';
 import ObjectiveEditor from '../../components/Performance/ObjectiveEditor';
 import GenericModal from '../../components/Common/GenericModal';
 import LoadingIndicator from '../../components/Common/LoadingIndicator';
@@ -216,7 +217,12 @@ const ObjectiveList: React.FC<{
 const EvaluationEditorPage: React.FC = () => {
     const { evaluacionId } = useParams<{ evaluacionId: string }>();
     const navigate = useNavigate();
+    const location = useLocation();
     const { getEvaluationById, saveEvaluation, completeEvaluation, getTemplates } = usePerformanceService();
+    const { syncComponente } = useIntegralEvaluationService();
+
+    // Obtener integralId del state de navegación
+    const integralId = (location.state as any)?.integralId || null;
 
     const [evaluation, setEvaluation]       = useState<EmployeeEvaluation | null>(null);
     const [isLoading, setIsLoading]         = useState(true);
@@ -321,7 +327,25 @@ const EvaluationEditorPage: React.FC = () => {
         if (!evaluation) return;
         setIsSaving(true);
         const res = await saveEvaluation(evaluation);
-        if (res?.success) { setEvaluation(res.data.evaluacion); setIsDirty(false); }
+        if (res?.success) {
+            setEvaluation(res.data.evaluacion);
+            setIsDirty(false);
+
+            // Sincronizar con evaluación integral si está vinculada
+            if (integralId && res.data.evaluacion) {
+                const evaluacion = res.data.evaluacion;
+                const puntaje = evaluacion.puntaje_final;
+                const estadoMapeado = 
+                    evaluacion.estado === 'COMPLETADA' ? 'COMPLETADA' :
+                    evaluacion.estado === 'EN_PROGRESO' ? 'EN_PROGRESO' :
+                    'BORRADOR';
+                
+                await syncComponente(integralId, 'desempeno', {
+                    estado: estadoMapeado,
+                    puntaje: puntaje ?? undefined,
+                });
+            }
+        }
         setIsSaving(false);
     };
 
@@ -330,7 +354,26 @@ const EvaluationEditorPage: React.FC = () => {
         setIsSaving(true);
         await saveEvaluation(evaluation);
         const res = await completeEvaluation(evaluation.id);
-        if (res?.success) { setEvaluation(res.data.evaluacion); setIsDirty(false); }
+        if (res?.success) {
+            setEvaluation(res.data.evaluacion);
+            setIsDirty(false);
+
+            // Si esta evaluación está vinculada a una evaluación integral, sincronizar
+            if (integralId && res.data.evaluacion) {
+                const evaluacion = res.data.evaluacion;
+                const puntaje = evaluacion.puntaje_final;
+                // Mapear EmployeeEvaluationStatus a IntegralEvaluationStatus
+                const estadoMapeado = 
+                    evaluacion.estado === 'COMPLETADA' ? 'COMPLETADA' :
+                    evaluacion.estado === 'EN_PROGRESO' ? 'EN_PROGRESO' :
+                    'BORRADOR';
+                
+                await syncComponente(integralId, 'desempeno', {
+                    estado: estadoMapeado,
+                    puntaje: puntaje ?? undefined,
+                });
+            }
+        }
         setIsSaving(false);
         setShowCompleteModal(false);
     };

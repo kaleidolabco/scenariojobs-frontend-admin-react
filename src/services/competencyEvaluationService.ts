@@ -132,6 +132,36 @@ export const useCompetencyEvaluationService = () => {
         }
     };
 
+    // ── GET evaluation for person ─────────────────────────────────────────────
+
+    /**
+     * Search for a competency evaluation that has the given person assigned
+     * Returns the first evaluation where persona_id is in personas_a_evaluar
+     */
+    const getCompetencyEvaluationForPerson = async (personaId: string): Promise<FetchResponse | null> => {
+        try {
+            const evaluation = _db.find((e) => 
+                e.personas_a_evaluar && e.personas_a_evaluar.includes(personaId)
+            );
+
+            const response = (await fetchData({
+                url: `/api/competency-evaluations/person/${personaId}`,
+                mockData: evaluation
+                    ? successMock({ evaluacion: evaluation })
+                    : successMock({ evaluacion: null }),
+            })) as FetchResponse | null;
+
+            if (response?.success === false) {
+                throw new Error(response.message || 'Error al buscar evaluación de competencias');
+            }
+
+            return response;
+        } catch (err) {
+            openAlert(err instanceof Error ? err.message : String(err), 'error');
+            return null;
+        }
+    };
+
     // ── GET stats ─────────────────────────────────────────────────────────────
 
     const getCompetencyEvaluationStats = async (): Promise<FetchResponse | null> => {
@@ -289,6 +319,7 @@ export const useCompetencyEvaluationService = () => {
     return {
         getCompetencyEvaluations,
         getCompetencyEvaluationDetail,
+        getCompetencyEvaluationForPerson,
         getCompetencyEvaluationStats,
         createCompetencyEvaluation,
         updateCompetencyEvaluation,
