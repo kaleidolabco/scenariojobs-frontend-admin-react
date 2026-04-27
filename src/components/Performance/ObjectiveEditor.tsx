@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
     Objective,
     ObjectiveCategory,
@@ -9,12 +10,15 @@ import {
     OBJECTIVE_FREQUENCY_LABELS,
     NOTA_LABELS,
     calcLogro,
+    calcValorLogroNumerico,
     logroBadgeColor,
 } from '../../services/performanceService';
 import InputField    from '../Common/Forms/InputField';
 import TextAreaField from '../Common/Forms/TextAreaField';
 import SelectField   from '../Common/Forms/SelectField';
 import EvidenciasTab from './EvidenciasTab';
+import VideoRecorder, { RecordedVideo } from '../Common/VideoRecorder';
+import VideoAnalysis from './VideoAnalysis';
 
 // ─── Tab type ─────────────────────────────────────────────────────────────────
 
@@ -80,6 +84,9 @@ const ObjectiveEditor: React.FC<ObjectiveEditorProps> = ({
     const [activeTab, setActiveTab] = useState<EditorTab>('definicion');
     const [draft, setDraft]         = useState<Objective>(objective);
     const [logroManual, setLogroManual] = useState(false);
+    const [activeCommentTab, setActiveCommentTab] = useState<'text' | 'video'>('text');
+    const [recordedVideo, setRecordedVideo] = useState<RecordedVideo | null>(null);
+    const [isAnalyzingVideo, setIsAnalyzingVideo] = useState(false);
 
     useEffect(() => {
         setDraft(objective);
@@ -160,12 +167,12 @@ const ObjectiveEditor: React.FC<ObjectiveEditorProps> = ({
             </div>
 
             {/* Tabs */}
-            <div className="border-b border-base-200 mb-5">
-                <div className="flex gap-0">
+            <div className="border-b border-base-200 mb-5 overflow-x-auto">
+                <div className="flex gap-0 shrink-0">
                     {tabs.map(tab => (
                         <button
                             key={tab.id}
-                            className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-all duration-150 flex items-center gap-1.5 ${
+                            className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-all duration-150 flex items-center gap-1.5 shrink-0 ${
                                 activeTab === tab.id
                                     ? 'border-primary text-primary'
                                     : 'border-transparent text-base-content/50 hover:text-base-content hover:border-base-300'
@@ -230,7 +237,7 @@ const ObjectiveEditor: React.FC<ObjectiveEditorProps> = ({
                             helpText="Cómo se calcula el resultado"
                             disabled={disabled}
                         />
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <SelectField
                                 label="Tendencia" required
                                 value={draft.tendencia}
@@ -247,7 +254,7 @@ const ObjectiveEditor: React.FC<ObjectiveEditorProps> = ({
                                 disabled={disabled}
                             />
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <InputField
                                 label="Unidad de medida" required
                                 value={draft.unidad_medida}
@@ -312,16 +319,23 @@ const ObjectiveEditor: React.FC<ObjectiveEditorProps> = ({
                         <div className="rounded-xl border border-base-200 p-4 space-y-3 bg-base-50">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="font-medium text-sm">% de logro</p>
+                                    <p className="font-medium text-sm">Logro del objetivo</p>
                                     <p className="text-xs text-base-content/50">
                                         {logroManual ? 'Override manual activo' : `Auto: tendencia ${draft.tendencia?.toLowerCase()}`}
                                     </p>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     {draft.calificacion_logro !== undefined && (
-                                        <div className={`badge badge-${logroBadgeColor(draft.calificacion_logro)} text-sm font-bold px-3`}>
-                                            {draft.calificacion_logro.toFixed(1)}%
-                                        </div>
+                                        <>
+                                            <div className={`badge badge-${logroBadgeColor(draft.calificacion_logro)} text-sm font-bold px-3`}>
+                                                {draft.calificacion_logro.toFixed(1)}%
+                                            </div>
+                                            {calcValorLogroNumerico(draft.calificacion_logro) !== undefined && (
+                                                <div className={`badge badge-${logroBadgeColor(draft.calificacion_logro)} text-sm font-bold px-3`}>
+                                                    {calcValorLogroNumerico(draft.calificacion_logro)}/5
+                                                </div>
+                                            )}
+                                        </>
                                     )}
                                     {logroManual && !disabled && (
                                         <button className="btn btn-ghost btn-xs" onClick={resetLogro} title="Restablecer cálculo automático">
@@ -370,6 +384,111 @@ const ObjectiveEditor: React.FC<ObjectiveEditorProps> = ({
                             placeholder="Observaciones, contexto, logros destacados o áreas de mejora..."
                             disabled={disabled}
                         />
+
+                        {/* Comentarios en video del evaluador */}
+                        {!disabled && (
+                            <div className="rounded-xl border border-base-200 p-5 space-y-4 bg-base-50/50">
+                                <div className="flex items-start gap-3">
+                                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.893L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h4 className="text-sm font-semibold text-base-content">Comentario en video</h4>
+                                        <p className="text-xs text-base-content/60 mt-0.5">
+                                            Opcionalmente, graba un video para enriquecer tu evaluación.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* Tabs */}
+                                <div className="flex gap-1 p-1 bg-base-200 rounded-lg w-fit">
+                                    <button
+                                        type="button"
+                                        onClick={() => setActiveCommentTab('text')}
+                                        className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                                            activeCommentTab === 'text'
+                                                ? 'bg-base-100 text-base-content shadow-sm'
+                                                : 'text-base-content/60 hover:text-base-content'
+                                        }`}
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+                                        </svg>
+                                        Texto
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setActiveCommentTab('video')}
+                                        className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                                            activeCommentTab === 'video'
+                                                ? 'bg-base-100 text-base-content shadow-sm'
+                                                : 'text-base-content/60 hover:text-base-content'
+                                        }`}
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.893L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                        </svg>
+                                        Video
+                                    </button>
+                                </div>
+
+                                {/* Content */}
+                                <AnimatePresence mode="wait">
+                                    {activeCommentTab === 'text' ? (
+                                        <motion.div
+                                            key="text-info"
+                                            initial={{ opacity: 0, y: 6 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -6 }}
+                                            transition={{ duration: 0.15 }}
+                                            className="text-xs text-base-content/50"
+                                        >
+                                            Puedes agregar comentarios de texto en el campo anterior.
+                                        </motion.div>
+                                    ) : (
+                                        <motion.div
+                                            key="video"
+                                            initial={{ opacity: 0, y: 6 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -6 }}
+                                            transition={{ duration: 0.15 }}
+                                            className="space-y-4"
+                                        >
+                                            <VideoRecorder
+                                                onVideoRecorded={(video) => {
+                                                    setRecordedVideo(video);
+                                                    update({ comentarios_evaluador: `[VIDEO: ${video.duration}s]` });
+                                                }}
+                                                onAnalyzeVideo={(_video) => {
+                                                    setIsAnalyzingVideo(true);
+                                                }}
+                                                isAnalyzing={isAnalyzingVideo}
+                                            />
+                                            {recordedVideo && (
+                                                <div className="p-3 bg-success/10 border border-success/20 rounded-lg flex items-center gap-2">
+                                                    <svg className="w-4 h-4 text-success shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                    <span className="text-xs text-success font-medium">Video grabado - se incluirá con tu evaluación</span>
+                                                </div>
+                                            )}
+                                            
+                                            {/* Video Analysis Section */}
+                                            {recordedVideo && (
+                                                <div className="mt-2">
+                                                    <VideoAnalysis 
+                                                        videoBlob={recordedVideo.blob}
+                                                        videoTitle="Comentario en video" 
+                                                    />
+                                                </div>
+                                            )}
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+                        )}
 
                         {/* Autoevaluación del evaluado — visible aquí como referencia */}
                         {(draft.autoevaluacion_comentarios || draft.autocalificacion_evaluado !== undefined) && (

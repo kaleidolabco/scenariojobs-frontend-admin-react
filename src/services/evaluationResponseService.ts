@@ -1,8 +1,81 @@
 import useFetch from '../hooks/useFetch';
 import { FetchResponse, successMock } from './responseType';
 import useUIStore from '../store/uiStore';
+import { getCompetenciesScalesMap } from './competencyService';
+
+// ─── Helper function for normalized score calculation ────────────────────
+
+/**
+ * Calculate normalized score (0-100) based on actual competency scales.
+ * For each competency, calculates (score / scale) * 100, then averages all.
+ * Scales are retrieved dynamically from competencyService to always use current data.
+ */
+export const calculateNormalizedScore = (
+    competenciasEvaluadas: Record<string, number>
+): number | undefined => {
+    const competencyIds = Object.keys(competenciasEvaluadas);
+    if (competencyIds.length === 0) return undefined;
+
+    // Get fresh scales from master data (no hook dependencies)
+    const scalesMap = getCompetenciesScalesMap();
+
+    let totalNormalized = 0;
+    let countValid = 0;
+
+    for (const competencyId of competencyIds) {
+        const score = competenciasEvaluadas[competencyId];
+        const scale = scalesMap[competencyId] || 5; // Default to 5 if competency not found
+
+        if (score !== undefined && score !== null && !isNaN(score)) {
+            // Normalize: (score / scale) * 100
+            const normalized = (score / scale) * 100;
+            totalNormalized += normalized;
+            countValid++;
+        }
+    }
+
+    if (countValid === 0) return undefined;
+
+    // Return average of all normalized scores (0-100)
+    return totalNormalized / countValid;
+};
+
+/**
+ * Calculate average score directly (without percentage conversion).
+ * Returns the arithmetic mean of all competency scores.
+ * E.g., if evaluating competencies on scale 1-4 with scores [3, 4, 3.5],
+ * returns 3.5 (not the normalized percentage).
+ */
+export const calculateAverageScore = (
+    competenciasEvaluadas: Record<string, number>
+): number | undefined => {
+    const scores = Object.values(competenciasEvaluadas).filter(
+        (score) => score !== undefined && score !== null && !isNaN(score)
+    );
+
+    if (scores.length === 0) return undefined;
+
+    const sum = scores.reduce((a, b) => a + b, 0);
+    return sum / scores.length;
+};
+
+/**
+ * Detect the maximum scale used from the competencies evaluated.
+ * Returns the maximum scale value (e.g., 4 for 1-4 scale, 5 for 1-5 scale).
+ */
+export const detectMaxScale = (
+    competenciasEvaluadas: Record<string, number>
+): number => {
+    const scalesMap = getCompetenciesScalesMap();
+    const scales = Object.keys(competenciasEvaluadas)
+        .map(competencyId => scalesMap[competencyId] || 5)
+        .filter(scale => scale > 0);
+    
+    return scales.length > 0 ? Math.max(...scales) : 5;
+};
 
 // ─── Types ────────────────────────────────────────────────────────────────────
+
 
 export interface CompetencyScore {
     [competencyId: string]: number;
@@ -29,6 +102,9 @@ export interface EvaluationResponse {
     fecha_creacion: string;
     fecha_actualizacion: string;
     completado_en?: string; // ISO timestamp when evaluation was finalized
+    puntaje_normalizado?: number; // Normalized score (0-100) for display as percentage
+    puntaje_numerico?: number; // Average score (e.g., 3.5 for 1-4 scale) for integral calculations
+    escala_maxima?: number; // Maximum scale used (e.g., 4 for 1-4 scale, 5 for 1-5 scale)
 }
 
 export interface EvaluationResponseQueryParams {
@@ -197,12 +273,20 @@ export const useEvaluationResponseService = () => {
             let saved: EvaluationResponseDB;
             const now = new Date().toISOString();
 
+            // Calculate both normalized score (0-100%) and average score for integral
+            const puntaje_normalizado = calculateNormalizedScore(data.competencias_evaluadas);
+            const puntaje_numerico = calculateAverageScore(data.competencias_evaluadas);
+            const escala_maxima = detectMaxScale(data.competencias_evaluadas);
+
             if (existing) {
                 // UPDATE
                 saved = {
                     ...existing,
                     ...data,
                     fecha_actualizacion: now,
+                    puntaje_normalizado, // Normalized percentage for display
+                    puntaje_numerico,    // Average score for integral calculations
+                    escala_maxima,       // Maximum scale used
                     completado_en: data.estado === 'COMPLETADO' ? now : existing.completado_en,
                 };
                 //console.log('Updating existing response:', saved);
@@ -214,6 +298,9 @@ export const useEvaluationResponseService = () => {
                     id: `evr-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
                     fecha_creacion: now,
                     fecha_actualizacion: now,
+                    puntaje_normalizado, // Normalized percentage for display
+                    puntaje_numerico,    // Average score for integral calculations
+                    escala_maxima,       // Maximum scale used
                     completado_en: data.estado === 'COMPLETADO' ? now : undefined,
                 };
                 //console.log('Creating new response:', saved);

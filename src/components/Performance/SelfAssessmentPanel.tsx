@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
     Objective,
     EvidenciaItem,
@@ -8,6 +9,8 @@ import {
     logroBadgeColor,
 } from '../../services/performanceService';
 import EvidenciasTab from './EvidenciasTab';
+import VideoRecorder, { RecordedVideo } from '../Common/VideoRecorder';
+import VideoAnalysis from './VideoAnalysis';
 
 // ─── Tipo extendido para objetivos del evaluado ───────────────────────────────
 
@@ -52,6 +55,9 @@ const SelfAssessmentPanel: React.FC<SelfAssessmentPanelProps> = ({
 }) => {
     const [tab, setTab]     = useState<Tab>('autoevaluacion');
     const [draft, setDraft] = useState<ObjectiveWithSelf>(objective);
+    const [activeCommentTab, setActiveCommentTab] = useState<'text' | 'video'>('text');
+    const [recordedVideo, setRecordedVideo] = useState<RecordedVideo | null>(null);
+    const [isAnalyzingVideo, setIsAnalyzingVideo] = useState(false);
 
     useEffect(() => {
         setDraft({
@@ -59,6 +65,7 @@ const SelfAssessmentPanel: React.FC<SelfAssessmentPanelProps> = ({
             evidencias_evaluado: objective.evidencias_evaluado ?? [],
         });
         setTab('autoevaluacion');
+        setRecordedVideo(null);
     }, [objective.id]);
 
     const update = (fields: Partial<ObjectiveWithSelf>) => {
@@ -150,7 +157,7 @@ const SelfAssessmentPanel: React.FC<SelfAssessmentPanelProps> = ({
                         <div className="rounded-xl bg-base-200/50 border border-base-200 p-4 space-y-4">
                             <ROField label="Nombre" value={objective.nombre} />
                             <ROField label="Descripción" value={objective.descripcion} />
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <ROField label="Categoría"  value={OBJECTIVE_CATEGORY_LABELS[objective.categoria]} />
                                 <ROField label="Frecuencia" value={OBJECTIVE_FREQUENCY_LABELS[objective.frecuencia]} />
                             </div>
@@ -169,14 +176,14 @@ const SelfAssessmentPanel: React.FC<SelfAssessmentPanelProps> = ({
                     <div className="rounded-xl bg-base-200/50 border border-base-200 p-4 space-y-4">
                         <ROField label="Indicador" value={objective.indicador} />
                         <ROField label="Fórmula de cálculo" value={objective.formula} mono />
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <ROField
                                 label="Tendencia"
                                 value={objective.tendencia === 'POSITIVA' ? '↑ Positiva (más es mejor)' : '↓ Negativa (menos es mejor)'}
                             />
                             <ROField label="Unidad" value={objective.unidad_medida} />
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-1">
                                 <p className="text-xs font-semibold uppercase tracking-wider text-base-content/40">Meta</p>
                                 <p className="text-2xl font-bold">
@@ -240,23 +247,132 @@ const SelfAssessmentPanel: React.FC<SelfAssessmentPanelProps> = ({
                             )}
                         </div>
 
-                        {/* Comentarios */}
-                        <div className="space-y-2">
-                            <label className="label-text font-medium block">
-                                Mi autoevaluación
-                                <span className="text-xs text-base-content/40 font-normal ml-1">(requerida)</span>
-                            </label>
-                            <textarea
-                                className="textarea textarea-bordered w-full text-sm leading-relaxed resize-none"
-                                rows={5}
-                                placeholder="Describe cómo trabajaste este objetivo, qué lograste, qué aprendiste y qué mejorarías..."
-                                value={draft.autoevaluacion_comentarios ?? ''}
-                                onChange={e => update({ autoevaluacion_comentarios: e.target.value })}
-                                disabled={disabled}
-                            />
-                            <p className="text-xs text-base-content/40">
-                                Sé específico: menciona acciones concretas, situaciones y resultados medibles.
-                            </p>
+                        {/* Comentarios en texto o video */}
+                        <div className="space-y-3">
+                            <div className="flex items-start gap-2">
+                                <label className="label-text font-medium block flex-1">
+                                    Mi autoevaluación
+                                    <span className="text-xs text-base-content/40 font-normal ml-1">(requerida)</span>
+                                </label>
+                            </div>
+
+                            {/* Tabs de Texto/Video */}
+                            {!disabled && (
+                                <div className="flex gap-1 p-1 bg-base-200 rounded-lg w-fit">
+                                    <button
+                                        type="button"
+                                        onClick={() => setActiveCommentTab('text')}
+                                        className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                                            activeCommentTab === 'text'
+                                                ? 'bg-base-100 text-base-content shadow-sm'
+                                                : 'text-base-content/60 hover:text-base-content'
+                                        }`}
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+                                        </svg>
+                                        Texto
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setActiveCommentTab('video')}
+                                        className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                                            activeCommentTab === 'video'
+                                                ? 'bg-base-100 text-base-content shadow-sm'
+                                                : 'text-base-content/60 hover:text-base-content'
+                                        }`}
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.893L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                        </svg>
+                                        Video
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* Contenido de tabs */}
+                            <AnimatePresence mode="wait">
+                                {activeCommentTab === 'text' ? (
+                                    <motion.div
+                                        key="text-comment"
+                                        initial={{ opacity: 0, y: 6 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -6 }}
+                                        transition={{ duration: 0.15 }}
+                                        className="space-y-2"
+                                    >
+                                        <textarea
+                                            className="textarea textarea-bordered w-full text-sm leading-relaxed resize-none"
+                                            rows={5}
+                                            placeholder="Describe cómo trabajaste este objetivo, qué lograste, qué aprendiste y qué mejorarías..."
+                                            value={draft.autoevaluacion_comentarios ?? ''}
+                                            onChange={e => update({ autoevaluacion_comentarios: e.target.value })}
+                                            disabled={disabled}
+                                        />
+                                        <p className="text-xs text-base-content/40">
+                                            Sé específico: menciona acciones concretas, situaciones y resultados medibles.
+                                        </p>
+                                    </motion.div>
+                                ) : (
+                                    <motion.div
+                                        key="video-comment"
+                                        initial={{ opacity: 0, y: 6 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -6 }}
+                                        transition={{ duration: 0.15 }}
+                                        className="space-y-4 rounded-xl border border-base-200 p-4 bg-base-50/50"
+                                    >
+                                        <div className="flex items-start gap-3">
+                                            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.893L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                                </svg>
+                                            </div>
+                                            <div className="flex-1">
+                                                <h4 className="text-sm font-semibold text-base-content">Graba tu autoevaluación en video</h4>
+                                                <p className="text-xs text-base-content/60 mt-0.5">
+                                                    Opcionalmente, puedes grabar un video para comunicar tu autoevaluación de forma más natural.
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <VideoRecorder
+                                            onVideoRecorded={(video) => {
+                                                setRecordedVideo(video);
+                                            }}
+                                            onAnalyzeVideo={(_video) => {
+                                                setIsAnalyzingVideo(true);
+                                            }}
+                                            isAnalyzing={isAnalyzingVideo}
+                                        />
+
+                                        {recordedVideo && (
+                                            <div className="p-3 bg-success/10 border border-success/20 rounded-lg flex items-center gap-2">
+                                                <svg className="w-4 h-4 text-success shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                </svg>
+                                                <span className="text-xs text-success font-medium">
+                                                    Video grabado ({recordedVideo.duration}s) - se incluirá con tu autoevaluación
+                                                </span>
+                                            </div>
+                                        )}
+
+                                        {/* Video Analysis Section */}
+                                        {recordedVideo && (
+                                            <div className="mt-2">
+                                                <VideoAnalysis 
+                                                    videoBlob={recordedVideo.blob}
+                                                    videoTitle="Tu autoevaluación en video" 
+                                                />
+                                            </div>
+                                        )}
+
+                                        <p className="text-xs text-base-content/40">
+                                            💡 Tip: Complementa el video con comentarios de texto en la pestaña "Texto" para proporcionar contexto adicional.
+                                        </p>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </div>
                     </div>
                 )}

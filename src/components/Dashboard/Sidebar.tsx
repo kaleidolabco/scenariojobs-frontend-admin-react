@@ -42,6 +42,12 @@ const SIDEBAR_CONFIG: MenuItem[] = [
         allowedRoles: [UserRole.ADMIN],
         icon: <Icon path="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
     },
+    {
+        label: 'Correos',
+        to: ROUTES.EMAIL_CONFIG,
+        allowedRoles: [UserRole.ADMIN],
+        icon: <Icon path="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
+    },
 
     // --- ORG STRUCTURE MODULE (New) ---
     { label: 'Estructura Org.', divider: true, allowedRoles: [UserRole.ADMIN] },
@@ -74,7 +80,7 @@ const SIDEBAR_CONFIG: MenuItem[] = [
     },
 
     // --- HR MODULE ---
-    { label: 'Módoulos', divider: true, allowedRoles: [UserRole.HR_MANAGER] },
+    { label: 'Módulos', divider: true, allowedRoles: [UserRole.HR_MANAGER] },
     {
         label: 'Selección',
         to: "https://dev.admin.scenariojobs.scenariovr.co/",

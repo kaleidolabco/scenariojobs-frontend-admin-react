@@ -18,8 +18,13 @@ export interface IntegralComponente {
     evaluacion_id: string;
     peso:    number;
     puntaje?: number;
-    /** Valor numérico 1-5 basado en el puntaje porcentual (<70%=1, 70-99%=2, 100%=3, 101-109%=4, >109%=5) */
-    puntaje_numerico?: 1 | 2 | 3 | 4 | 5;
+    /** 
+     * Valor numérico:
+     * - Para DESEMPEÑO: 1-5 basado en el puntaje porcentual (<70%=1, 70-99%=2, 100%=3, 101-109%=4, >109%=5)
+     * - Para COMPETENCIAS: promedio directo (e.g., 3.5 para competencias con escala 1-4)
+     */
+    puntaje_numerico?: number;
+    escala_maxima?: number; // Escala máxima (e.g., 4 para competencias 1-4, 5 para 1-5)
     estado:  IntegralEvaluationStatus;
 }
 
@@ -76,14 +81,23 @@ export interface CreateIntegralInput {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Convierte un puntaje porcentual a valor numérico 1-5 */
-export const calcValorNumerico = (puntaje: number | undefined): 1 | 2 | 3 | 4 | 5 | undefined => {
-    if (puntaje === undefined) return undefined;
-    if (puntaje < 70) return 1;
-    if (puntaje < 100) return 2;
-    if (puntaje === 100) return 3;
-    if (puntaje <= 109) return 4;
-    return 5;
+// calcValorLogroNumerico is imported from '../utils/evaluationHelpers' — shared with performanceService.
+
+/**
+ * Normaliza el puntaje numérico de competencias a escala 1-5.
+ * Si la evaluación de competencias usa escala 1-4, convierte el promedio a 1-5.
+ * Fórmula: (puntaje - 1) / (escala_maxima - 1) * 4 + 1
+ * Ejemplos:
+ * - Escala 1-5, puntaje 3.5 → 3.5
+ * - Escala 1-4, puntaje 3.5 → ((3.5 - 1) / 3 * 4 + 1) = 4.33
+ */
+export const normalizeToScale5 = (score: number | undefined, maxScale: number | undefined): number | undefined => {
+    if (score === undefined || maxScale === undefined) return score;
+    if (maxScale === 5) return score; // Ya está en escala 1-5
+    if (maxScale <= 1) return score; // Valor inválido
+    
+    // Normalizar a escala 1-5
+    return ((score - 1) / (maxScale - 1)) * 4 + 1;
 };
 
 export const calcPuntajeIntegral = (
@@ -99,6 +113,43 @@ export const calcPuntajeIntegral = (
     return (suma * 100) / pesoTotalActivo;
 };
 
+/**
+ * Calcula el puntaje integral en escala numérica (1-5).
+ * Promedio ponderado de los puntajes numéricos de los componentes.
+ * Normaliza el puntaje de competencias si es necesario (solo para el cálculo, no modifica el valor original).
+ */
+export const calcPuntajeIntegralNumerico = (
+    componente_desempeno?:    IntegralComponente,
+    componente_competencias?: IntegralComponente,
+    escalaMaximaCompetencias?: number,
+): number | undefined => {
+    const activos: { puntajeParaCalculo: number; peso: number }[] = [];
+    
+    if (componente_desempeno && componente_desempeno.puntaje_numerico !== undefined) {
+        activos.push({ puntajeParaCalculo: componente_desempeno.puntaje_numerico, peso: componente_desempeno.peso });
+    }
+    
+    if (componente_competencias && componente_competencias.puntaje_numerico !== undefined) {
+        // Normalizar puntaje de competencias si es necesario (solo para el cálculo, no modifica el original)
+        const puntajeNormalizado = normalizeToScale5(
+            componente_competencias.puntaje_numerico,
+            escalaMaximaCompetencias
+        );
+        if (puntajeNormalizado !== undefined) {
+            // Usar el valor normalizado para el cálculo, pero sin modificar el componente original
+            activos.push({ puntajeParaCalculo: puntajeNormalizado, peso: componente_competencias.peso });
+        }
+    }
+    
+    if (activos.length === 0) return undefined;
+    
+    const pesoTotalActivo = activos.reduce((s, a) => s + a.peso, 0);
+    if (pesoTotalActivo === 0) return undefined;
+    
+    const suma = activos.reduce((s, a) => s + (a.puntajeParaCalculo * a.peso) / 100, 0);
+    return suma;
+};
+
 export const deriveIntegralStatus = (
     componente_desempeno?:    IntegralComponente,
     componente_competencias?: IntegralComponente,
@@ -111,9 +162,10 @@ export const deriveIntegralStatus = (
 };
 
 export const integralBadgeColor = (score: number): string => {
-    if (score >= 100) return 'success';
-    if (score >= 80)  return 'info';
-    if (score >= 60)  return 'warning';
+    // Score is now numeric (1-5 scale)
+    if (score >= 4.5) return 'success';
+    if (score >= 3.5) return 'info';
+    if (score >= 2.5) return 'warning';
     return 'error';
 };
 
@@ -159,6 +211,62 @@ let _integrales: EvaluacionIntegral[] = [
             puntaje:       undefined,
             estado:        'BORRADOR',
         },
+    },
+    {
+        id:                   'integ-3',
+        ciclo_id:             'cyc-2',
+        ciclo_nombre:         'Semestral H2 2025',
+        persona_id:           'per_67',
+        persona_nombre:       'Carlos Eduardo Moreno López',
+        persona_departamento: 'Desarrollo Backend',
+        persona_puesto:       'Senior Developer',
+        estado:               'COMPLETADA',
+        fecha_creacion:       '2025-06-15',
+        fecha_completado:     '2025-08-20',
+        puntaje_final:        3.92,
+        componente_desempeno: {
+            evaluacion_id: 'eval-3',
+            peso:          60,
+            puntaje:       92,
+            puntaje_numerico: 4,
+            estado:        'COMPLETADA',
+        },
+        componente_competencias: {
+            evaluacion_id: 'eval_proc_003',
+            peso:          40,
+            puntaje:       80,
+            puntaje_numerico: 3.8,
+            estado:        'COMPLETADA',
+        },
+        comentarios: 'Excelente desempeño, ha superado objetivos. Liderazgo destacado en proyectos críticos.'
+    },
+    {
+        id:                   'integ-4',
+        ciclo_id:             'cyc-2',
+        ciclo_nombre:         'Semestral H2 2025',
+        persona_id:           'per_52',
+        persona_nombre:       'María del Rosario Gómez Sánchez',
+        persona_departamento: 'Recursos Humanos',
+        persona_puesto:       'Especialista RRHH',
+        estado:               'COMPLETADA',
+        fecha_creacion:       '2025-06-20',
+        fecha_completado:     '2025-08-25',
+        puntaje_final:        2.40,
+        componente_desempeno: {
+            evaluacion_id: 'eval-4',
+            peso:          60,
+            puntaje:       68,
+            puntaje_numerico: 2,
+            estado:        'COMPLETADA',
+        },
+        componente_competencias: {
+            evaluacion_id: 'eval_proc_004',
+            peso:          40,
+            puntaje:       60,
+            puntaje_numerico: 3,
+            estado:        'COMPLETADA',
+        },
+        comentarios: 'Desempeño aceptable. Se recomienda capacitación para mejorar eficiencia operativa.'
     },
 ];
 
@@ -293,7 +401,7 @@ export const useIntegralEvaluationService = () => {
     const syncComponente = async (
         integralId: string,
         tipo: 'desempeno' | 'competencias',
-        update: { estado: IntegralEvaluationStatus; puntaje?: number }
+        update: { estado: IntegralEvaluationStatus; puntaje?: number; puntaje_numerico?: number; escala_maxima?: number }
     ): Promise<FetchResponse | null> => {
         try {
             const integral = _integrales.find((i) => i.id === integralId);
@@ -303,9 +411,16 @@ export const useIntegralEvaluationService = () => {
             const current = integral[field];
             if (!current) throw new Error(`Componente ${tipo} no existe en esta evaluación.`);
 
-            // Calcular puntaje_numerico automáticamente basado en puntaje
-            const puntaje_numerico = update.puntaje !== undefined ? calcValorNumerico(update.puntaje) : current.puntaje_numerico;
-            const updatedComponent: IntegralComponente = { ...current, ...update, puntaje_numerico };
+            // Use provided puntaje_numerico if available, otherwise keep current
+            let puntaje_numerico = update.puntaje_numerico ?? current.puntaje_numerico;
+            let escala_maxima = update.escala_maxima ?? current.escala_maxima;
+
+            const updatedComponent: IntegralComponente = { 
+                ...current, 
+                ...update, 
+                puntaje_numerico: puntaje_numerico as any,
+                escala_maxima: escala_maxima as any,
+            };
             const updatedIntegral: EvaluacionIntegral = {
                 ...integral,
                 [field]: updatedComponent,
@@ -313,9 +428,10 @@ export const useIntegralEvaluationService = () => {
                     tipo === 'desempeno'    ? updatedComponent : integral.componente_desempeno,
                     tipo === 'competencias' ? updatedComponent : integral.componente_competencias,
                 ),
-                puntaje_final: calcPuntajeIntegral(
+                puntaje_final: calcPuntajeIntegralNumerico(
                     tipo === 'desempeno'    ? updatedComponent : integral.componente_desempeno,
                     tipo === 'competencias' ? updatedComponent : integral.componente_competencias,
+                    tipo === 'competencias' ? escala_maxima : undefined,
                 ),
             };
 

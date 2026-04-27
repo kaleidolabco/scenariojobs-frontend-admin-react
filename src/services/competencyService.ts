@@ -85,6 +85,19 @@ const MOCK_COMPETENCIES_DATA = [
     { id: '41', nombre: 'Normativa GDPR', descripcion: 'Reglamento General de Protección de Datos de la Unión Europea.', categoria: 'CONOCIMIENTO_ESPECIFICO', escala: 5 },
 ];
 
+/**
+ * Get a dynamic map of competency scales from the master data.
+ * This function is pure (no hooks) and returns scales for all competencies.
+ * Automatically includes any new competencies added to MOCK_COMPETENCIES_DATA.
+ */
+export const getCompetenciesScalesMap = (): Record<string, number> => {
+    const scalesMap: Record<string, number> = {};
+    MOCK_COMPETENCIES_DATA.forEach((competency) => {
+        scalesMap[competency.id] = competency.escala;
+    });
+    return scalesMap;
+};
+
 export const useCompetencyService = () => {
     const { fetchData, loading, error } = useFetch<FetchResponse>();
     const { openAlert } = useUIStore();

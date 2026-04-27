@@ -6,6 +6,7 @@ import {
     EmployeeEvaluation,
     EmployeeEvaluationStatus,
     calcPuntajeFinal,
+    calcPuntajeFinalNumerico,
     logroBadgeColor,
 } from '../../services/performanceService';
 import LoadingIndicator from '../../components/Common/LoadingIndicator';
@@ -67,9 +68,9 @@ type SelfEvalStatus = 'PENDIENTE' | 'EN_PROGRESO' | 'ENVIADA';
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const evalStatusMap: Record<EmployeeEvaluationStatus, { color: string; label: string }> = {
-    PENDIENTE:   { color: 'ghost',   label: 'Pendiente'   },
+    PENDIENTE: { color: 'ghost', label: 'Pendiente' },
     EN_PROGRESO: { color: 'warning', label: 'En progreso' },
-    COMPLETADA:  { color: 'success', label: 'Completada'  },
+    COMPLETADA: { color: 'success', label: 'Completada' },
 };
 
 const selfEvalStatusMap: Record<SelfEvalStatus, { color: string; label: string; icon: React.ReactNode }> = {
@@ -78,7 +79,7 @@ const selfEvalStatusMap: Record<SelfEvalStatus, { color: string; label: string; 
         label: 'Sin autoevaluar',
         icon: (
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <circle cx="12" cy="12" r="9" strokeWidth={1.5}/>
+                <circle cx="12" cy="12" r="9" strokeWidth={1.5} />
             </svg>
         ),
     },
@@ -87,7 +88,7 @@ const selfEvalStatusMap: Record<SelfEvalStatus, { color: string; label: string; 
         label: 'Autoevaluación en progreso',
         icon: (
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
         ),
     },
@@ -96,7 +97,7 @@ const selfEvalStatusMap: Record<SelfEvalStatus, { color: string; label: string; 
         label: 'Autoevaluación enviada',
         icon: (
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
         ),
     },
@@ -117,6 +118,7 @@ const EvalCard: React.FC<EvalCardProps> = ({ evaluation, onOpen }) => {
     const evalInfo = evalStatusMap[evaluation.estado];
 
     const puntaje = calcPuntajeFinal(evaluation.objetivos);
+    const puntajeNumerico = calcPuntajeFinalNumerico(evaluation.objetivos);
     const objConAuto = evaluation.objetivos.filter(
         (o: any) => o.autoevaluacion_comentarios || (o.evidencias_evaluado ?? []).length > 0
     ).length;
@@ -159,9 +161,8 @@ const EvalCard: React.FC<EvalCardProps> = ({ evaluation, onOpen }) => {
                         </div>
                         <div className="h-1.5 bg-base-200 rounded-full overflow-hidden">
                             <div
-                                className={`h-full rounded-full transition-all duration-500 ${
-                                    selfStatus === 'ENVIADA' ? 'bg-success' : autoProgress > 0 ? 'bg-warning' : 'bg-base-300'
-                                }`}
+                                className={`h-full rounded-full transition-all duration-500 ${selfStatus === 'ENVIADA' ? 'bg-success' : autoProgress > 0 ? 'bg-warning' : 'bg-base-300'
+                                    }`}
                                 style={{ width: `${autoProgress}%` }}
                             />
                         </div>
@@ -172,22 +173,22 @@ const EvalCard: React.FC<EvalCardProps> = ({ evaluation, onOpen }) => {
 
                 {/* Footer */}
                 <div className="flex items-center justify-between pt-2 border-t border-base-100">
-                    <div className={`flex items-center gap-1.5 text-xs font-medium ${
-                        selfInfo.color === 'ghost' ? 'text-base-content/40' :
-                        selfInfo.color === 'warning' ? 'text-warning' : 'text-success'
-                    }`}>
+                    <div className={`flex items-center gap-1.5 text-xs font-medium ${selfInfo.color === 'ghost' ? 'text-base-content/40' :
+                            selfInfo.color === 'warning' ? 'text-warning' : 'text-success'
+                        }`}>
                         {selfInfo.icon}
                         {selfInfo.label}
                     </div>
                     {isCompleted && puntaje !== undefined ? (
-                        <div className={`badge badge-${logroBadgeColor(puntaje)} font-bold text-sm`}>
-                            {puntaje.toFixed(1)}%
+                        <div className={`badge badge-${logroBadgeColor(puntaje)} font-bold text-sm flex flex-col gap-0.5`}>
+                            {/* <span>{puntaje.toFixed(1)}%</span> */}
+                            {puntajeNumerico !== undefined && <span className="text-xs">{puntajeNumerico.toFixed(2)}/5</span>}
                         </div>
                     ) : (
                         <div className="flex items-center gap-1 text-xs text-primary font-medium">
                             {totalObj > 0 ? 'Ir a evaluar' : 'Ver detalle'}
                             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/>
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                             </svg>
                         </div>
                     )}
@@ -202,7 +203,7 @@ const EvalCard: React.FC<EvalCardProps> = ({ evaluation, onOpen }) => {
 const EmptyState: React.FC = () => (
     <div className="text-center py-20 text-base-content/40">
         <svg className="h-12 w-12 mx-auto mb-4 opacity-25" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
         </svg>
         <p className="font-semibold text-base">Sin evaluaciones asignadas</p>
         <p className="text-sm mt-1">Cuando tu líder cree una evaluación para ti, aparecerá aquí.</p>
@@ -215,7 +216,7 @@ const SectionLabel: React.FC<{ label: string; count: number }> = ({ label, count
     <div className="flex items-center gap-3 mb-4">
         <p className="text-xs font-semibold uppercase tracking-widest text-base-content/40">{label}</p>
         <span className="badge badge-ghost badge-sm">{count}</span>
-        <div className="flex-1 h-px bg-base-200"/>
+        <div className="flex-1 h-px bg-base-200" />
     </div>
 );
 
@@ -231,17 +232,17 @@ const EvaluadoPage: React.FC = () => {
     const load = useCallback(async () => {
         const r = await getEvaluations({ items_por_pagina: 50 });
         if (r?.success) setEvals(r.data.evaluaciones);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => { load(); }, [load]);
 
-    const active    = evals.filter(e => e.estado !== 'COMPLETADA');
+    const active = evals.filter(e => e.estado !== 'COMPLETADA');
     const completed = evals.filter(e => e.estado === 'COMPLETADA');
 
     // Métricas de resumen
     const totalObjs = evals.reduce((s, e) => s + e.objetivos.length, 0);
-    const selfDone  = evals.reduce((s, e) => {
+    const selfDone = evals.reduce((s, e) => {
         return s + e.objetivos.filter((o: any) => o.autoevaluacion_comentarios || (o.evidencias_evaluado ?? []).length > 0).length;
     }, 0);
 

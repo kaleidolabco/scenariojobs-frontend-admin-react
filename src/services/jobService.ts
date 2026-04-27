@@ -1,6 +1,7 @@
 import useFetch from '../hooks/useFetch';
 import { FetchResponse, successMock } from './responseType';
 import useUIStore from '../store/uiStore';
+import { JobFunction, createEmptyCapability, createEmptyKnowledge, createEmptyModule, createEmptyTopic, createEmptyDetail, generateId } from './functionService';
 
 // Query params
 export interface JobQueryParams {
@@ -27,10 +28,66 @@ export interface Job {
     descripcion: string;
     nivel_jerarquico: SeniorityLevel;
     competencias_requeridas: CompetencyRequirement[];
-    funciones: string[];
+    funciones: JobFunction[];
     banda_salarial_min?: number;
     banda_salarial_max?: number;
 }
+
+/**
+ * Convierte funciones legacy (strings) a la nueva estructura jerárquica
+ * @param funcionesTexto Array de strings con funciones
+ * @param tituloFuncionPrincipal Nombre de la función principal
+ * @returns JobFunction[] - Estructura jerárquica
+ */
+export const convertLegacyFunctionsToHierarchical = (
+    funcionesTexto: string[],
+    tituloFuncionPrincipal?: string
+): JobFunction[] => {
+    if (!funcionesTexto || funcionesTexto.length === 0) {
+        return [];
+    }
+
+    // Crear una única función principal que agrupe todas las funciones legacy
+    const mainCapability = createEmptyCapability();
+    mainCapability.titulo = 'Funciones Principales';
+    mainCapability.descripcion = 'Funciones migradas desde el formato anterior';
+
+    const knowledge = createEmptyKnowledge();
+    knowledge.titulo = 'Funciones Operacionales';
+
+    const module = createEmptyModule();
+    module.titulo = 'Funciones Base';
+    module.tipoConocimiento = 'ESTANDAR';
+
+    // Convertir cada string de función en un tema
+    const topics = funcionesTexto.map(funcionTexto => {
+        const tema = createEmptyTopic();
+        tema.titulo = funcionTexto;
+        
+        // El detalle contiene la descripción completa
+        const detail = createEmptyDetail();
+        detail.titulo = 'Descripción';
+        detail.descripcion = funcionTexto;
+        tema.detalles = [detail];
+        
+        return tema;
+    });
+
+    module.temas = topics;
+    knowledge.modulos = [module];
+    mainCapability.conocimientos = [knowledge];
+
+    const jobFunction: JobFunction = {
+        id: generateId(),
+        titulo: tituloFuncionPrincipal || 'Funciones del Cargo',
+        descripcion: 'Función migrada automáticamente desde estructura legacy',
+        capacidades: [mainCapability],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+    };
+
+    return [jobFunction];
+};
 
 // Mock Data - 27 unique positions from CSV
 const MOCK_JOBS: Job[] = [
@@ -47,10 +104,10 @@ const MOCK_JOBS: Job[] = [
             { competencia_id: '7', competencia_nombre: 'Pensamiento Analítico', nivel_esperado: 5 }
         ],
         funciones: [
-            'Definir la visión y estrategia organizacional',
+            /* 'Definir la visión y estrategia organizacional',
             'Liderar el equipo directivo',
             'Asegurar el cumplimiento de objetivos corporativos',
-            'Representar a la organización ante stakeholders'
+            'Representar a la organización ante stakeholders' */
         ],
         banda_salarial_min: 200000,
         banda_salarial_max: 300000
@@ -66,10 +123,10 @@ const MOCK_JOBS: Job[] = [
             { competencia_id: '7', competencia_nombre: 'Pensamiento Analítico', nivel_esperado: 5 }
         ],
         funciones: [
-            'Dirigir la gestión administrativa y financiera',
+            /* 'Dirigir la gestión administrativa y financiera',
             'Supervisar presupuestos y recursos',
             'Asegurar cumplimiento normativo y legal',
-            'Optimizar procesos administrativos'
+            'Optimizar procesos administrativos' */
         ],
         banda_salarial_min: 120000,
         banda_salarial_max: 180000
@@ -86,10 +143,10 @@ const MOCK_JOBS: Job[] = [
             { competencia_id: '22', competencia_nombre: 'Preventa y Soluciones', nivel_esperado: 4 }
         ],
         funciones: [
-            'Definir estrategia comercial y de ventas',
+            /* 'Definir estrategia comercial y de ventas',
             'Gestionar relaciones con clientes clave',
             'Liderar equipos comerciales',
-            'Alcanzar objetivos de ingresos'
+            'Alcanzar objetivos de ingresos' */
         ],
         banda_salarial_min: 120000,
         banda_salarial_max: 180000
@@ -105,10 +162,10 @@ const MOCK_JOBS: Job[] = [
             { competencia_id: '5', competencia_nombre: 'Gestión de Proyectos', nivel_esperado: 4 }
         ],
         funciones: [
-            'Diseñar estrategias de desarrollo organizacional',
+            /* 'Diseñar estrategias de desarrollo organizacional',
             'Liderar procesos de transformación cultural',
             'Implementar sistemas de gestión de calidad',
-            'Fortalecer capacidades institucionales'
+            'Fortalecer capacidades institucionales' */
         ],
         banda_salarial_min: 110000,
         banda_salarial_max: 160000
@@ -124,10 +181,10 @@ const MOCK_JOBS: Job[] = [
             { competencia_id: '2', competencia_nombre: 'Comunicación Asertiva', nivel_esperado: 4 }
         ],
         funciones: [
-            'Dirigir la oficina de gestión de proyectos',
+        /*     'Dirigir la oficina de gestión de proyectos',
             'Supervisar múltiples proyectos estratégicos',
             'Asegurar entrega de proyectos a tiempo y presupuesto',
-            'Gestionar riesgos y stakeholders'
+            'Gestionar riesgos y stakeholders' */
         ],
         banda_salarial_min: 110000,
         banda_salarial_max: 160000
@@ -143,10 +200,10 @@ const MOCK_JOBS: Job[] = [
             { competencia_id: '7', competencia_nombre: 'Pensamiento Analítico', nivel_esperado: 5 }
         ],
         funciones: [
-            'Diseñar arquitecturas de soluciones',
+            /* 'Diseñar arquitecturas de soluciones',
             'Liderar equipos de preventa y soluciones',
             'Asegurar calidad técnica de propuestas',
-            'Innovar en ofertas de valor'
+            'Innovar en ofertas de valor' */
         ],
         banda_salarial_min: 110000,
         banda_salarial_max: 160000
@@ -164,10 +221,10 @@ const MOCK_JOBS: Job[] = [
             { competencia_id: '8', competencia_nombre: 'Orientación a Resultados', nivel_esperado: 4 }
         ],
         funciones: [
-            'Gestionar cartera de clientes estratégicos',
+            /* 'Gestionar cartera de clientes estratégicos',
             'Desarrollar planes de cuenta',
             'Identificar oportunidades de crecimiento',
-            'Asegurar satisfacción y retención de clientes'
+            'Asegurar satisfacción y retención de clientes' */
         ],
         banda_salarial_min: 80000,
         banda_salarial_max: 120000
@@ -185,10 +242,10 @@ const MOCK_JOBS: Job[] = [
             { competencia_id: '2', competencia_nombre: 'Comunicación Asertiva', nivel_esperado: 4 }
         ],
         funciones: [
-            'Liderar procesos de reclutamiento y selección',
+            /* 'Liderar procesos de reclutamiento y selección',
             'Diseñar programas de desarrollo de talento',
             'Gestionar clima y cultura organizacional',
-            'Implementar sistemas de evaluación de desempeño'
+            'Implementar sistemas de evaluación de desempeño' */
         ],
         banda_salarial_min: 60000,
         banda_salarial_max: 90000
@@ -204,10 +261,10 @@ const MOCK_JOBS: Job[] = [
             { competencia_id: '6', competencia_nombre: 'Atención al Cliente', nivel_esperado: 4 }
         ],
         funciones: [
-            'Coordinar equipos de soporte técnico',
+            /* 'Coordinar equipos de soporte técnico',
             'Asegurar niveles de servicio (SLA)',
             'Gestionar escalamiento de incidentes',
-            'Mejorar procesos de atención'
+            'Mejorar procesos de atención' */
         ],
         banda_salarial_min: 55000,
         banda_salarial_max: 85000
@@ -223,10 +280,10 @@ const MOCK_JOBS: Job[] = [
             { competencia_id: '5', competencia_nombre: 'Gestión de Proyectos', nivel_esperado: 3 }
         ],
         funciones: [
-            'Liderar equipos técnicos de desarrollo',
+            /* 'Liderar equipos técnicos de desarrollo',
             'Definir arquitecturas y estándares técnicos',
             'Realizar revisiones de código',
-            'Mentoría técnica al equipo'
+            'Mentoría técnica al equipo' */
         ],
         banda_salarial_min: 65000,
         banda_salarial_max: 95000
@@ -244,10 +301,10 @@ const MOCK_JOBS: Job[] = [
             { competencia_id: '7', competencia_nombre: 'Pensamiento Analítico', nivel_esperado: 4 }
         ],
         funciones: [
-            'Resolver incidentes técnicos complejos',
+            /* 'Resolver incidentes técnicos complejos',
             'Realizar análisis de causa raíz',
             'Documentar soluciones técnicas',
-            'Capacitar a equipo de soporte'
+            'Capacitar a equipo de soporte' */
         ],
         banda_salarial_min: 50000,
         banda_salarial_max: 75000
@@ -263,10 +320,10 @@ const MOCK_JOBS: Job[] = [
             { competencia_id: '13', competencia_nombre: 'Ciberseguridad', nivel_esperado: 3 }
         ],
         funciones: [
-            'Diseñar arquitecturas cloud en AWS',
+            /* 'Diseñar arquitecturas cloud en AWS',
             'Implementar infraestructura como código',
             'Optimizar costos y rendimiento',
-            'Asegurar alta disponibilidad y seguridad'
+            'Asegurar alta disponibilidad y seguridad' */
         ],
         banda_salarial_min: 60000,
         banda_salarial_max: 90000
@@ -282,10 +339,10 @@ const MOCK_JOBS: Job[] = [
             { competencia_id: '7', competencia_nombre: 'Pensamiento Analítico', nivel_esperado: 4 }
         ],
         funciones: [
-            'Analizar requerimientos de clientes',
+            /* 'Analizar requerimientos de clientes',
             'Diseñar propuestas técnicas',
             'Realizar presentaciones y demos',
-            'Estimar esfuerzos y costos'
+            'Estimar esfuerzos y costos' */
         ],
         banda_salarial_min: 55000,
         banda_salarial_max: 80000
@@ -301,10 +358,10 @@ const MOCK_JOBS: Job[] = [
             { competencia_id: '18', competencia_nombre: 'Bases de Datos', nivel_esperado: 3 }
         ],
         funciones: [
-            'Desarrollar aplicaciones web escalables',
+            /* 'Desarrollar aplicaciones web escalables',
             'Implementar APIs y servicios backend',
             'Crear interfaces de usuario modernas',
-            'Participar en revisiones de código'
+            'Participar en revisiones de código' */
         ],
         banda_salarial_min: 50000,
         banda_salarial_max: 75000
@@ -322,10 +379,10 @@ const MOCK_JOBS: Job[] = [
             { competencia_id: '8', competencia_nombre: 'Orientación a Resultados', nivel_esperado: 4 }
         ],
         funciones: [
-            'Analizar y documentar procesos',
+            /* 'Analizar y documentar procesos',
             'Identificar oportunidades de mejora',
             'Implementar sistemas de gestión de calidad',
-            'Realizar auditorías internas'
+            'Realizar auditorías internas' */
         ],
         banda_salarial_min: 40000,
         banda_salarial_max: 60000
@@ -341,10 +398,10 @@ const MOCK_JOBS: Job[] = [
             { competencia_id: '10', competencia_nombre: 'Python Avanzado', nivel_esperado: 3 }
         ],
         funciones: [
-            'Analizar datos de negocio',
+            /* 'Analizar datos de negocio',
             'Crear dashboards y reportes',
             'Generar insights y recomendaciones',
-            'Automatizar procesos de análisis'
+            'Automatizar procesos de análisis' */
         ],
         banda_salarial_min: 45000,
         banda_salarial_max: 65000
@@ -360,10 +417,10 @@ const MOCK_JOBS: Job[] = [
             { competencia_id: '4', competencia_nombre: 'Trabajo en Equipo', nivel_esperado: 4 }
         ],
         funciones: [
-            'Coordinar equipos de especialistas',
+            /* 'Coordinar equipos de especialistas',
             'Gestionar asignación de recursos',
             'Hacer seguimiento a proyectos',
-            'Reportar avances y métricas'
+            'Reportar avances y métricas' */
         ],
         banda_salarial_min: 42000,
         banda_salarial_max: 62000
@@ -379,10 +436,10 @@ const MOCK_JOBS: Job[] = [
             { competencia_id: '7', competencia_nombre: 'Pensamiento Analítico', nivel_esperado: 3 }
         ],
         funciones: [
-            'Ejecutar campañas de marketing digital',
+            /* 'Ejecutar campañas de marketing digital',
             'Gestionar redes sociales',
             'Analizar métricas de marketing',
-            'Crear contenido promocional'
+            'Crear contenido promocional' */
         ],
         banda_salarial_min: 38000,
         banda_salarial_max: 58000
@@ -398,10 +455,10 @@ const MOCK_JOBS: Job[] = [
             { competencia_id: '4', competencia_nombre: 'Trabajo en Equipo', nivel_esperado: 3 }
         ],
         funciones: [
-            'Monitorear operaciones diarias',
+            /* 'Monitorear operaciones diarias',
             'Optimizar procesos operativos',
             'Generar reportes de gestión',
-            'Coordinar con diferentes áreas'
+            'Coordinar con diferentes áreas' */
         ],
         banda_salarial_min: 40000,
         banda_salarial_max: 60000
@@ -417,10 +474,10 @@ const MOCK_JOBS: Job[] = [
             { competencia_id: '8', competencia_nombre: 'Orientación a Resultados', nivel_esperado: 3 }
         ],
         funciones: [
-            'Registrar transacciones contables',
+            /* 'Registrar transacciones contables',
             'Preparar estados financieros',
             'Realizar conciliaciones bancarias',
-            'Apoyar en cierres contables'
+            'Apoyar en cierres contables' */
         ],
         banda_salarial_min: 38000,
         banda_salarial_max: 55000
@@ -436,10 +493,10 @@ const MOCK_JOBS: Job[] = [
             { competencia_id: '7', competencia_nombre: 'Pensamiento Analítico', nivel_esperado: 4 }
         ],
         funciones: [
-            'Monitorear eventos de seguridad',
+            /* 'Monitorear eventos de seguridad',
             'Analizar vulnerabilidades',
             'Responder a incidentes de seguridad',
-            'Implementar controles de seguridad'
+            'Implementar controles de seguridad' */
         ],
         banda_salarial_min: 45000,
         banda_salarial_max: 65000
@@ -455,10 +512,10 @@ const MOCK_JOBS: Job[] = [
             { competencia_id: '2', competencia_nombre: 'Comunicación Asertiva', nivel_esperado: 3 }
         ],
         funciones: [
-            'Gestionar documentación administrativa',
+            /* 'Gestionar documentación administrativa',
             'Coordinar recursos y logística',
             'Apoyar en procesos de compras',
-            'Generar reportes administrativos'
+            'Generar reportes administrativos' */
         ],
         banda_salarial_min: 35000,
         banda_salarial_max: 50000
@@ -474,10 +531,10 @@ const MOCK_JOBS: Job[] = [
             { competencia_id: '11', competencia_nombre: 'JavaScript/TypeScript', nivel_esperado: 3 }
         ],
         funciones: [
-            'Diseñar casos de prueba',
+           /*  'Diseñar casos de prueba',
             'Ejecutar pruebas manuales y automatizadas',
             'Reportar y dar seguimiento a bugs',
-            'Automatizar procesos de testing'
+            'Automatizar procesos de testing' */
         ],
         banda_salarial_min: 42000,
         banda_salarial_max: 62000
@@ -495,10 +552,10 @@ const MOCK_JOBS: Job[] = [
             { competencia_id: '2', competencia_nombre: 'Comunicación Asertiva', nivel_esperado: 3 }
         ],
         funciones: [
-            'Atender solicitudes de usuarios',
+            /* 'Atender solicitudes de usuarios',
             'Resolver incidentes de primer nivel',
             'Documentar casos en sistema de tickets',
-            'Escalar casos complejos'
+            'Escalar casos complejos' */
         ],
         banda_salarial_min: 28000,
         banda_salarial_max: 40000
@@ -514,10 +571,10 @@ const MOCK_JOBS: Job[] = [
             { competencia_id: '4', competencia_nombre: 'Trabajo en Equipo', nivel_esperado: 3 }
         ],
         funciones: [
-            'Brindar soporte técnico a usuarios',
+            /* 'Brindar soporte técnico a usuarios',
             'Resolver problemas de hardware y software',
             'Gestionar tickets de soporte',
-            'Mantener base de conocimiento'
+            'Mantener base de conocimiento' */
         ],
         banda_salarial_min: 28000,
         banda_salarial_max: 42000
@@ -532,10 +589,10 @@ const MOCK_JOBS: Job[] = [
             { competencia_id: '8', competencia_nombre: 'Orientación a Resultados', nivel_esperado: 2 }
         ],
         funciones: [
-            'Apoyar en tareas asignadas',
+            /* 'Apoyar en tareas asignadas',
             'Aprender procesos organizacionales',
             'Desarrollar competencias técnicas',
-            'Cumplir con programa de formación'
+            'Cumplir con programa de formación' */
         ],
         banda_salarial_min: 15000,
         banda_salarial_max: 20000
@@ -550,10 +607,10 @@ const MOCK_JOBS: Job[] = [
             { competencia_id: '8', competencia_nombre: 'Orientación a Resultados', nivel_esperado: 3 }
         ],
         funciones: [
-            'Mantener limpieza de instalaciones',
+           /*  'Mantener limpieza de instalaciones',
             'Apoyar en logística de eventos',
             'Gestionar suministros de oficina',
-            'Realizar tareas de mantenimiento básico'
+            'Realizar tareas de mantenimiento básico' */
         ],
         banda_salarial_min: 18000,
         banda_salarial_max: 25000

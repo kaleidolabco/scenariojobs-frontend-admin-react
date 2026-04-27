@@ -13,9 +13,9 @@ import {
     IntegralEvaluationStatus,
     INTEGRAL_STATUS_LABELS,
     integralBadgeColor,
+    calcPuntajeIntegralNumerico,
 } from '../../services/integralEvaluationService';
 import { useEvaluationResponseService } from '../../services/evaluationResponseService';
-import { calcPuntajeIntegral } from '../../services/integralEvaluationService';
 import useUIStore from '../../store/uiStore';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -143,7 +143,7 @@ const ComponentCard: React.FC<ComponentCardProps> = ({
 }) => {
     if (!component) return null;
     
-    const scoreColor   = component.puntaje !== undefined ? integralBadgeColor(component.puntaje) : null;
+    const scoreColor   = component.puntaje_numerico !== undefined ? integralBadgeColor(component.puntaje_numerico) : null;
     const borderColor  = accentColor === 'primary' ? 'border-primary/20' : 'border-secondary/20';
     const bgAccent     = accentColor === 'primary' ? 'bg-primary/5'      : 'bg-secondary/5';
     const textAccent   = accentColor === 'primary' ? 'text-primary'      : 'text-secondary';
@@ -182,8 +182,8 @@ const ComponentCard: React.FC<ComponentCardProps> = ({
                             </div>
                             <div className="px-4 py-3">
                                 <p className="text-xs text-base-content/50 font-medium uppercase tracking-wide mb-1">Puntaje</p>
-                                {component.puntaje !== undefined ? (
-                                    <p className={`text-2xl font-bold text-${scoreColor}`}>{component.puntaje.toFixed(1)}%</p>
+                                {component.puntaje_numerico !== undefined ? (
+                                    <p className={`text-2xl font-bold text-${scoreColor}`}>{component.puntaje_numerico.toFixed(2)} / {component.escala_maxima || 5}</p>
                                 ) : (
                                     <p className="text-2xl font-bold text-base-content/25">—</p>
                                 )}
@@ -191,12 +191,12 @@ const ComponentCard: React.FC<ComponentCardProps> = ({
                         </div>
 
                         {/* Score bar */}
-                        {component.puntaje !== undefined && (
+                        {component.puntaje_numerico !== undefined && (
                             <div className="space-y-1">
                                 <div className="h-1.5 bg-base-200 rounded-full overflow-hidden">
                                     <div
                                         className={`h-full bg-${scoreColor} rounded-full transition-all duration-700`}
-                                        style={{ width: `${Math.min(component.puntaje, 100)}%` }}
+                                        style={{ width: `${Math.min((component.puntaje_numerico / (component.escala_maxima || 5)) * 100, 100)}%` }}
                                     />
                                 </div>
                             </div>
@@ -285,30 +285,31 @@ const EvaluacionesIntegralDetailPage: React.FC = () => {
                     integral.persona_id
                 );
                 
-                // Si encontró evaluación guardada y no tiene puntaje aún, calcula el puntaje
+                // Si encontró evaluación guardada y no tiene puntaje aún, usa los puntajes calculados
                 if (evalResponse && !integral.componente_competencias.puntaje) {
-                    // Calcula el promedio de competencias (1-5) y convierte a porcentaje (0-100)
-                    const scores = Object.values(evalResponse.competencias_evaluadas);
-                    if (scores.length > 0) {
-                        const promedio = scores.reduce((a, b) => a + b, 0) / scores.length;
-                        const puntajeProcentaje = (promedio / 5) * 100;
-                        const puntajeNumerico = Math.round(promedio) as 1 | 2 | 3 | 4 | 5;
-                        
-                        // Actualiza el componente con el puntaje y puntaje_numerico
+                    // Use both scores already calculated in evaluationResponseService
+                    const puntajeProcentaje = evalResponse.puntaje_normalizado; // 0-100 for display
+                    const puntajeNumerico = evalResponse.puntaje_numerico;     // Direct average for integral
+                    const escalaMaxima = evalResponse.escala_maxima;           // Max scale (4, 5, etc)
+                    
+                    if (puntajeProcentaje !== undefined && puntajeNumerico !== undefined) {
+                        // Actualiza el componente con los puntajes
                         const componenteActualizado = {
                             ...integral.componente_competencias,
                             puntaje: puntajeProcentaje,
                             puntaje_numerico: puntajeNumerico,
+                            escala_maxima: escalaMaxima,
                             estado: 'COMPLETADA' as const
                         };
                         
                         integral = {
                             ...integral,
                             componente_competencias: componenteActualizado,
-                            // Recalcula el puntaje final basado en ambos componentes
-                            puntaje_final: calcPuntajeIntegral(
+                            // Recalcula el puntaje final basado en ambos componentes (usando escala numérica)
+                            puntaje_final: calcPuntajeIntegralNumerico(
                                 integral.componente_desempeno,
-                                componenteActualizado
+                                componenteActualizado,
+                                escalaMaxima
                             ),
                         };
                     }
@@ -444,7 +445,7 @@ const EvaluacionesIntegralDetailPage: React.FC = () => {
                         <p className="text-xs font-semibold uppercase tracking-wide text-base-content/40 mb-1">Puntaje final</p>
                         {evaluacion.puntaje_final !== undefined ? (
                             <p className={`text-2xl font-bold text-${integralBadgeColor(evaluacion.puntaje_final)}`}>
-                                {evaluacion.puntaje_final.toFixed(1)}%
+                                {evaluacion.puntaje_final.toFixed(2)} / 5
                             </p>
                         ) : (
                             <p className="text-2xl font-bold text-base-content/20">—</p>

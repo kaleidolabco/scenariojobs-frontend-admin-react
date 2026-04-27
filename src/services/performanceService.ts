@@ -1,6 +1,8 @@
 import useFetch from '../hooks/useFetch';
 import { FetchResponse, successMock, errorMock } from './responseType';
 import useUIStore from '../store/uiStore';
+import { calcValorLogroNumerico } from '../utils/evaluationHelpers';
+export { calcValorLogroNumerico };
 
 // ─── Enums / union types ──────────────────────────────────────────────────────
 
@@ -170,15 +172,7 @@ export const calcPuntajeFinal = (objetivos: Objective[]): number | undefined => 
     return pesoTotal > 0 ? (suma * 100) / pesoTotal : 0;
 };
 
-/** Calcula el valor numérico (1-5) basado en el porcentaje de logro */
-export const calcValorLogroNumerico = (porcentajeLogro: number | undefined): 1 | 2 | 3 | 4 | 5 | undefined => {
-    if (porcentajeLogro === undefined || porcentajeLogro === null) return undefined;
-    if (porcentajeLogro < 70) return 1;
-    if (porcentajeLogro < 100) return 2;
-    if (porcentajeLogro === 100) return 3;
-    if (porcentajeLogro < 110) return 4;
-    return 5;
-};
+// calcValorLogroNumerico is re-exported from '../utils/evaluationHelpers' at the top of this file.
 
 /** Calcula el puntaje final numérico ponderado basado en los valores de logro numéricos */
 /* export const calcPuntajeFinalNumerico = (objetivos: Objective[]): number | undefined => {

@@ -15,13 +15,14 @@ import {
     IntegralEvaluationStatus,
     INTEGRAL_STATUS_LABELS,
     integralBadgeColor,
-    calcPuntajeIntegral,
+    calcPuntajeIntegralNumerico,
 } from '../../services/integralEvaluationService';
 import { useEvaluationResponseService } from '../../services/evaluationResponseService';
 import { Pagination } from '../../services/responseType';
-import { CreateIntegralModal } from '../../components/Performance';
+import { CreateIntegralModal, IntegralEvaluationSummary } from '../../components/Performance';
 
 const ITEMS_PER_PAGE = 10;
+type TabId = 'lista' | 'resumen';
 
 const EvaluacionesIntegralPage: React.FC = () => {
     const navigate = useNavigate();
@@ -31,6 +32,7 @@ const EvaluacionesIntegralPage: React.FC = () => {
     // Data state
     const [evaluaciones, setEvaluaciones] = useState<EvaluacionIntegral[]>([]);
     const [pagination, setPagination] = useState<Pagination | null>(null);
+    const [activeTab, setActiveTab] = useState<TabId>('lista');
 
     // Modal state
     const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -82,30 +84,31 @@ const EvaluacionesIntegralPage: React.FC = () => {
                         integral.persona_id
                     );
                     
-                    // Si encontró evaluación guardada y no tiene puntaje aún, calcula el puntaje
+                    // Si encontró evaluación guardada y no tiene puntaje aún, usa los puntajes calculados
                     if (evalResponse && !integral.componente_competencias.puntaje) {
-                        // Calcula el promedio de competencias (1-5) y convierte a porcentaje (0-100)
-                        const scores = Object.values(evalResponse.competencias_evaluadas);
-                        if (scores.length > 0) {
-                            const promedio = scores.reduce((a, b) => a + b, 0) / scores.length;
-                            const puntajeProcentaje = (promedio / 5) * 100;
-                            const puntajeNumerico = Math.round(promedio) as 1 | 2 | 3 | 4 | 5;
-                            
-                            // Actualiza el componente con el puntaje y puntaje_numerico
+                        // Use both scores already calculated in evaluationResponseService
+                        const puntajeProcentaje = evalResponse.puntaje_normalizado; // 0-100 for display
+                        const puntajeNumerico = evalResponse.puntaje_numerico;     // Direct average for integral
+                        const escalaMaxima = evalResponse.escala_maxima;           // Max scale (4, 5, etc)
+                        
+                        if (puntajeProcentaje !== undefined && puntajeNumerico !== undefined) {
+                            // Actualiza el componente con los puntajes
                             const componenteActualizado = {
                                 ...integral.componente_competencias,
                                 puntaje: puntajeProcentaje,
                                 puntaje_numerico: puntajeNumerico,
+                                escala_maxima: escalaMaxima,
                                 estado: 'COMPLETADA' as const
                             };
                             
                             updatedIntegral = {
                                 ...integral,
                                 componente_competencias: componenteActualizado,
-                                // Recalcula el puntaje final basado en ambos componentes
-                                puntaje_final: calcPuntajeIntegral(
+                                // Recalcula el puntaje final basado en ambos componentes (usando escala numérica)
+                                puntaje_final: calcPuntajeIntegralNumerico(
                                     integral.componente_desempeno,
-                                    componenteActualizado
+                                    componenteActualizado,
+                                    escalaMaxima
                                 ),
                             };
                         }
@@ -256,7 +259,7 @@ const EvaluacionesIntegralPage: React.FC = () => {
                 <div className="text-sm font-bold">
                     {evaluacion.puntaje_final !== undefined ? (
                         <span className={`badge ${integralBadgeColor(evaluacion.puntaje_final)}`}>
-                            {evaluacion.puntaje_final.toFixed(1)}
+                            {evaluacion.puntaje_final.toFixed(2)} / 5
                         </span>
                     ) : (
                         <span className="opacity-50">—</span>
@@ -353,44 +356,86 @@ const EvaluacionesIntegralPage: React.FC = () => {
                 </button>
             }
         >
-            <FilterBar
-                onSearch={handleSearch}
-                searchTerm={searchInput}
-                searchPlaceholder="Buscar por colaborador o ciclo..."
-                filters={filterDefinitions}
-                activeFilters={activeFilters}
-                onFilterChange={handleFilterChange}
-                onClearFilters={clearFilters}
-            />
+            {/* Tabs */}
+            <div className="border-b border-base-200 mb-6">
+                <div className="flex gap-0">
+                    <button
+                        className={`px-4 py-3 text-sm font-medium border-b-2 transition-all duration-150 flex items-center gap-2 ${
+                            activeTab === 'lista'
+                                ? 'border-primary text-primary'
+                                : 'border-transparent text-base-content/50 hover:text-base-content hover:border-base-300'
+                        }`}
+                        onClick={() => setActiveTab('lista')}
+                    >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                        </svg>
+                        Evaluaciones
+                    </button>
+                    <button
+                        className={`px-4 py-3 text-sm font-medium border-b-2 transition-all duration-150 flex items-center gap-2 ${
+                            activeTab === 'resumen'
+                                ? 'border-primary text-primary'
+                                : 'border-transparent text-base-content/50 hover:text-base-content hover:border-base-300'
+                        }`}
+                        onClick={() => setActiveTab('resumen')}
+                    >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                        Resumen
+                    </button>
+                </div>
+            </div>
 
-            {loading && !evaluaciones.length ? (
-                <LoadingIndicator />
-            ) : (
-                <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
-                >
-                    <GenericTable
-                        data={evaluaciones}
-                        columns={columns}
-                        actions={actions}
-                        keyExtractor={(evaluacion) => evaluacion.id}
-                        currentPage={queryParams.pagina || 1}
-                        totalPages={pagination?.total_paginas || 1}
-                        pageSize={queryParams.items_por_pagina || ITEMS_PER_PAGE}
-                        onPageChange={(page) =>
-                            updateQueryParams({ pagina: page })
-                        }
-                        onPageSizeChange={(size) =>
-                            updateQueryParams({
-                                items_por_pagina: size,
-                                pagina: 1,
-                            })
-                        }
-                        emptyMessage="No se encontraron evaluaciones integrales"
+            {/* Content: Lista */}
+            {activeTab === 'lista' && (
+                <>
+                    <FilterBar
+                        onSearch={handleSearch}
+                        searchTerm={searchInput}
+                        searchPlaceholder="Buscar por colaborador o ciclo..."
+                        filters={filterDefinitions}
+                        activeFilters={activeFilters}
+                        onFilterChange={handleFilterChange}
+                        onClearFilters={clearFilters}
                     />
-                </motion.div>
+
+                    {loading && !evaluaciones.length ? (
+                        <LoadingIndicator />
+                    ) : (
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3 }}
+                        >
+                            <GenericTable
+                                data={evaluaciones}
+                                columns={columns}
+                                actions={actions}
+                                keyExtractor={(evaluacion) => evaluacion.id}
+                                currentPage={queryParams.pagina || 1}
+                                totalPages={pagination?.total_paginas || 1}
+                                pageSize={queryParams.items_por_pagina || ITEMS_PER_PAGE}
+                                onPageChange={(page) =>
+                                    updateQueryParams({ pagina: page })
+                                }
+                                onPageSizeChange={(size) =>
+                                    updateQueryParams({
+                                        items_por_pagina: size,
+                                        pagina: 1,
+                                    })
+                                }
+                                emptyMessage="No se encontraron evaluaciones integrales"
+                            />
+                        </motion.div>
+                    )}
+                </>
+            )}
+
+            {/* Content: Resumen */}
+            {activeTab === 'resumen' && (
+                <IntegralEvaluationSummary evaluaciones={evaluaciones} />
             )}
 
             {/* Create Integral Evaluation Modal */}

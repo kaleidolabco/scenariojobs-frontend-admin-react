@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Job, SeniorityLevel, CompetencyRequirement } from '../../services/jobService';
+import { Job, SeniorityLevel, CompetencyRequirement, convertLegacyFunctionsToHierarchical } from '../../services/jobService';
+import { JobFunction } from '../../services/functionService';
 import InputField from '../Common/Forms/InputField';
 import SelectField from '../Common/Forms/SelectField';
 import TextAreaField from '../Common/Forms/TextAreaField';
 import NumberInputField from '../Common/Forms/NumberInputField';
 import FormSection from '../Common/Forms/FormSection';
 import JobCompetencySelector from './JobCompetencySelector';
+import { FunctionManagerModal } from '../Functions';
 
 interface JobFormProps {
     initialData?: Job | null;
@@ -29,8 +31,9 @@ const JobForm: React.FC<JobFormProps> = ({ initialData, isLoading, onSubmit, onC
     const [nivelJerarquico, setNivelJerarquico] = useState<SeniorityLevel>('SEMI_SENIOR');
     const [bandaSalarialMin, setBandaSalarialMin] = useState<number | undefined>();
     const [bandaSalarialMax, setBandaSalarialMax] = useState<number | undefined>();
-    const [funcionesText, setFuncionesText] = useState('');
+    const [funciones, setFunciones] = useState<JobFunction[]>([]);
     const [competencias, setCompetencias] = useState<CompetencyRequirement[]>([]);
+    const [funcionesModalOpen, setFuncionesModalOpen] = useState(false);
 
     useEffect(() => {
         if (initialData) {
@@ -39,7 +42,27 @@ const JobForm: React.FC<JobFormProps> = ({ initialData, isLoading, onSubmit, onC
             setNivelJerarquico(initialData.nivel_jerarquico);
             setBandaSalarialMin(initialData.banda_salarial_min);
             setBandaSalarialMax(initialData.banda_salarial_max);
-            setFuncionesText(initialData.funciones.join('\n'));
+            
+            // Validar y convertir funciones si es necesario
+            let processedFunciones: JobFunction[] = [];
+            if (Array.isArray(initialData.funciones)) {
+                // Verificar si son strings (legacy) o JobFunctions
+                if (initialData.funciones.length > 0) {
+                    const firstItem = initialData.funciones[0];
+                    if (typeof firstItem === 'string') {
+                        // Es legacy format (strings), convertir
+                        processedFunciones = convertLegacyFunctionsToHierarchical(
+                            initialData.funciones as unknown as string[],
+                            `Funciones de ${initialData.nombre}`
+                        );
+                    } else if (firstItem && typeof firstItem === 'object' && 'capacidades' in firstItem) {
+                        // Ya es JobFunction format
+                        processedFunciones = initialData.funciones as JobFunction[];
+                    }
+                }
+            }
+            
+            setFunciones(processedFunciones);
             setCompetencias(initialData.competencias_requeridas || []);
         } else {
             setNombre('');
@@ -47,18 +70,13 @@ const JobForm: React.FC<JobFormProps> = ({ initialData, isLoading, onSubmit, onC
             setNivelJerarquico('SEMI_SENIOR');
             setBandaSalarialMin(undefined);
             setBandaSalarialMax(undefined);
-            setFuncionesText('');
+            setFunciones([]);
             setCompetencias([]);
         }
     }, [initialData]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-
-        const funciones = funcionesText
-            .split('\n')
-            .map(f => f.trim())
-            .filter(f => f.length > 0);
 
         onSubmit({
             nombre,
@@ -111,16 +129,52 @@ const JobForm: React.FC<JobFormProps> = ({ initialData, isLoading, onSubmit, onC
 
             <FormSection
                 title="Funciones y Responsabilidades"
-                description="Detalle las funciones específicas del cargo (una por línea)."
+                description="Configure las funciones jerárquicas del cargo con capacidades, conocimientos, módulos y detalles."
             >
-                <TextAreaField
-                    label="Funciones"
-                    value={funcionesText}
-                    onChange={(e) => setFuncionesText(e.target.value)}
-                    placeholder="Diseñar y desarrollar aplicaciones web&#10;Mentoría a desarrolladores junior&#10;Participar en revisiones de código"
-                    rows={5}
-                    helpText="Ingrese cada función en una línea separada"
-                />
+                <div className="space-y-4">
+                    <div className="bg-base-200 rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-3">
+                            <h4 className="font-semibold text-base-content">Funciones Configuradas</h4>
+                            <span className="badge badge-primary">{funciones.length}</span>
+                        </div>
+
+                        {funciones.length > 0 ? (
+                            <div className="space-y-2">
+                                {funciones.map((func, index) => (
+                                    <div key={func.id} className="bg-base-100 rounded p-3">
+                                        <div className="font-semibold text-sm text-base-content">{index + 1}. {func.titulo}</div>
+                                        {func.descripcion && (
+                                            <div className="text-xs opacity-70 mt-1">{func.descripcion}</div>
+                                        )}
+                                        <div className="text-xs opacity-60 mt-2">
+                                            {func.capacidades.length} capacidades
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center py-6 text-base-content/60">
+                                <svg className="w-12 h-12 mx-auto mb-2 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                <p className="text-sm">No hay funciones configuradas</p>
+                                <p className="text-xs opacity-70">Haz clic en el botón de abajo para añadir</p>
+                            </div>
+                        )}
+                    </div>
+
+                    <button
+                        type="button"
+                        onClick={() => setFuncionesModalOpen(true)}
+                        className="btn btn-outline w-full"
+                        disabled={isLoading}
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                        Gestionar Funciones
+                    </button>
+                </div>
             </FormSection>
 
             <FormSection
@@ -188,6 +242,18 @@ const JobForm: React.FC<JobFormProps> = ({ initialData, isLoading, onSubmit, onC
                     </button>
                 </div>
             </div>
+
+            {/* Function Manager Modal */}
+            <FunctionManagerModal
+                isOpen={funcionesModalOpen}
+                onClose={() => setFuncionesModalOpen(false)}
+                onSave={(updatedFunciones) => {
+                    setFunciones(updatedFunciones);
+                    setFuncionesModalOpen(false);
+                }}
+                initialFunctions={funciones}
+                isLoading={isLoading}
+            />
         </form>
     );
 };

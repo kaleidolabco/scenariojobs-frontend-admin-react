@@ -10,8 +10,9 @@ export const ROUTES = {
     COMPANY_CONFIG: '/empresa',
     USERS: '/usuarios',
     ROLES: '/roles',
-    
-    
+    EMAIL_CONFIG: '/correos',
+
+
     // Organizational Structure (New Module)
     ORG_CHART: '/organizacion', // Main org chart view
     ORG_UNIT_DETAIL: (id: string) => `/organizacion/unidades/${id}`, // Unit detail
@@ -70,6 +71,7 @@ export const ROUTE_LABELS: Record<string, string> = {
     [ROUTES.COMPANY_CONFIG]: 'Configuración Empresa',
     [ROUTES.USERS]: 'Usuarios',
     [ROUTES.ROLES]: 'Roles',
+    [ROUTES.EMAIL_CONFIG]: 'Correos',
     [ROUTES.ORG_CHART]: 'Organigrama',
     [ROUTES.ORG_POSITIONS]: 'Puestos',
     [ROUTES.JOBS]: 'Cargos (Perfiles)',

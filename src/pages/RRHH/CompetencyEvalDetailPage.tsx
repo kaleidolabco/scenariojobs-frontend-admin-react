@@ -19,10 +19,11 @@ import { useCategoryService, Category } from '../../services/categoryService';
 import { useUserService } from '../../services/userService';
 import { usePersonService } from '../../services/personService';
 import OrgChartPersonSelector from '../../components/Competencies/OrgChartPersonSelector';
+import EmailConfigTab from '../../components/Common/EmailConfigTab';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type ActiveTab = 'general' | 'competencias' | 'participantes';
+type ActiveTab = 'general' | 'competencias' | 'participantes' | 'correos';
 type WeightMap = Record<string, number>;
 type EvaluadoresPorPersona = Record<string, string[]>; // personId → evaluatorIds[]
 
@@ -136,6 +137,10 @@ const TabHeader: React.FC<{
             badge: personCount > 0 && (
                 <span className="badge badge-sm badge-primary ml-1">{personCount}</span>
             ),
+        },
+        {
+            id: 'correos',
+            label: 'Correos',
         },
     ];
 
@@ -1081,6 +1086,7 @@ const CompetencyEvalDetailPage: React.FC = () => {
         weights:                 {} as WeightMap,
         personas_a_evaluar:      [] as string[],
         evaluadores_por_persona: {} as EvaluadoresPorPersona,
+        templates_asociadas:     [] as string[],
     });
     const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -1098,7 +1104,7 @@ const CompetencyEvalDetailPage: React.FC = () => {
                 ]);
 
                 if (evalRes?.success) {
-                    const ev = evalRes.data.evaluacion as CompetencyEvaluationDetail & { weights?: WeightMap };
+                    const ev = evalRes.data.evaluacion as CompetencyEvaluationDetail & { weights?: WeightMap; templates_asociadas?: string[] };
                     setEvaluation(ev);
                     setFormData({
                         nombre:                  ev.nombre,
@@ -1108,6 +1114,7 @@ const CompetencyEvalDetailPage: React.FC = () => {
                         weights:                 ev.weights ?? {},
                         personas_a_evaluar:      ev.personas_a_evaluar || [],
                         evaluadores_por_persona: (ev as any).evaluadores_por_persona ?? {},
+                        templates_asociadas:     ev.templates_asociadas ?? [],
                     });
                 }
                 if (compRes?.success)    setAllCompetencies(compRes.data.competencias  || []);
@@ -1193,6 +1200,7 @@ const CompetencyEvalDetailPage: React.FC = () => {
                 // @ts-ignore extended fields
                 weights:                   formData.weights,
                 evaluadores_por_persona:   formData.evaluadores_por_persona,
+                templates_asociadas:       formData.templates_asociadas,
             });
             if (res?.success) {
                 openAlert('Proceso actualizado correctamente', 'success');
@@ -1334,6 +1342,15 @@ const CompetencyEvalDetailPage: React.FC = () => {
                             evaluadoresPorPersona={formData.evaluadores_por_persona}
                             onPersonsChange={(ids) => handleChange('personas_a_evaluar', ids)}
                             onEvaluadoresPorPersonaChange={(map) => handleChange('evaluadores_por_persona', map)}
+                        />
+                    )}
+
+                    {activeTab === 'correos' && evaluation && (
+                        <EmailConfigTab
+                            evaluationId={evaluation.id}
+                            evaluationType="competencia"
+                            data={{ templates_asociadas: formData.templates_asociadas }}
+                            onChange={(data) => handleChange('templates_asociadas', data.templates_asociadas)}
                         />
                     )}
                 </motion.div>

@@ -34,6 +34,7 @@ import CalificationListPage from "./pages/Evaluador/CalificationListPage";
 import CompetencyEvaluationDetailPage from "./pages/Evaluador/CompetencyEvaluationDetailPage";
 import EvaluacionesIntegralPage from "./pages/RRHH/EvaluacionesIntegralPage";
 import EvaluacionesIntegralDetailPage from "./pages/RRHH/EvaluacionesIntegralDetailPage";
+import EmailConfigPage from "./pages/Admin/EmailConfigPage";
 
 import { ROUTES } from "./constants/routes";
 
@@ -65,6 +66,7 @@ function App() {
           <Route path={ROUTES.COMPANY_CONFIG} element={<PageAnimation key={location.pathname}><UnderConstruction title="Configuración Empresa" /></PageAnimation>} />
           <Route path={ROUTES.USERS} element={<PageAnimation key={location.pathname}><UsersPage /></PageAnimation>} />
           <Route path={ROUTES.ROLES} element={<PageAnimation key={location.pathname}><UnderConstruction title="Roles y Permisos" /></PageAnimation>} />
+          <Route path={ROUTES.EMAIL_CONFIG} element={<PageAnimation key={location.pathname}><EmailConfigPage /></PageAnimation>} />
 
           {/* Módulo Estructura Organizacional (Nuevo) */}
           <Route path={ROUTES.ORG_CHART} element={<PageAnimation key={location.pathname}><OrgChartPage /></PageAnimation>} />
@@ -87,7 +89,7 @@ function App() {
 
           {/* Módulo Desempeño (Objetivos) */}
           <Route path={ROUTES.PERFORMANCE} element={<PageAnimation key={location.pathname}><DesempenoPage /></PageAnimation>} />
-          <Route path={ROUTES.EVALUATION_EDITOR(":evaluacionId")} element={<PageAnimation key={location.pathname}><EvaluationEditorPage/></PageAnimation>} />
+          <Route path={ROUTES.EVALUATION_EDITOR(":evaluacionId")} element={<PageAnimation key={location.pathname}><EvaluationEditorPage /></PageAnimation>} />
 
           <Route path={ROUTES.PROCESSES} element={<PageAnimation key={location.pathname}><UnderConstruction title="Procesos de Evaluación" /></PageAnimation>} />
           <Route path={ROUTES.PROCESS_CREATE} element={<PageAnimation key={location.pathname}><UnderConstruction title="Crear Proceso" /></PageAnimation>} />

@@ -8,7 +8,8 @@ import {
     ObjectiveTemplate,
     ObjectiveCategory,
     OBJECTIVE_CATEGORY_LABELS,
-    calcPuntajeFinal,
+    calcPuntajeFinalNumerico,
+    calcValorLogroNumerico,
     logroBadgeColor,
 } from '../../services/performanceService';
 import { useIntegralEvaluationService } from '../../services/integralEvaluationService';
@@ -105,11 +106,11 @@ const ObjectiveList: React.FC<{
     pesoOk: boolean;
     listRef: React.RefObject<HTMLDivElement | null>;
     isCompleted: boolean;
-    puntajePreview?: number;
+    puntajePreviewNumerico?: number;
     onSelect: (id: string) => void;
     onAdd: () => void;
     onOpenPicker: () => void;
-}> = ({ evaluation, selectedObjId, pesoTotal, pesoOk, listRef, isCompleted, puntajePreview, onSelect, onAdd, onOpenPicker }) => (
+}> = ({ evaluation, selectedObjId, pesoTotal, pesoOk, listRef, isCompleted, puntajePreviewNumerico, onSelect, onAdd, onOpenPicker }) => (
     <div className="flex flex-col h-full overflow-hidden">
         {/* Header */}
         <div className="px-4 pt-4 pb-3 border-b border-base-200 shrink-0">
@@ -135,11 +136,11 @@ const ObjectiveList: React.FC<{
                     </p>
                 )}
             </div>
-            {puntajePreview !== undefined && (
+            {puntajePreviewNumerico !== undefined && (
                 <div className="mt-3 flex items-center justify-between">
-                    <span className="text-xs text-base-content/50">Puntaje parcial</span>
-                    <span className={`badge badge-${logroBadgeColor(puntajePreview)} badge-sm font-bold`}>
-                        {puntajePreview.toFixed(1)}%
+                    <span className="text-xs text-base-content/50">Puntaje final</span>
+                    <span className="badge badge-primary badge-sm font-bold">
+                        {puntajePreviewNumerico.toFixed(2)}/5
                     </span>
                 </div>
             )}
@@ -335,6 +336,7 @@ const EvaluationEditorPage: React.FC = () => {
             if (integralId && res.data.evaluacion) {
                 const evaluacion = res.data.evaluacion;
                 const puntaje = evaluacion.puntaje_final;
+                const puntajeNumerico = evaluacion.puntaje_final_numerico;
                 const estadoMapeado = 
                     evaluacion.estado === 'COMPLETADA' ? 'COMPLETADA' :
                     evaluacion.estado === 'EN_PROGRESO' ? 'EN_PROGRESO' :
@@ -343,6 +345,7 @@ const EvaluationEditorPage: React.FC = () => {
                 await syncComponente(integralId, 'desempeno', {
                     estado: estadoMapeado,
                     puntaje: puntaje ?? undefined,
+                    puntaje_numerico: puntajeNumerico ?? undefined,
                 });
             }
         }
@@ -362,6 +365,7 @@ const EvaluationEditorPage: React.FC = () => {
             if (integralId && res.data.evaluacion) {
                 const evaluacion = res.data.evaluacion;
                 const puntaje = evaluacion.puntaje_final;
+                const puntajeNumerico = evaluacion.puntaje_final_numerico;
                 // Mapear EmployeeEvaluationStatus a IntegralEvaluationStatus
                 const estadoMapeado = 
                     evaluacion.estado === 'COMPLETADA' ? 'COMPLETADA' :
@@ -371,6 +375,7 @@ const EvaluationEditorPage: React.FC = () => {
                 await syncComponente(integralId, 'desempeno', {
                     estado: estadoMapeado,
                     puntaje: puntaje ?? undefined,
+                    puntaje_numerico: puntajeNumerico ?? undefined,
                 });
             }
         }
@@ -382,7 +387,14 @@ const EvaluationEditorPage: React.FC = () => {
     const pesoOk         = pesoTotal === 100;
     const selectedObj    = evaluation?.objetivos.find((o) => o.id === selectedObjId) ?? null;
     const isCompleted    = evaluation?.estado === 'COMPLETADA';
-    const puntajePreview = evaluation ? calcPuntajeFinal(evaluation.objetivos) : undefined;
+    const puntajePreviewNumerico = evaluation
+        ? calcPuntajeFinalNumerico(
+              evaluation.objetivos.map(o => ({
+                  ...o,
+                  valor_logro_numerico: calcValorLogroNumerico(o.calificacion_logro),
+              }))
+          )
+        : undefined;
 
     if (isLoading) return <div className="min-h-screen flex items-center justify-center"><LoadingIndicator /></div>;
     if (!evaluation) return null;
@@ -395,7 +407,7 @@ const EvaluationEditorPage: React.FC = () => {
             pesoOk={pesoOk}
             listRef={listRef}
             isCompleted={isCompleted}
-            puntajePreview={puntajePreview}
+            puntajePreviewNumerico={puntajePreviewNumerico}
             onSelect={(id) => { setSelectedObjId(id); setDrawerOpen(false); }}
             onAdd={addObjective}
             onOpenPicker={openTemplatePicker}
@@ -422,9 +434,9 @@ const EvaluationEditorPage: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                     <StatusBadge estado={evaluation.estado} />
-                    {puntajePreview !== undefined && (
-                        <div className={`badge badge-${logroBadgeColor(puntajePreview)} font-bold hidden sm:flex`}>
-                            {puntajePreview.toFixed(1)}%
+                    {puntajePreviewNumerico !== undefined && (
+                        <div className="badge badge-primary font-bold hidden sm:flex">
+                            {puntajePreviewNumerico.toFixed(2)}/5
                         </div>
                     )}
                     {!isCompleted && (
@@ -475,7 +487,7 @@ const EvaluationEditorPage: React.FC = () => {
 
                 {/* Right panel */}
                 <main className="flex-1 overflow-y-auto">
-                    <div className="p-4 md:p-6 max-w-3xl h-full">
+                    <div className="p-3 md:p-6 w-full md:max-w-3xl h-full">
                         <AnimatePresence mode="wait">
                             {selectedObj ? (
                                 <motion.div
