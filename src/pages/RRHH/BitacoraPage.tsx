@@ -631,7 +631,7 @@ const BitacoraPage: React.FC = () => {
     const [searchInput, setSearchInput] = useState('');
     const [tipoFilter, setTipoFilter] = useState<BitacoraTipo | ''>('');
     const [visibilidadFilter, setVisibilidadFilter] = useState<BitacoraVisibilidad | ''>('');
-    const [showFilters, setShowFilters] = useState(false);
+   /*  const [showFilters, setShowFilters] = useState(false); */
     const [queryParams, setQueryParams] = useState<BitacoraQueryParams>({
         pagina: 1,
         items_por_pagina: ITEMS_PER_PAGE,

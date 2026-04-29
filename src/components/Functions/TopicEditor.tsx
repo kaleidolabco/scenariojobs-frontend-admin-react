@@ -1,97 +1,150 @@
-import React from 'react';
-import { Topic, Detail, updateDetailInTopic, addDetailToTopic, removeDetailFromTopic } from '../../services/functionService';
-import InputField from '../Common/Forms/InputField';
+import React, { useState } from 'react';
+import {
+    Topic,
+    Detail,
+    FileResource,
+    updateDetailInTopic,
+    addDetailToTopic,
+    removeDetailFromTopic,
+    addFileToTopic,
+    removeFileFromTopic,
+    updateFileInTopic,
+} from '../../services/functionService';
+import TreeNodeRow from './TreeNodeRow';
 import DetailEditor from './DetailEditor';
+import FileEditor from './FileEditor';
 
 interface TopicEditorProps {
     topic: Topic;
     onUpdate: (topic: Topic) => void;
     onDelete: () => void;
-    isLast?: boolean;
-    onAddNew?: () => void;
+    defaultOpen?: boolean;
 }
 
 const TopicEditor: React.FC<TopicEditorProps> = ({
     topic,
     onUpdate,
     onDelete,
-    isLast,
-    onAddNew
+    defaultOpen = false,
 }) => {
-    const handleDetailUpdate = (detailId: string, updatedDetail: Detail) => {
-        const updatedTopic = updateDetailInTopic(topic, detailId, updatedDetail);
-        onUpdate(updatedTopic);
+    const [isOpen, setIsOpen] = useState(defaultOpen);
+
+    const handleDetailUpdate = (detailId: string, updated: Detail) => {
+        onUpdate(updateDetailInTopic(topic, detailId, updated));
     };
 
     const handleAddDetail = () => {
-        const updatedTopic = addDetailToTopic(topic);
-        onUpdate(updatedTopic);
+        const updated = addDetailToTopic(topic);
+        onUpdate(updated);
+        if (!isOpen) setIsOpen(true);
     };
 
     const handleRemoveDetail = (detailId: string) => {
-        const updatedTopic = removeDetailFromTopic(topic, detailId);
-        onUpdate(updatedTopic);
+        onUpdate(removeDetailFromTopic(topic, detailId));
+    };
+
+    const handleFileUpdate = (fileId: string, updated: FileResource) => {
+        onUpdate(updateFileInTopic(topic, fileId, updated));
+    };
+
+    const handleAddFile = () => {
+        const updated = addFileToTopic(topic);
+        onUpdate(updated);
+        if (!isOpen) setIsOpen(true);
+    };
+
+    const handleRemoveFile = (fileId: string) => {
+        onUpdate(removeFileFromTopic(topic, fileId));
     };
 
     return (
-        <div className="bg-base-200 border-2 border-base-300 rounded-lg p-5 space-y-4">
-            <div className="flex items-center justify-between">
-                <div className="flex-1">
-                    <label className="label pb-2">
-                        <span className="label-text font-semibold">Tema</span>
-                    </label>
-                    <InputField
-                        label=""
-                        value={topic.titulo}
-                        onChange={(e) => onUpdate({ ...topic, titulo: e.target.value })}
-                        placeholder="Ej. Técnicas de análisis predictivo"
-                        required
-                    />
-                </div>
+        <div>
+            <TreeNodeRow
+                isOpen={isOpen}
+                onToggle={() => setIsOpen(v => !v)}
+                dotColorClass="bg-accent"
+                label={topic.titulo}
+                childCount={topic.detalles.length}
+                onAdd={handleAddDetail}
+                addLabel="detalle"
+                onDelete={onDelete}
+            />
 
-                <div className="flex gap-2 ml-4">
-                    {isLast && onAddNew && (
-                        <button
-                            type="button"
-                            onClick={onAddNew}
-                            className="btn btn-sm btn-outline"
-                            title="Añadir tema"
-                        >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-                            </svg>
-                            Tema
-                        </button>
+            {isOpen && (
+                <div className="ml-4 pl-4 border-l border-base-300 py-2 space-y-3">
+                    {/* Title field */}
+                    <div>
+                        <label className="text-xs text-base-content/50 uppercase tracking-wide mb-1 block">
+                            Título del tema
+                        </label>
+                        <input
+                            type="text"
+                            className="input input-sm input-bordered w-full"
+                            value={topic.titulo}
+                            onChange={e => onUpdate({ ...topic, titulo: e.target.value })}
+                            placeholder="Ej. Técnicas de análisis predictivo"
+                        />
+                    </div>
+
+                    {/* Detail children */}
+                    {topic.detalles.length > 0 && (
+                        <div className="space-y-1">
+                            <p className="text-xs text-base-content/40 uppercase tracking-wide mb-1">
+                                Detalles ({topic.detalles.length})
+                            </p>
+                            {topic.detalles.map((detail, i) => (
+                                <DetailEditor
+                                    key={detail.id}
+                                    detail={detail}
+                                    onUpdate={updated => handleDetailUpdate(detail.id, updated)}
+                                    onDelete={() => handleRemoveDetail(detail.id)}
+                                    defaultOpen={i === topic.detalles.length - 1 && !detail.titulo}
+                                />
+                            ))}
+                        </div>
                     )}
+
                     <button
                         type="button"
-                        onClick={onDelete}
-                        className="btn btn-sm btn-ghost text-error hover:bg-error/10"
-                        title="Eliminar tema"
+                        onClick={handleAddDetail}
+                        className="flex items-center gap-1.5 text-xs text-base-content/50 hover:text-base-content border border-dashed border-base-300 hover:border-base-content/30 rounded-lg px-3 py-1.5 w-full justify-center transition-colors"
                     >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 16 16">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 3v10M3 8h10" />
                         </svg>
+                        Añadir detalle
+                    </button>
+
+                    {/* File resources section */}
+                    {topic.archivos.length > 0 && (
+                        <div className="space-y-1">
+                            <p className="text-xs text-base-content/40 uppercase tracking-wide mb-1">
+                                📎 Archivos ({topic.archivos.length})
+                            </p>
+                            {topic.archivos.map((archivo, i) => (
+                                <FileEditor
+                                    key={archivo.id}
+                                    file={archivo}
+                                    onUpdate={updated => handleFileUpdate(archivo.id, updated)}
+                                    onDelete={() => handleRemoveFile(archivo.id)}
+                                    defaultOpen={i === topic.archivos.length - 1 && !archivo.nombre}
+                                />
+                            ))}
+                        </div>
+                    )}
+
+                    <button
+                        type="button"
+                        onClick={handleAddFile}
+                        className="flex items-center gap-1.5 text-xs text-base-content/50 hover:text-base-content border border-dashed border-base-300 hover:border-base-content/30 rounded-lg px-3 py-1.5 w-full justify-center transition-colors"
+                    >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 16 16">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 3v10M3 8h10" />
+                        </svg>
+                        Añadir archivo
                     </button>
                 </div>
-            </div>
-
-            {/* Detalles */}
-            <div className="bg-base-100 rounded-lg p-4">
-                <h6 className="font-semibold text-sm mb-4 text-base-content">Detalles del Tema ({topic.detalles.length})</h6>
-                <div className="space-y-3">
-                    {topic.detalles.map((detail, index) => (
-                        <DetailEditor
-                            key={detail.id}
-                            detail={detail}
-                            onUpdate={(updated) => handleDetailUpdate(detail.id, updated)}
-                            onDelete={() => handleRemoveDetail(detail.id)}
-                            isLast={index === topic.detalles.length - 1}
-                            onAddNew={handleAddDetail}
-                        />
-                    ))}
-                </div>
-            </div>
+            )}
         </div>
     );
 };

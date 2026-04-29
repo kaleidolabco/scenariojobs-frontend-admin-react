@@ -69,6 +69,7 @@ interface ObjectiveEditorProps {
     onUpdate:            (updated: Objective) => void;
     onDelete:            () => void;
     onLoadTemplate:      () => void;
+    availableFunctions?:  Array<{ id: string; titulo: string }>;
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -80,6 +81,7 @@ const ObjectiveEditor: React.FC<ObjectiveEditorProps> = ({
     onUpdate,
     onDelete,
     onLoadTemplate,
+    availableFunctions = [],
 }) => {
     const [activeTab, setActiveTab] = useState<EditorTab>('definicion');
     const [draft, setDraft]         = useState<Objective>(objective);
@@ -215,6 +217,25 @@ const ObjectiveEditor: React.FC<ObjectiveEditorProps> = ({
                             options={CATEGORY_OPTIONS}
                             disabled={disabled}
                         />
+                        {availableFunctions.length > 0 && (
+                            <SelectField
+                                label="Función del cargo"
+                                value={draft.funcion_id ?? ''}
+                                onChange={e => {
+                                    const selectedFunc = availableFunctions.find(f => f.id === e.target.value);
+                                    update({
+                                        funcion_id: e.target.value || undefined,
+                                        funcion_titulo: selectedFunc?.titulo || undefined,
+                                    });
+                                }}
+                                options={[
+                                    { value: '', label: '— Sin función asignada —' },
+                                    ...availableFunctions.map(f => ({ value: f.id, label: f.titulo })),
+                                ]}
+                                disabled={disabled}
+                                helpText="Selecciona la función del cargo relacionada con este objetivo"
+                            />
+                        )}
                     </>
                 )}
 

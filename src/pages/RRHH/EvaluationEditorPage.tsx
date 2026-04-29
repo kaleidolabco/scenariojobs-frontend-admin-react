@@ -12,6 +12,7 @@ import {
     calcValorLogroNumerico,
     logroBadgeColor,
 } from '../../services/performanceService';
+import { useJobService } from '../../services/jobService';
 import { useIntegralEvaluationService } from '../../services/integralEvaluationService';
 import ObjectiveEditor from '../../components/Performance/ObjectiveEditor';
 import GenericModal from '../../components/Common/GenericModal';
@@ -34,6 +35,8 @@ const newObjective = (): Objective => ({
     frecuencia:    'MENSUAL',
     peso:          0,
     meta:          0,
+    funcion_id:    undefined,
+    funcion_titulo: undefined,
 });
 
 const StatusBadge: React.FC<{ estado: EmployeeEvaluation['estado'] }> = ({ estado }) => {
@@ -220,6 +223,7 @@ const EvaluationEditorPage: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { getEvaluationById, saveEvaluation, completeEvaluation, getTemplates } = usePerformanceService();
+    const { getJobByName } = useJobService();
     const { syncComponente } = useIntegralEvaluationService();
 
     // Obtener integralId del state de navegación
@@ -241,6 +245,9 @@ const EvaluationEditorPage: React.FC = () => {
     // del ObjectiveEditor y que su draft interno se reinicialice con los datos nuevos
     const [templateKey, setTemplateKey] = useState(0);
 
+    // Estado para funciones disponibles del cargo
+    const [availableFunctions, setAvailableFunctions] = useState<{ id: string; titulo: string }[]>([]);
+
     const listRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -252,6 +259,23 @@ const EvaluationEditorPage: React.FC = () => {
             const ev: EmployeeEvaluation = res.data.evaluacion;
             setEvaluation(ev);
             if (ev.objetivos.length > 0) setSelectedObjId(ev.objetivos[0].id);
+
+            // Cargar funciones del cargo del evaluado
+            if (ev.persona_puesto) {
+                const job = getJobByName(ev.persona_puesto);
+                if (job && job.funciones) {
+                    // Extraer funciones disponibles
+                    // Si son strings (legacy), convertir a objeto con id y titulo
+                    const functions = (Array.isArray(job.funciones) ? job.funciones : []).map((func, idx) => {
+                        if (typeof func === 'string') {
+                            return { id: `func-${idx}`, titulo: func };
+                        }
+                        // Si es JobFunction, extraer títulos de capacidades
+                        return func;
+                    }).flat();
+                    setAvailableFunctions(functions);
+                }
+            }
             setIsLoading(false);
         })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -502,6 +526,7 @@ const EvaluationEditorPage: React.FC = () => {
                                         onUpdate={updateObjective}
                                         onDelete={() => deleteObjective(selectedObj.id)}
                                         onLoadTemplate={openTemplatePicker}
+                                        availableFunctions={availableFunctions}
                                     />
                                 </motion.div>
                             ) : (

@@ -141,13 +141,13 @@ const JobForm: React.FC<JobFormProps> = ({ initialData, isLoading, onSubmit, onC
                         {funciones.length > 0 ? (
                             <div className="space-y-2">
                                 {funciones.map((func, index) => (
-                                    <div key={func.id} className="bg-base-100 rounded p-3">
-                                        <div className="font-semibold text-sm text-base-content">{index + 1}. {func.titulo}</div>
-                                        {func.descripcion && (
+                                    <div key={func?.id || index} className="bg-base-100 rounded p-3">
+                                        <div className="font-semibold text-sm text-base-content">{index + 1}. {func?.titulo || 'Sin título'}</div>
+                                        {func?.descripcion && (
                                             <div className="text-xs opacity-70 mt-1">{func.descripcion}</div>
                                         )}
                                         <div className="text-xs opacity-60 mt-2">
-                                            {func.capacidades.length} capacidades
+                                            {func?.capacidades?.length || 0} capacidades
                                         </div>
                                     </div>
                                 ))}

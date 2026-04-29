@@ -225,15 +225,16 @@ const OrgPositionDetailPage: React.FC = () => {
                             <h3 className="card-title text-base">Funciones</h3>
                             <p className="text-sm text-base-content/70 mb-3">Heredadas del cargo</p>
 
-                            {job && job.funciones.length > 0 ? (
+                            {/* {job && job.funciones.length > 0 ? (
                                 <ul className="list-disc list-inside space-y-1 text-sm">
                                     {job.funciones.map((func, idx) => (
-                                        <li key={idx} className="text-base-content/80">{func}</li>
+                                        <li key={idx} className="text-base-content/80">{typeof func === 'string' ? func : func.description}</li>
                                     ))}
                                 </ul>
                             ) : (
                                 <p className="text-sm text-base-content/50">Sin funciones definidas</p>
-                            )}
+                            )} */}
+                            <p className="text-sm text-base-content/50">Sin funciones definidas</p>
                         </div>
                     </div>
                 </div>

@@ -1,120 +1,116 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
     Capability,
     Knowledge,
     updateKnowledgeInCapability,
     addKnowledgeToCapability,
-    removeKnowledgeFromCapability
+    removeKnowledgeFromCapability,
 } from '../../services/functionService';
-import InputField from '../Common/Forms/InputField';
-import TextAreaField from '../Common/Forms/TextAreaField';
+import TreeNodeRow from './TreeNodeRow';
 import KnowledgeEditor from './KnowledgeEditor';
 
 interface CapabilityEditorProps {
     capability: Capability;
     onUpdate: (capability: Capability) => void;
     onDelete: () => void;
-    isLast?: boolean;
-    onAddNew?: () => void;
+    defaultOpen?: boolean;
 }
 
 const CapabilityEditor: React.FC<CapabilityEditorProps> = ({
     capability,
     onUpdate,
     onDelete,
-    isLast,
-    onAddNew
+    defaultOpen = false,
 }) => {
-    const handleKnowledgeUpdate = (knowledgeId: string, updatedKnowledge: Knowledge) => {
-        const updatedCapability = updateKnowledgeInCapability(capability, knowledgeId, updatedKnowledge);
-        onUpdate(updatedCapability);
+    const [isOpen, setIsOpen] = useState(defaultOpen);
+
+    const handleKnowledgeUpdate = (knowledgeId: string, updated: Knowledge) => {
+        onUpdate(updateKnowledgeInCapability(capability, knowledgeId, updated));
     };
 
     const handleAddKnowledge = () => {
-        const updatedCapability = addKnowledgeToCapability(capability);
-        onUpdate(updatedCapability);
+        const updated = addKnowledgeToCapability(capability);
+        onUpdate(updated);
+        if (!isOpen) setIsOpen(true);
     };
 
     const handleRemoveKnowledge = (knowledgeId: string) => {
-        const updatedCapability = removeKnowledgeFromCapability(capability, knowledgeId);
-        onUpdate(updatedCapability);
+        onUpdate(removeKnowledgeFromCapability(capability, knowledgeId));
     };
 
     return (
-        <div className="border-l-4 border-l-primary pl-6 py-4 space-y-4">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div className="flex-1 space-y-2">
-                    <label className="label pb-0">
-                        <span className="label-text font-semibold text-primary">Capacidad a Desarrollar</span>
-                    </label>
-                    <InputField
-                        label=""
-                        value={capability.titulo}
-                        onChange={(e) => onUpdate({ ...capability, titulo: e.target.value })}
-                        placeholder="Ej. Análisis de Datos Avanzado"
-                        required
-                    />
-                </div>
+        <div>
+            <TreeNodeRow
+                isOpen={isOpen}
+                onToggle={() => setIsOpen(v => !v)}
+                dotColorClass="bg-primary"
+                label={capability.titulo}
+                childCount={capability.conocimientos.length}
+                onAdd={handleAddKnowledge}
+                addLabel="conocimiento"
+                onDelete={onDelete}
+            />
 
-                <div className="flex gap-2 ml-4">
-                    {isLast && onAddNew && (
-                        <button
-                            type="button"
-                            onClick={onAddNew}
-                            className="btn btn-sm btn-primary"
-                            title="Añadir capacidad"
-                        >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-                            </svg>
-                            Capacidad
-                        </button>
+            {isOpen && (
+                <div className="ml-4 pl-4 border-l border-base-300 py-2 space-y-3">
+                    {/* Title */}
+                    <div>
+                        <label className="text-xs text-base-content/50 uppercase tracking-wide mb-1 block">
+                            Título de la capacidad
+                        </label>
+                        <input
+                            type="text"
+                            className="input input-sm input-bordered w-full"
+                            value={capability.titulo}
+                            onChange={e => onUpdate({ ...capability, titulo: e.target.value })}
+                            placeholder="Ej. Análisis de Datos Avanzado"
+                        />
+                    </div>
+
+                    {/* Description */}
+                    <div>
+                        <label className="text-xs text-base-content/50 uppercase tracking-wide mb-1 block">
+                            Descripción <span className="normal-case">(opcional)</span>
+                        </label>
+                        <textarea
+                            className="textarea textarea-bordered textarea-sm w-full resize-none"
+                            rows={2}
+                            value={capability.descripcion || ''}
+                            onChange={e => onUpdate({ ...capability, descripcion: e.target.value })}
+                            placeholder="Breve descripción de esta capacidad..."
+                        />
+                    </div>
+
+                    {/* Knowledge children */}
+                    {capability.conocimientos.length > 0 && (
+                        <div className="space-y-1">
+                            <p className="text-xs text-base-content/40 uppercase tracking-wide mb-1">
+                                Conocimientos ({capability.conocimientos.length})
+                            </p>
+                            {capability.conocimientos.map((conocimiento, i) => (
+                                <KnowledgeEditor
+                                    key={conocimiento.id}
+                                    knowledge={conocimiento}
+                                    onUpdate={updated => handleKnowledgeUpdate(conocimiento.id, updated)}
+                                    onDelete={() => handleRemoveKnowledge(conocimiento.id)}
+                                    defaultOpen={i === capability.conocimientos.length - 1 && !conocimiento.titulo}
+                                />
+                            ))}
+                        </div>
                     )}
+
                     <button
                         type="button"
-                        onClick={onDelete}
-                        className="btn btn-sm btn-ghost text-error hover:bg-error/10"
-                        title="Eliminar capacidad"
+                        onClick={handleAddKnowledge}
+                        className="flex items-center gap-1.5 text-xs text-base-content/50 hover:text-base-content border border-dashed border-base-300 hover:border-base-content/30 rounded-lg px-3 py-1.5 w-full justify-center transition-colors"
                     >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 16 16">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 3v10M3 8h10" />
                         </svg>
+                        Añadir conocimiento
                     </button>
                 </div>
-            </div>
-
-            {/* Description */}
-            <div>
-                <TextAreaField
-                    label="Descripción (Opcional)"
-                    value={capability.descripcion || ''}
-                    onChange={(e) => onUpdate({ ...capability, descripcion: e.target.value })}
-                    placeholder="Breve descripción de esta capacidad..."
-                    rows={2}
-                />
-            </div>
-
-            {/* Conocimientos */}
-            <div className="space-y-4 bg-base-100 rounded-lg p-4">
-                <div className="flex items-center justify-between">
-                    <h4 className="font-semibold text-base-content">
-                        Conocimientos ({capability.conocimientos.length})
-                    </h4>
-                </div>
-                <div className="space-y-4">
-                    {capability.conocimientos.map((conocimiento, index) => (
-                        <KnowledgeEditor
-                            key={conocimiento.id}
-                            knowledge={conocimiento}
-                            onUpdate={(updated) => handleKnowledgeUpdate(conocimiento.id, updated)}
-                            onDelete={() => handleRemoveKnowledge(conocimiento.id)}
-                            isLast={index === capability.conocimientos.length - 1}
-                            onAddNew={handleAddKnowledge}
-                        />
-                    ))}
-                </div>
-            </div>
+            )}
         </div>
     );
 };

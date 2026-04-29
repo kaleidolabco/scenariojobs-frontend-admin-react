@@ -7,7 +7,7 @@ import {
     removeCapabilityFromFunction,
     updateJobFunction,
     isJobFunctionValid,
-    calculateFunctionStats
+    calculateFunctionStats,
 } from '../../services/functionService';
 import InputField from '../Common/Forms/InputField';
 import TextAreaField from '../Common/Forms/TextAreaField';
@@ -26,171 +26,156 @@ const FunctionEditor: React.FC<FunctionEditorProps> = ({
     onUpdate,
     isLoading = false,
     onSave,
-    onCancel
+    onCancel,
 }) => {
     const [localFunction, setLocalFunction] = useState<JobFunction>(jobFunction);
     const [isValid, setIsValid] = useState(false);
     const stats = calculateFunctionStats(localFunction);
 
-    useEffect(() => {
-        setLocalFunction(jobFunction);
-    }, [jobFunction]);
+    useEffect(() => { setLocalFunction(jobFunction); }, [jobFunction]);
+    useEffect(() => { setIsValid(isJobFunctionValid(localFunction)); }, [localFunction]);
 
-    useEffect(() => {
-        setIsValid(isJobFunctionValid(localFunction));
-    }, [localFunction]);
+    const update = (fn: JobFunction) => { setLocalFunction(fn); onUpdate(fn); };
 
-    const handleCapabilityUpdate = (capabilityId: string, updatedCapability: Capability) => {
-        const updated = updateCapabilityInFunction(localFunction, capabilityId, updatedCapability);
-        setLocalFunction(updated);
-        onUpdate(updated);
+    const handleCapabilityUpdate = (capabilityId: string, updated: Capability) => {
+        update(updateCapabilityInFunction(localFunction, capabilityId, updated));
     };
 
     const handleAddCapability = () => {
-        const updated = addCapabilityToFunction(localFunction);
-        setLocalFunction(updated);
-        onUpdate(updated);
+        update(addCapabilityToFunction(localFunction));
     };
 
     const handleRemoveCapability = (capabilityId: string) => {
-        const updated = removeCapabilityFromFunction(localFunction, capabilityId);
-        setLocalFunction(updated);
-        onUpdate(updated);
+        update(removeCapabilityFromFunction(localFunction, capabilityId));
     };
 
     const handleFunctionUpdate = (updates: Partial<Omit<JobFunction, 'id'>>) => {
-        const updated = updateJobFunction(localFunction, updates);
-        setLocalFunction(updated);
-        onUpdate(updated);
+        update(updateJobFunction(localFunction, updates));
     };
 
     return (
-        <div className="space-y-6">
-            {/* Header Info */}
-            <div className="bg-base-100 rounded-lg border border-base-300 p-6 space-y-4">
-                <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                        <h3 className="font-bold text-xl text-base-content mb-4">Función Principal</h3>
-                        <InputField
-                            label="Título de la Función"
-                            value={localFunction.titulo}
-                            onChange={(e) => handleFunctionUpdate({ titulo: e.target.value })}
-                            placeholder="Ej. Gestión de Proyectos Complejos"
-                            required
-                        />
-                    </div>
-                </div>
-
+        <div className="space-y-5">
+            {/* Function header */}
+            <div className="space-y-3">
+                <InputField
+                    label="Título de la Función"
+                    value={localFunction.titulo}
+                    onChange={e => handleFunctionUpdate({ titulo: e.target.value })}
+                    placeholder="Ej. Gestión de Proyectos Complejos"
+                    required
+                />
                 <TextAreaField
                     label="Descripción (Opcional)"
                     value={localFunction.descripcion || ''}
-                    onChange={(e) => handleFunctionUpdate({ descripcion: e.target.value })}
+                    onChange={e => handleFunctionUpdate({ descripcion: e.target.value })}
                     placeholder="Descripción general de esta función y su alcance..."
                     rows={2}
                 />
-
-                {/* Statistics */}
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-2 pt-4 border-t border-base-300">
-                    <div className="bg-base-200 rounded p-2 text-center">
-                        <div className="text-2xl font-bold text-primary">{stats.capabilitiesCount}</div>
-                        <div className="text-xs text-base-content/60">Capacidades</div>
-                    </div>
-                    <div className="bg-base-200 rounded p-2 text-center">
-                        <div className="text-2xl font-bold text-secondary">{stats.knowledgesCount}</div>
-                        <div className="text-xs text-base-content/60">Conocimientos</div>
-                    </div>
-                    <div className="bg-base-200 rounded p-2 text-center">
-                        <div className="text-2xl font-bold text-accent">{stats.modulesCount}</div>
-                        <div className="text-xs text-base-content/60">Módulos</div>
-                    </div>
-                    <div className="bg-base-200 rounded p-2 text-center">
-                        <div className="text-2xl font-bold text-info">{stats.topicsCount}</div>
-                        <div className="text-xs text-base-content/60">Temas</div>
-                    </div>
-                    <div className="bg-base-200 rounded p-2 text-center">
-                        <div className="text-2xl font-bold text-warning">{stats.detailsCount}</div>
-                        <div className="text-xs text-base-content/60">Detalles</div>
-                    </div>
-                </div>
-
-                {/* Validation Status */}
-                {!isValid && (
-                    <div className="alert alert-warning">
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4v2m0 0v2m0-6v-2" />
-                        </svg>
-                        <span>Completa todos los campos requeridos en cada nivel jerárquico</span>
-                    </div>
-                )}
             </div>
 
-            {/* Capacidades */}
-            <div className="bg-base-100 rounded-lg border border-base-300 p-6 space-y-4">
-                <div className="flex items-center justify-between">
-                    <h3 className="font-bold text-lg text-base-content">
-                        Capacidades a Desarrollar ({localFunction.capacidades.length})
-                    </h3>
-                </div>
+            {/* Stats pills */}
+            <div className="flex flex-wrap gap-1.5">
+                {[
+                    { label: 'capacidades',  value: stats.capabilitiesCount, color: 'bg-primary/10 text-primary' },
+                    { label: 'conocimientos', value: stats.knowledgesCount,   color: 'bg-secondary/10 text-secondary' },
+                    { label: 'módulos',       value: stats.modulesCount,      color: 'bg-warning/10 text-warning' },
+                    { label: 'temas',         value: stats.topicsCount,       color: 'bg-accent/10 text-accent' },
+                    { label: 'detalles',      value: stats.detailsCount,      color: 'bg-base-content/10 text-base-content/60' },
+                ].map(({ label, value, color }) => (
+                    <span key={label} className={`text-xs font-medium px-2.5 py-1 rounded-full ${color}`}>
+                        {value} {label}
+                    </span>
+                ))}
+            </div>
 
-                <div className="space-y-6 bg-base-200 rounded-lg p-4">
-                    {localFunction.capacidades.map((capacidad, index) => (
-                        <CapabilityEditor
-                            key={capacidad.id}
-                            capability={capacidad}
-                            onUpdate={(updated) => handleCapabilityUpdate(capacidad.id, updated)}
-                            onDelete={() => handleRemoveCapability(capacidad.id)}
-                            isLast={index === localFunction.capacidades.length - 1}
-                            onAddNew={handleAddCapability}
-                        />
-                    ))}
-                </div>
-
-                {/* Add capability button */}
-                <button
-                    type="button"
-                    onClick={handleAddCapability}
-                    className="btn btn-primary w-full"
-                    disabled={isLoading}
-                >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+            {/* Validation alert */}
+            {!isValid && localFunction.capacidades.length > 0 && (
+                <div className="alert alert-warning py-2 text-sm">
+                    <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                              d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
                     </svg>
-                    Nueva Capacidad
-                </button>
+                    <span>Completa los campos requeridos en cada nivel</span>
+                </div>
+            )}
+
+            <h1 className="text-lg font-bold text-base-content">
+                Mapa de conocimiento
+            </h1>
+
+            {/* Capability tree */}
+            <div className="border border-base-300 rounded-xl overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-2.5 bg-base-200/50 border-b border-base-300">
+                    <span className="text-sm font-semibold text-base-content">
+                        Capacidades a Desarrollar
+                    </span>
+                    <button
+                        type="button"
+                        onClick={handleAddCapability}
+                        className="flex items-center gap-1.5 text-xs font-medium text-primary hover:text-primary-focus transition-colors"
+                        disabled={isLoading}
+                    >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 16 16">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 3v10M3 8h10" />
+                        </svg>
+                        Nueva capacidad
+                    </button>
+                </div>
+
+                <div className="p-2">
+                    {localFunction.capacidades.length === 0 ? (
+                        <div className="text-center py-10 text-base-content/40">
+                            <svg className="w-10 h-10 mx-auto mb-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"
+                                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <p className="text-sm font-medium">Sin capacidades aún</p>
+                            <button
+                                type="button"
+                                onClick={handleAddCapability}
+                                className="btn btn-sm btn-primary mt-3"
+                                disabled={isLoading}
+                            >
+                                Añadir primera capacidad
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="space-y-0.5">
+                            {localFunction.capacidades.map((cap, i) => (
+                                <CapabilityEditor
+                                    key={cap.id}
+                                    capability={cap}
+                                    onUpdate={updated => handleCapabilityUpdate(cap.id, updated)}
+                                    onDelete={() => handleRemoveCapability(cap.id)}
+                                    defaultOpen={i === 0 && localFunction.capacidades.length === 1}
+                                />
+                            ))}
+                        </div>
+                    )}
+                </div>
             </div>
 
-            {/* Actions */}
+            {/* Optional inline save/cancel actions */}
             {(onSave || onCancel) && (
-                <div className="sticky bottom-0 bg-base-100 border-t border-base-300 p-4 md:relative md:border-t-0 md:p-0 md:pt-4 flex flex-col-reverse md:flex-row justify-end gap-2 md:gap-3">
+                <div className="flex justify-end gap-2 pt-2">
                     {onCancel && (
-                        <button
-                            type="button"
-                            className="btn btn-ghost hover:bg-base-200 mt-2 md:mt-0 order-2 md:order-1"
-                            onClick={onCancel}
-                            disabled={isLoading}
-                        >
+                        <button type="button" className="btn btn-ghost btn-sm" onClick={onCancel} disabled={isLoading}>
                             Cancelar
                         </button>
                     )}
                     {onSave && (
                         <button
                             type="button"
-                            className="btn btn-primary w-full md:w-auto order-1 md:order-2"
+                            className="btn btn-primary btn-sm"
                             onClick={onSave}
                             disabled={isLoading || !isValid}
                         >
                             {isLoading ? (
-                                <>
-                                    <span className="loading loading-spinner loading-sm"></span>
-                                    <span className="ml-2">Guardando...</span>
-                                </>
+                                <><span className="loading loading-spinner loading-xs" /> Guardando...</>
                             ) : (
-                                <>
-                                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    <span>Guardar Función</span>
-                                </>
+                                <><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                                </svg> Guardar función</>
                             )}
                         </button>
                     )}

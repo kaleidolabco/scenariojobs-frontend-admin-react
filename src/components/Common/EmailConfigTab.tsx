@@ -57,8 +57,8 @@ const formatDate = (iso?: string): string => {
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 const EmailConfigTab: React.FC<EmailConfigTabProps> = ({
-    evaluationId,
-    evaluationType,
+    /* evaluationId,
+    evaluationType, */
     data,
     onChange,
 }) => {

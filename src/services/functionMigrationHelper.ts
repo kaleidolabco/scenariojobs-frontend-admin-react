@@ -11,7 +11,7 @@
  */
 
 import { convertLegacyFunctionsToHierarchical } from './jobService';
-import { JobFunction, createEmptyCapability, createEmptyKnowledge, createEmptyModule, createEmptyTopic, createEmptyDetail } from './functionService';
+import { JobFunction, createEmptyCapability, createEmptyKnowledge, createEmptyModule, createEmptyTopic, /* createEmptyDetail */ } from './functionService';
 
 /**
  * Ejemplo 1: Migración manual para un job

@@ -25,6 +25,20 @@ export interface Topic {
     id: string;
     titulo: string;
     detalles: Detail[];
+    archivos: FileResource[];
+}
+
+/**
+ * Archivo - Recurso asociado a un módulo
+ */
+export interface FileResource {
+    id: string;
+    nombre: string;
+    descripcion?: string;
+    comentario?: string;
+    archivoNombre?: string;  // Nombre del archivo cargado
+    archivoUrl?: string;      // URL o path del archivo
+    archivoTamaño?: number;   // Tamaño en bytes
 }
 
 /**
@@ -36,7 +50,10 @@ export interface Module {
     tipoConocimiento: KnowledgeType;
     fuentes: KnowledgeSource[];
     nivelDesarrollo: DevelopmentLevel;
+    origenEmpleadoId?: string;      // ID del empleado si fuente es INTERNA
+    origenExternoReferencia?: string; // Referencia/nombre si fuente es EXTERNA
     temas: Topic[];
+    archivos: FileResource[];
 }
 
 /**
@@ -94,7 +111,18 @@ export const createEmptyDetail = (): Detail => ({
 export const createEmptyTopic = (): Topic => ({
     id: generateId(),
     titulo: '',
-    detalles: [createEmptyDetail()]
+    detalles: [createEmptyDetail()],
+    archivos: []
+});
+
+/**
+ * Crea un nuevo archivo vacío
+ */
+export const createEmptyFileResource = (): FileResource => ({
+    id: generateId(),
+    nombre: '',
+    descripcion: '',
+    comentario: ''
 });
 
 /**
@@ -106,7 +134,10 @@ export const createEmptyModule = (): Module => ({
     tipoConocimiento: 'ESTANDAR',
     fuentes: ['INTERNA'],
     nivelDesarrollo: 1,
-    temas: [createEmptyTopic()]
+    origenEmpleadoId: undefined,
+    origenExternoReferencia: undefined,
+    temas: [createEmptyTopic()],
+    archivos: []
 });
 
 /**
@@ -173,6 +204,36 @@ export const updateDetailInTopic = (
 });
 
 /**
+ * Añade un nuevo archivo a un tema
+ */
+export const addFileToTopic = (topic: Topic): Topic => ({
+    ...topic,
+    archivos: [...topic.archivos, createEmptyFileResource()]
+});
+
+/**
+ * Elimina un archivo de un tema
+ */
+export const removeFileFromTopic = (topic: Topic, fileId: string): Topic => ({
+    ...topic,
+    archivos: topic.archivos.filter(f => f.id !== fileId)
+});
+
+/**
+ * Actualiza un archivo en un tema
+ */
+export const updateFileInTopic = (
+    topic: Topic,
+    fileId: string,
+    updates: Partial<FileResource>
+): Topic => ({
+    ...topic,
+    archivos: topic.archivos.map(f =>
+        f.id === fileId ? { ...f, ...updates } : f
+    )
+});
+
+/**
  * Añade un nuevo tema a un módulo
  */
 export const addTopicToModule = (module: Module): Module => ({
@@ -199,6 +260,36 @@ export const updateTopicInModule = (
     ...module,
     temas: module.temas.map(t =>
         t.id === topicId ? { ...t, ...updates } : t
+    )
+});
+
+/**
+ * Añade un nuevo archivo a un módulo
+ */
+export const addFileToModule = (module: Module): Module => ({
+    ...module,
+    archivos: [...module.archivos, createEmptyFileResource()]
+});
+
+/**
+ * Elimina un archivo de un módulo
+ */
+export const removeFileFromModule = (module: Module, fileId: string): Module => ({
+    ...module,
+    archivos: module.archivos.filter(f => f.id !== fileId)
+});
+
+/**
+ * Actualiza un archivo en un módulo
+ */
+export const updateFileInModule = (
+    module: Module,
+    fileId: string,
+    updates: Partial<FileResource>
+): Module => ({
+    ...module,
+    archivos: module.archivos.map(f =>
+        f.id === fileId ? { ...f, ...updates } : f
     )
 });
 

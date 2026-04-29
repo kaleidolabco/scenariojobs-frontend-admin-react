@@ -28,7 +28,7 @@ export interface Job {
     descripcion: string;
     nivel_jerarquico: SeniorityLevel;
     competencias_requeridas: CompetencyRequirement[];
-    funciones: JobFunction[];
+    funciones: JobFunction[] | string[]; // Permite ambos formatos durante transición
     banda_salarial_min?: number;
     banda_salarial_max?: number;
 }
@@ -104,10 +104,10 @@ const MOCK_JOBS: Job[] = [
             { competencia_id: '7', competencia_nombre: 'Pensamiento Analítico', nivel_esperado: 5 }
         ],
         funciones: [
-            /* 'Definir la visión y estrategia organizacional',
+            'Definir la visión y estrategia organizacional',
             'Liderar el equipo directivo',
             'Asegurar el cumplimiento de objetivos corporativos',
-            'Representar a la organización ante stakeholders' */
+            'Representar a la organización ante stakeholders'
         ],
         banda_salarial_min: 200000,
         banda_salarial_max: 300000
@@ -242,10 +242,10 @@ const MOCK_JOBS: Job[] = [
             { competencia_id: '2', competencia_nombre: 'Comunicación Asertiva', nivel_esperado: 4 }
         ],
         funciones: [
-            /* 'Liderar procesos de reclutamiento y selección',
+            'Liderar procesos de reclutamiento y selección',
             'Diseñar programas de desarrollo de talento',
             'Gestionar clima y cultura organizacional',
-            'Implementar sistemas de evaluación de desempeño' */
+            'Implementar sistemas de evaluación de desempeño'
         ],
         banda_salarial_min: 60000,
         banda_salarial_max: 90000
@@ -339,10 +339,10 @@ const MOCK_JOBS: Job[] = [
             { competencia_id: '7', competencia_nombre: 'Pensamiento Analítico', nivel_esperado: 4 }
         ],
         funciones: [
-            /* 'Analizar requerimientos de clientes',
+            'Analizar requerimientos de clientes',
             'Diseñar propuestas técnicas',
             'Realizar presentaciones y demos',
-            'Estimar esfuerzos y costos' */
+            'Estimar esfuerzos y costos'
         ],
         banda_salarial_min: 55000,
         banda_salarial_max: 80000
@@ -358,10 +358,10 @@ const MOCK_JOBS: Job[] = [
             { competencia_id: '18', competencia_nombre: 'Bases de Datos', nivel_esperado: 3 }
         ],
         funciones: [
-            /* 'Desarrollar aplicaciones web escalables',
+            'Desarrollar aplicaciones web escalables',
             'Implementar APIs y servicios backend',
             'Crear interfaces de usuario modernas',
-            'Participar en revisiones de código' */
+            'Participar en revisiones de código'
         ],
         banda_salarial_min: 50000,
         banda_salarial_max: 75000
@@ -571,10 +571,10 @@ const MOCK_JOBS: Job[] = [
             { competencia_id: '4', competencia_nombre: 'Trabajo en Equipo', nivel_esperado: 3 }
         ],
         funciones: [
-            /* 'Brindar soporte técnico a usuarios',
+            'Brindar soporte técnico a usuarios',
             'Resolver problemas de hardware y software',
             'Gestionar tickets de soporte',
-            'Mantener base de conocimiento' */
+            'Mantener base de conocimiento'
         ],
         banda_salarial_min: 28000,
         banda_salarial_max: 42000
@@ -732,11 +732,17 @@ export const useJobService = () => {
         }
     };
 
+    const getJobByName = (jobName?: string): Job | undefined => {
+        if (!jobName) return undefined;
+        return MOCK_JOBS.find(j => j.nombre.toLowerCase() === jobName.toLowerCase());
+    };
+
     return {
         getJobs,
         createJob,
         updateJob,
         deleteJob,
+        getJobByName,
         loading,
         error
     };

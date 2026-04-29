@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { JobFunction, createEmptyJobFunction } from '../../services/functionService';
 import GenericModal from '../Common/GenericModal';
 import FunctionEditor from './FunctionEditor';
+import { exportFunctionsToExcel, exportFunctionsSummaryToExcel } from '../../utils/excelExportHelper';
 
 interface FunctionManagerModalProps {
     isOpen: boolean;
@@ -61,6 +62,16 @@ const FunctionManagerModal: React.FC<FunctionManagerModalProps> = ({
         } finally {
             setIsSaving(false);
         }
+    };
+
+    const handleExportDetailed = () => {
+        if (functions.length === 0) return;
+        exportFunctionsToExcel(functions, `Funciones_Detallado_${new Date().toISOString().split('T')[0]}.xlsx`);
+    };
+
+    const handleExportSummary = () => {
+        if (functions.length === 0) return;
+        exportFunctionsSummaryToExcel(functions, `Funciones_Resumen_${new Date().toISOString().split('T')[0]}.xlsx`);
     };
 
     return (
@@ -152,35 +163,63 @@ const FunctionManagerModal: React.FC<FunctionManagerModalProps> = ({
             </div>
 
             {/* Modal Actions */}
-            <div className="flex flex-col-reverse md:flex-row justify-end gap-2 md:gap-3 mt-6 pt-4 border-t border-base-300">
-                <button
-                    type="button"
-                    className="btn btn-ghost"
-                    onClick={onClose}
-                    disabled={isSaving || isLoading}
-                >
-                    Cancelar
-                </button>
-                <button
-                    type="button"
-                    className="btn btn-primary"
-                    onClick={handleSave}
-                    disabled={isSaving || isLoading || functions.length === 0}
-                >
-                    {isSaving ? (
-                        <>
-                            <span className="loading loading-spinner loading-sm"></span>
-                            <span>Guardando...</span>
-                        </>
-                    ) : (
-                        <>
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                            Guardar {functions.length} Función{functions.length !== 1 ? 'es' : ''}
-                        </>
-                    )}
-                </button>
+            <div className="flex flex-col-reverse md:flex-row justify-between gap-2 md:gap-3 mt-6 pt-4 border-t border-base-300">
+                <div className="flex gap-2">
+                    <button
+                        type="button"
+                        className="btn btn-outline btn-sm"
+                        onClick={handleExportSummary}
+                        disabled={isSaving || isLoading || functions.length === 0}
+                        title="Descargar resumen en Excel"
+                    >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        Resumen
+                    </button>
+                    <button
+                        type="button"
+                        className="btn btn-outline btn-sm"
+                        onClick={handleExportDetailed}
+                        disabled={isSaving || isLoading || functions.length === 0}
+                        title="Descargar funciones detalladas en Excel"
+                    >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        Detallado
+                    </button>
+                </div>
+                <div className="flex gap-2 md:gap-3">
+                    <button
+                        type="button"
+                        className="btn btn-ghost"
+                        onClick={onClose}
+                        disabled={isSaving || isLoading}
+                    >
+                        Cancelar
+                    </button>
+                    <button
+                        type="button"
+                        className="btn btn-primary"
+                        onClick={handleSave}
+                        disabled={isSaving || isLoading || functions.length === 0}
+                    >
+                        {isSaving ? (
+                            <>
+                                <span className="loading loading-spinner loading-sm"></span>
+                                <span>Guardando...</span>
+                            </>
+                        ) : (
+                            <>
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                                Guardar {functions.length} Función{functions.length !== 1 ? 'es' : ''}
+                            </>
+                        )}
+                    </button>
+                </div>
             </div>
         </GenericModal>
     );

@@ -78,6 +78,10 @@ export interface ObjectiveBase {
 
 export interface Objective extends ObjectiveBase {
     id: string;
+    /** Función del cargo asociada al objetivo */
+    funcion_id?:             string;
+    /** Título de la función del cargo */
+    funcion_titulo?:         string;
     resultado?:              number;
     calificacion_logro?:     number;
     nota?:                   1 | 2 | 3 | 4 | 5;
