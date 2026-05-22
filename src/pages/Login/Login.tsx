@@ -4,21 +4,34 @@ import { useNavigate } from "react-router-dom";
 // Assets
 import logo from "../../assets/logos/scenario-logo-color.png";
 
+// Hooks
+import useFetch from "../../hooks/useFetch";
+
 // Stores
 import useAuthStore from "../../store/authStore";
 import useUIStore from "../../store/uiStore";
+
+// Types
+import { FetchResponse } from "../../hooks/useFetch";
+
+interface LoginResponse {
+  access_token: string;
+  refresh_token: string;
+  token_tipo: string;
+  expira_en: string;
+}
 
 const Login: React.FC = () => {
   const { login, isAuthenticated } = useAuthStore();
   const { openAlert } = useUIStore();
   const navigate = useNavigate();
 
-  const [formData, setFormData] = useState({
-    username: "",
-    password: "",
-  });
+  const { fetchData, loading: isFetching } = useFetch<FetchResponse<LoginResponse>>();
 
-  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    correo: "",
+    contrasena: "",
+  });
 
   const handleFormChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -30,25 +43,25 @@ const Login: React.FC = () => {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const response = await fetchData({
+        url: `${import.meta.env.VITE_API_URL}/auth/login`,
+        method: "POST",
+        body: {
+          correo: formData.correo,
+          contrasena: formData.contrasena,
+        },
+      });
 
-      if (
-        formData.username === "usuario@prueba.com" &&
-        formData.password === "123456"
-      ) {
-        const token =
-          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub21icmVzIjoidXN1YXJpbyIsImFwZWxsaWRvcyI6InBydWViYSIsImZvdG9fZGVfcGVyZmlsIjoiIiwiY29ycmVvIjoidXN1YXJpb0BwcnVlYmEuY29tIiwicm9sIjoicGMiLCJleHAiOjE4Mzg1MTQ2ODB9.xpXiEWohnojdNORcZgaoca6TdFOS92GFt2DRYkuLm2E";
-        login(token);
+      if (response.success && response.data?.access_token) {
+        await login(response.data.access_token);
       } else {
-        openAlert("Credenciales incorrectas", "error");
+        openAlert(response.message || "Credenciales incorrectas", "error");
       }
-    } catch (error) {
-      console.error("Error al procesar el token:", error);
-    } finally {
-      setIsLoading(false);
+    } catch (error: any) {
+      console.error("Error al iniciar sesión:", error);
+      openAlert(error.message || "Ocurrió un error inesperado", "error");
     }
   };
 
@@ -73,8 +86,8 @@ const Login: React.FC = () => {
             </label>
             <input
               type="text"
-              name="username"
-              value={formData.username}
+              name="correo"
+              value={formData.correo}
               onChange={handleFormChange}
               placeholder="usuario@prueba.com"
               className="input input-bordered w-full"
@@ -88,8 +101,8 @@ const Login: React.FC = () => {
             </label>
             <input
               type="password"
-              name="password"
-              value={formData.password}
+              name="contrasena"
+              value={formData.contrasena}
               onChange={handleFormChange}
               placeholder="******"
               className="input input-bordered w-full"
@@ -106,10 +119,10 @@ const Login: React.FC = () => {
             <button
               type="submit"
               className={`btn btn-primary w-full`}
-              disabled={isLoading}
+              disabled={isFetching}
             >
-              {isLoading && <span className="loading loading-spinner"></span>}
-              {isLoading ? "Iniciando sesión..." : "Iniciar sesión"}
+              {isFetching && <span className="loading loading-spinner"></span>}
+              {isFetching ? "Iniciando sesión..." : "Iniciar sesión"}
             </button>
           </div>
         </form>

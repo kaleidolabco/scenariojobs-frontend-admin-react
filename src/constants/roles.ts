@@ -1,9 +1,9 @@
 export enum UserRole {
     SUPER_ADMIN = 'SUPER_ADMIN', // SaaS Owner
-    ADMIN = 'ADMIN',             // Tenant Admin
-    HR_MANAGER = 'HR_MANAGER',   // Gestor de Evaluaciones
-    EVALUATOR = 'EVALUATOR',     // Evaluador
-    EMPLOYEE = 'EMPLOYEE',       // Evaluado/Empleado
+    ADMIN = 'ADMIN_EMPRESA',             // Tenant Admin
+    HR_MANAGER = 'GESTOR_TALENTO',   // Gestor de Evaluaciones
+    EVALUATOR = 'EVALUADOR',     // Evaluador
+    EMPLOYEE = 'COLABORADOR',       // Evaluado/Empleado
 }
 
 export const ROLE_LABELS: Record<UserRole, string> = {
