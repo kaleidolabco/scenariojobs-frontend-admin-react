@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { UserRole, ROLE_LABELS } from '../../constants/roles';
 import { motion, AnimatePresence } from 'framer-motion';
 import PageContainer from '../../components/Common/PageContainer';
 import FormSection from '../../components/Common/Forms/FormSection';
@@ -1213,7 +1214,7 @@ const CompetencyEvalDetailPage: React.FC = () => {
 
     const breadcrumbs = [
         { label: 'Inicio',                     to: ROUTES.HOME              },
-        { label: 'RRHH',                       to: undefined                },
+        { label: ROLE_LABELS[UserRole.HR_MANAGER], to: undefined                },
         { label: 'Evaluación de Competencias', to: ROUTES.COMPETENCIES_EVAL },
         { label: evaluation?.nombre || '…',    to: undefined                },
     ];

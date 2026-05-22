@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { UserRole, ROLE_LABELS } from '../../constants/roles';
 import PageContainer from '../../components/Common/PageContainer';
 import GenericTable, { TableColumn, TableAction } from '../../components/Common/GenericTable';
 import LoadingIndicator from '../../components/Common/LoadingIndicator';
@@ -275,7 +276,7 @@ const CalificationListPage: React.FC = () => {
 
     const breadcrumbs = [
         { label: 'Inicio', to: ROUTES.HOME },
-        { label: 'Evaluador', to: undefined },
+        { label: ROLE_LABELS[UserRole.EVALUATOR], to: undefined },
         { label: 'Mis Evaluaciones', to: undefined },
     ];
 

@@ -11,7 +11,6 @@ import {
     BitacoraVisibilidad,
     BitacoraQueryParams,
     CreateBitacoraDto,
-    UserRole,
     BITACORA_TIPO_META,
     BITACORA_VISIBILIDAD_META,
     TIPOS_POR_ROL,
@@ -19,6 +18,7 @@ import {
     canEditEntry,
     canDeleteEntry,
 } from '../../services/bitacoraService';
+import { UserRole } from '../../constants/roles';
 import { Pagination } from '../../services/responseType';
 
 // ─── Simulación de sesión activa ──────────────────────────────────────────────
@@ -32,10 +32,10 @@ interface CurrentUser {
 }
 
 const MOCK_USERS: CurrentUser[] = [
-    { id: 'usr-rrhh-01',  nombre: 'María López',      rol: 'RRHH',        puesto: 'Gestora de RRHH'      },
-    { id: 'usr-eval-01',  nombre: 'Roberto Mendoza',   rol: 'EVALUADOR',   puesto: 'Evaluador Senior'     },
-    { id: 'usr-col-01',   nombre: 'Ana García',        rol: 'COLABORADOR', puesto: 'Desarrollador Senior' },
-    { id: 'usr-admin-01', nombre: 'Super Admin',       rol: 'ADMIN',       puesto: 'Administrador'        },
+    { id: 'usr-rrhh-01',  nombre: 'María López',      rol: UserRole.HR_MANAGER,  puesto: 'Gestora de RRHH'      },
+    { id: 'usr-eval-01',  nombre: 'Roberto Mendoza',   rol: UserRole.EVALUATOR,   puesto: 'Evaluador Senior'     },
+    { id: 'usr-col-01',   nombre: 'Ana García',        rol: UserRole.EMPLOYEE,    puesto: 'Desarrollador Senior' },
+    { id: 'usr-admin-01', nombre: 'Super Admin',       rol: UserRole.ADMIN,       puesto: 'Administrador'        },
 ];
 
 // Colaboradores disponibles para asociar entradas (simplificado)
@@ -83,10 +83,10 @@ const groupByDate = (entries: BitacoraEntry[]): { label: string; entries: Bitaco
 };
 
 const getRolBadgeColor = (rol: UserRole) => ({
-    ADMIN: 'badge-error',
-    RRHH: 'badge-primary',
-    EVALUADOR: 'badge-secondary',
-    COLABORADOR: 'badge-ghost',
+    [UserRole.ADMIN]: 'badge-error',
+    [UserRole.HR_MANAGER]: 'badge-primary',
+    [UserRole.EVALUATOR]: 'badge-secondary',
+    [UserRole.EMPLOYEE]: 'badge-ghost'
 }[rol]);
 
 // ─── Ícono SVG inline ─────────────────────────────────────────────────────────
@@ -387,7 +387,7 @@ interface EditorProps {
 }
 
 const EMPTY_FORM = (rol: UserRole): CreateBitacoraDto => ({
-    tipo: rol === 'COLABORADOR' ? 'NOTA_PERSONAL' : 'NOTA_PERSONAL',
+    tipo: rol === UserRole.EMPLOYEE ? 'NOTA_PERSONAL' : 'NOTA_PERSONAL',
     titulo: '',
     contenido: '',
     visibilidad: 'PRIVADA',
@@ -432,7 +432,7 @@ const EntryEditor: React.FC<EditorProps> = ({ entry, currentUser, onSave, onClos
 
     // Mostrar campo de colaborador solo si el tipo lo requiere y el rol puede
     const showColaborador =
-        currentUser.rol !== 'COLABORADOR' &&
+        currentUser.rol !== UserRole.EMPLOYEE &&
         ['REUNION', 'OBSERVACION_EVALUACION', 'SEGUIMIENTO'].includes(form.tipo);
 
     const showEvaluacion =

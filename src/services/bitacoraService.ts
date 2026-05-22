@@ -1,6 +1,7 @@
 import useFetch from '../hooks/useFetch';
 import { FetchResponse, successMock } from './responseType';
 import useUIStore from '../store/uiStore';
+import { UserRole } from '../constants/roles';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -16,7 +17,6 @@ export type BitacoraVisibilidad =
     | 'COMPARTIDA'      // Autor + colaborador involucrado + RRHH + Admin
     | 'INTERNA_RRHH';   // Solo RRHH y Admin (nunca visible al colaborador)
 
-export type UserRole = 'ADMIN' | 'RRHH' | 'EVALUADOR' | 'COLABORADOR';
 
 export interface BitacoraEntry {
     id: string;
@@ -122,7 +122,7 @@ export const BITACORA_VISIBILIDAD_META: Record<BitacoraVisibilidad, {
         descripcion: 'Solo visible para ti',
         icon: 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z',
         color: 'neutral',
-        rolesPermitidos: ['ADMIN', 'RRHH', 'EVALUADOR', 'COLABORADOR'],
+        rolesPermitidos: [UserRole.ADMIN, UserRole.HR_MANAGER, UserRole.EVALUATOR, UserRole.EMPLOYEE],
         rolesLectores: [],
     },
     COMPARTIDA: {
@@ -130,33 +130,33 @@ export const BITACORA_VISIBILIDAD_META: Record<BitacoraVisibilidad, {
         descripcion: 'Visible para el colaborador involucrado, RRHH y Admin',
         icon: 'M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z',
         color: 'info',
-        rolesPermitidos: ['ADMIN', 'RRHH', 'EVALUADOR', 'COLABORADOR'],
-        rolesLectores: ['ADMIN', 'RRHH', 'COLABORADOR'],
+        rolesPermitidos: [UserRole.ADMIN, UserRole.HR_MANAGER, UserRole.EVALUATOR, UserRole.EMPLOYEE],
+        rolesLectores: [UserRole.ADMIN, UserRole.HR_MANAGER, UserRole.EMPLOYEE],
     },
     INTERNA_RRHH: {
         label: 'Interna RRHH',
         descripcion: 'Solo visible para RRHH y Admin — nunca para el colaborador',
         icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
         color: 'warning',
-        rolesPermitidos: ['ADMIN', 'RRHH', 'EVALUADOR'],
-        rolesLectores: ['ADMIN', 'RRHH'],
+        rolesPermitidos: [UserRole.ADMIN, UserRole.HR_MANAGER, UserRole.EVALUATOR],
+        rolesLectores: [UserRole.ADMIN, UserRole.HR_MANAGER],
     },
 };
 
 /** Qué tipos de entrada puede crear cada rol */
 export const TIPOS_POR_ROL: Record<UserRole, BitacoraTipo[]> = {
-    ADMIN:        ['NOTA_PERSONAL', 'REUNION', 'OBSERVACION_EVALUACION', 'SEGUIMIENTO', 'OTRO'],
-    RRHH:         ['NOTA_PERSONAL', 'REUNION', 'OBSERVACION_EVALUACION', 'SEGUIMIENTO', 'OTRO'],
-    EVALUADOR:    ['NOTA_PERSONAL', 'REUNION', 'OBSERVACION_EVALUACION', 'SEGUIMIENTO', 'OTRO'],
-    COLABORADOR:  ['NOTA_PERSONAL', 'SEGUIMIENTO', 'OTRO'],
+    [UserRole.ADMIN]:        ['NOTA_PERSONAL', 'REUNION', 'OBSERVACION_EVALUACION', 'SEGUIMIENTO', 'OTRO'],
+    [UserRole.HR_MANAGER]:   ['NOTA_PERSONAL', 'REUNION', 'OBSERVACION_EVALUACION', 'SEGUIMIENTO', 'OTRO'],
+    [UserRole.EVALUATOR]:    ['NOTA_PERSONAL', 'REUNION', 'OBSERVACION_EVALUACION', 'SEGUIMIENTO', 'OTRO'],
+    [UserRole.EMPLOYEE]:     ['NOTA_PERSONAL', 'SEGUIMIENTO', 'OTRO'],
 };
 
 /** Qué visibilidades puede asignar cada rol */
 export const VISIBILIDADES_POR_ROL: Record<UserRole, BitacoraVisibilidad[]> = {
-    ADMIN:       ['PRIVADA', 'COMPARTIDA', 'INTERNA_RRHH'],
-    RRHH:        ['PRIVADA', 'COMPARTIDA', 'INTERNA_RRHH'],
-    EVALUADOR:   ['PRIVADA', 'COMPARTIDA', 'INTERNA_RRHH'],
-    COLABORADOR: ['PRIVADA', 'COMPARTIDA'],
+    [UserRole.ADMIN]:        ['PRIVADA', 'COMPARTIDA', 'INTERNA_RRHH'],
+    [UserRole.HR_MANAGER]:   ['PRIVADA', 'COMPARTIDA', 'INTERNA_RRHH'],
+    [UserRole.EVALUATOR]:    ['PRIVADA', 'COMPARTIDA', 'INTERNA_RRHH'],
+    [UserRole.EMPLOYEE]:     ['PRIVADA', 'COMPARTIDA'],
 };
 
 // ─── Helpers de permisos ──────────────────────────────────────────────────────
@@ -172,7 +172,7 @@ export const canReadEntry = (
     // El autor siempre ve sus propias entradas
     if (entry.autor_id === usuarioId) return true;
     // Admin ve todo
-    if (usuarioRol === 'ADMIN') return true;
+    if (usuarioRol === UserRole.ADMIN) return true;
 
     switch (entry.visibilidad) {
         case 'PRIVADA':
@@ -180,11 +180,11 @@ export const canReadEntry = (
         case 'COMPARTIDA':
             // RRHH ve todas compartidas; colaborador involucrado también
             return (
-                usuarioRol === 'RRHH' ||
+                usuarioRol === UserRole.HR_MANAGER ||
                 entry.colaborador_id === usuarioId
             );
         case 'INTERNA_RRHH':
-            return usuarioRol === 'RRHH';
+            return usuarioRol === UserRole.HR_MANAGER;
         default:
             return false;
     }
@@ -199,7 +199,7 @@ export const canEditEntry = (
     usuarioId: string,
     usuarioRol: UserRole,
 ): boolean => {
-    if (usuarioRol === 'ADMIN') return true;
+    if (usuarioRol === UserRole.ADMIN) return true;
     return entry.autor_id === usuarioId;
 };
 
@@ -212,7 +212,7 @@ export const canDeleteEntry = (
     usuarioId: string,
     usuarioRol: UserRole,
 ): boolean => {
-    if (usuarioRol === 'ADMIN' || usuarioRol === 'RRHH') return true;
+    if (usuarioRol === UserRole.ADMIN || usuarioRol === UserRole.HR_MANAGER) return true;
     return entry.autor_id === usuarioId;
 };
 
@@ -236,7 +236,7 @@ const MOCK_ENTRIES: BitacoraEntry[] = [
         visibilidad: 'COMPARTIDA',
         autor_id: 'usr-rrhh-01',
         autor_nombre: 'María López',
-        autor_rol: 'RRHH',
+        autor_rol: UserRole.HR_MANAGER,
         colaborador_id: 'usr-col-01',
         colaborador_nombre: 'Ana García',
         colaborador_puesto: 'Desarrollador Senior',
@@ -257,7 +257,7 @@ Para el siguiente ciclo se sugiere asignarle proyectos con mayor exposición a o
         visibilidad: 'INTERNA_RRHH',
         autor_id: 'usr-eval-01',
         autor_nombre: 'Roberto Mendoza',
-        autor_rol: 'EVALUADOR',
+        autor_rol: UserRole.EVALUATOR,
         colaborador_id: 'usr-col-02',
         colaborador_nombre: 'Carlos Rodríguez',
         colaborador_puesto: 'Arquitecto de Software',
@@ -280,7 +280,7 @@ El reconocimiento por el proyecto de migración fue muy motivador. Quiero seguir
         visibilidad: 'PRIVADA',
         autor_id: 'usr-col-01',
         autor_nombre: 'Ana García',
-        autor_rol: 'COLABORADOR',
+        autor_rol: UserRole.EMPLOYEE,
         ciclo_nombre: 'Q1 2025',
         etiquetas: ['reflexión', 'desempeño'],
         creado_en: '2025-03-30T18:00:00Z',
@@ -300,7 +300,7 @@ El reconocimiento por el proyecto de migración fue muy motivador. Quiero seguir
         visibilidad: 'COMPARTIDA',
         autor_id: 'usr-rrhh-01',
         autor_nombre: 'María López',
-        autor_rol: 'RRHH',
+        autor_rol: UserRole.HR_MANAGER,
         colaborador_id: 'usr-col-01',
         colaborador_nombre: 'Ana García',
         colaborador_puesto: 'Desarrollador Senior',
@@ -322,7 +322,7 @@ Se compartirá el acta formal por correo.`,
         visibilidad: 'INTERNA_RRHH',
         autor_id: 'usr-rrhh-01',
         autor_nombre: 'María López',
-        autor_rol: 'RRHH',
+        autor_rol: UserRole.HR_MANAGER,
         ciclo_nombre: 'Q1 2025',
         etiquetas: ['calibración', 'evaluadores', 'Q1'],
         creado_en: '2025-04-10T16:45:00Z',
@@ -342,7 +342,7 @@ Voy a proponer esto en la próxima reunión de RRHH.`,
         visibilidad: 'PRIVADA',
         autor_id: 'usr-rrhh-01',
         autor_nombre: 'María López',
-        autor_rol: 'RRHH',
+        autor_rol: UserRole.HR_MANAGER,
         etiquetas: ['ideas', 'onboarding', 'proceso'],
         creado_en: '2025-04-12T11:00:00Z',
         actualizado_en: '2025-04-12T11:00:00Z',
@@ -363,7 +363,7 @@ Voy a proponer esto en la próxima reunión de RRHH.`,
         visibilidad: 'COMPARTIDA',
         autor_id: 'usr-rrhh-01',
         autor_nombre: 'María López',
-        autor_rol: 'RRHH',
+        autor_rol: UserRole.HR_MANAGER,
         colaborador_id: 'usr-col-02',
         colaborador_nombre: 'Carlos Rodríguez',
         colaborador_puesto: 'Arquitecto de Software',
@@ -381,7 +381,7 @@ Voy a proponer esto en la próxima reunión de RRHH.`,
         visibilidad: 'PRIVADA',
         autor_id: 'usr-rrhh-01',
         autor_nombre: 'María López',
-        autor_rol: 'RRHH',
+        autor_rol: UserRole.HR_MANAGER,
         etiquetas: ['pendiente', 'Q2'],
         creado_en: '2025-04-15T08:30:00Z',
         actualizado_en: '2025-04-15T08:30:00Z',

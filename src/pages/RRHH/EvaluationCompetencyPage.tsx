@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { UserRole, ROLE_LABELS } from '../../constants/roles';
 import PageContainer from '../../components/Common/PageContainer';
 import GenericTable, { TableColumn, TableAction } from '../../components/Common/GenericTable';
 import GenericModal from '../../components/Common/GenericModal';
@@ -513,7 +514,7 @@ const EvaluationCompetencyPage: React.FC = () => {
 
     const breadcrumbs = [
         { label: 'Inicio', to: ROUTES.HOME },
-        { label: 'RRHH', to: undefined },
+        { label: ROLE_LABELS[UserRole.HR_MANAGER], to: undefined },
         { label: 'Evaluación de Competencias', to: undefined },
     ];
 

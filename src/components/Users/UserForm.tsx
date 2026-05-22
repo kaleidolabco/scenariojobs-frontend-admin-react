@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { SystemUser } from '../../services/userService';
+import { UserRole, ROLE_LABELS } from '../../constants/roles';
 import InputField from '../Common/Forms/InputField';
 import SelectField from '../Common/Forms/SelectField';
 import CheckboxGroup from '../Common/Forms/CheckboxGroup';
@@ -24,7 +25,7 @@ const UserForm: React.FC<UserFormProps> = ({ initialData, isLoading = false, onS
             setEstado(initialData.estado);
         } else {
             setEmail('');
-            setSelectedRoles(['EMPLOYEE']); // Default role
+            setSelectedRoles([UserRole.EMPLOYEE]); // Default role
             setEstado('ACTIVO');
         }
     }, [initialData]);
@@ -39,10 +40,10 @@ const UserForm: React.FC<UserFormProps> = ({ initialData, isLoading = false, onS
     };
 
     const roleOptions = [
-        { value: 'ADMIN', label: 'Administrador' },
-        { value: 'HR_MANAGER', label: 'Gerente RRHH' },
-        { value: 'EVALUATOR', label: 'Evaluador' },
-        { value: 'EMPLOYEE', label: 'Empleado' }
+        { value: UserRole.ADMIN, label: ROLE_LABELS[UserRole.ADMIN] },
+        { value: UserRole.HR_MANAGER, label: ROLE_LABELS[UserRole.HR_MANAGER] },
+        { value: UserRole.EVALUATOR, label: ROLE_LABELS[UserRole.EVALUATOR] },
+        { value: UserRole.EMPLOYEE, label: ROLE_LABELS[UserRole.EMPLOYEE] },
     ];
 
     const statusOptions = [

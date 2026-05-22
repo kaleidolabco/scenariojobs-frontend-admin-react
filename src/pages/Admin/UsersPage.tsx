@@ -10,6 +10,7 @@ import LoadingIndicator from '../../components/Common/LoadingIndicator';
 import { useUserService, SystemUser } from '../../services/userService';
 import UserForm from '../../components/Users/UserForm';
 import { ROUTES } from '../../constants/routes';
+import { UserRole, ROLE_LABELS } from '../../constants/roles';
 import useUIStore from '../../store/uiStore';
 import { Pagination } from '../../services/responseType';
 
@@ -99,10 +100,10 @@ const UsersPage: React.FC = () => {
             key: 'rol',
             label: 'Rol',
             options: [
-                { label: 'Administrador', value: 'ADMIN' },
-                { label: 'Gerente RRHH', value: 'HR_MANAGER' },
-                { label: 'Evaluador', value: 'EVALUATOR' },
-                { label: 'Empleado', value: 'EMPLOYEE' }
+                { label: ROLE_LABELS[UserRole.ADMIN], value: UserRole.ADMIN },
+                { label: ROLE_LABELS[UserRole.HR_MANAGER], value: UserRole.HR_MANAGER },
+                { label: ROLE_LABELS[UserRole.EVALUATOR], value: UserRole.EVALUATOR },
+                { label: ROLE_LABELS[UserRole.EMPLOYEE], value: UserRole.EMPLOYEE }
             ]
         },
         {

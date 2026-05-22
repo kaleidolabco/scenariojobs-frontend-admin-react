@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useSearchParams, useLocation } from 'react-router-dom';
+import { UserRole, ROLE_LABELS } from '../../constants/roles';
 import { motion, AnimatePresence } from 'framer-motion';
 import PageContainer from '../../components/Common/PageContainer';
 import LoadingIndicator from '../../components/Common/LoadingIndicator';
@@ -360,7 +361,7 @@ const CompetencyEvaluationDetailPage: React.FC = () => {
                 subtitle="No se encontraron los datos solicitados"
                 breadcrumbs={[
                     { label: 'Inicio', to: ROUTES.HOME },
-                    { label: 'Evaluador', to: undefined },
+                    { label: ROLE_LABELS[UserRole.EVALUATOR], to: undefined },
                     { label: 'Mis Evaluaciones', to: ROUTES.GRADING_PENDING },
                 ]}
             >
