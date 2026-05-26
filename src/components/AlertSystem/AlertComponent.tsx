@@ -44,7 +44,7 @@ const AlertComponent: React.FC<AlertComponentProps> = ({
             text-white 
             w-80 
             text-center 
-            z-50 
+            z-100 
             shadow-lg 
             flex 
             items-center 
