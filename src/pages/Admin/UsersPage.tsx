@@ -24,6 +24,7 @@ const UsersPage: React.FC = () => {
     // State
     const [users, setUsers] = useState<SystemUser[]>([]);
     const [pagination, setPagination] = useState<Pagination | null>(null);
+    const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
 
     // State for FilterBar
     const [queryParams, setQueryParams] = useState<any>({
@@ -149,6 +150,29 @@ const UsersPage: React.FC = () => {
         setQueryParams((prev: any) => ({ ...prev, ...updates }));
     };
 
+    const handleSort = (key: string) => {
+        let direction: 'asc' | 'desc' = 'asc';
+        if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+            direction = 'desc';
+        }
+
+        setSortConfig({ key, direction });
+
+        // Map frontend column keys to backend expected sort fields
+        const sortMap: Record<string, string> = {
+            'email': 'correo',
+            'ultimo_acceso': 'ultimo_acceso'
+        };
+
+        const ordenar_por = sortMap[key] || key;
+
+        updateQueryParams({
+            ordenar_por,
+            orden: direction,
+            pagina: 1
+        });
+    };
+
     // Table Config
     const columns: TableColumn<SystemUser>[] = [
         {
@@ -184,7 +208,7 @@ const UsersPage: React.FC = () => {
         {
             key: 'rol',
             label: 'Rol',
-            sortable: true,
+            sortable: false,
             render: (user) => (
                 <div className="flex flex-wrap gap-1">
                     {user.roles && user.roles.length > 0 ? (
@@ -210,6 +234,7 @@ const UsersPage: React.FC = () => {
         {
             key: 'ultimo_acceso',
             label: 'Último Acceso',
+            sortable: true,
             render: (user) => user.ultimo_acceso ? new Date(user.ultimo_acceso).toLocaleDateString() : '-'
         }
     ];
@@ -279,6 +304,8 @@ const UsersPage: React.FC = () => {
                     actions={actions}
                     keyExtractor={(user) => user.id}
                     pagination={pagination}
+                    sortConfig={sortConfig}
+                    onSort={handleSort}
                     onPageChange={(page) => updateQueryParam('pagina', page)}
                     onPageSizeChange={(size) => updateQueryParams({ items_por_pagina: size, pagina: 1 })}
                     emptyMessage="No se encontraron usuarios"

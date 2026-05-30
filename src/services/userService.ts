@@ -25,6 +25,8 @@ export interface UserQueryParams {
     estado?: UserStatus;
     pagina?: number;
     items_por_pagina?: number;
+    ordenar_por?: string;
+    orden?: 'asc' | 'desc';
 }
 
 export interface CreateUserRequest {
@@ -80,6 +82,14 @@ export const useUserService = () => {
             
             if (params?.items_por_pagina) {
                 backendParams.limite = params.items_por_pagina;
+            }
+            
+            if (params?.ordenar_por) {
+                backendParams.ordenar_por = params.ordenar_por;
+            }
+            
+            if (params?.orden) {
+                backendParams.orden = params.orden;
             }
 
             const response = (await fetchData({
