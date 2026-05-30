@@ -11,6 +11,7 @@ import { useUserService, SystemUser } from '../../services/userService';
 import UserForm from '../../components/Users/UserForm';
 import { ROUTES } from '../../constants/routes';
 import { UserRole, ROLE_LABELS } from '../../constants/roles';
+import { UserStatus, USER_STATUS_LABELS } from '../../constants/userStatus';
 import useUIStore from '../../store/uiStore';
 import { Pagination } from '../../services/responseType';
 
@@ -48,7 +49,7 @@ const UsersPage: React.FC = () => {
     const loadUsers = async () => {
         const response = await getUsers(queryParams);
         if (response && response.success) {
-            setUsers(response.data.usuarios);
+            setUsers(response.data.datos || []);
             setPagination(response.data.paginacion);
         }
     };
@@ -110,9 +111,9 @@ const UsersPage: React.FC = () => {
             key: 'estado',
             label: 'Estado',
             options: [
-                { label: 'Activo', value: 'ACTIVO' },
-                { label: 'Inactivo', value: 'INACTIVO' },
-                { label: 'Bloqueado', value: 'BLOQUEADO' }
+                { label: USER_STATUS_LABELS[UserStatus.ACTIVO], value: UserStatus.ACTIVO },
+                { label: USER_STATUS_LABELS[UserStatus.INACTIVO], value: UserStatus.INACTIVO },
+                { label: USER_STATUS_LABELS[UserStatus.PENDIENTE], value: UserStatus.PENDIENTE }
             ]
         }
     ];
@@ -162,17 +163,17 @@ const UsersPage: React.FC = () => {
             )
         },
         {
-            key: 'persona',
-            label: 'Perfil Asociado',
-            render: (user) => user.persona ? (
+            key: 'colaborador',
+            label: 'Colaborador Asociado',
+            render: (user) => user.colaborador ? (
                 <div className="flex items-center gap-2">
                     <Avatar
-                        src={user.persona.foto}
-                        name={`${user.persona.nombres} ${user.persona.apellidos}`}
+                        src={user.colaborador.foto}
+                        name={`${user.colaborador.nombres} ${user.colaborador.apellidos}`}
                         size="sm"
                     />
                     <span className="text-primary font-medium hover:underline cursor-pointer">
-                        {user.persona.nombres} {user.persona.apellidos}
+                        {user.colaborador.nombres} {user.colaborador.apellidos}
                     </span>
                     <span className="badge badge-xs badge-primary ml-1">Link</span>
                 </div>
@@ -200,10 +201,10 @@ const UsersPage: React.FC = () => {
             key: 'estado',
             label: 'Estado',
             render: (user) => {
-                let color = 'badge-ghost';
-                if (user.estado === 'ACTIVO') color = 'badge-success';
-                if (user.estado === 'BLOQUEADO') color = 'badge-error';
-                return <div className={`badge ${color} badge-sm`}>{user.estado}</div>;
+                let color = 'badge-warning';
+                if (user.estado === UserStatus.ACTIVO) color = 'badge-success';
+                if (user.estado === UserStatus.PENDIENTE) color = 'badge-info';
+                return <div className={`badge ${color} badge-sm`}>{USER_STATUS_LABELS[user.estado] || user.estado}</div>;
             }
         },
         {
@@ -277,9 +278,7 @@ const UsersPage: React.FC = () => {
                     columns={columns}
                     actions={actions}
                     keyExtractor={(user) => user.id}
-                    currentPage={queryParams.pagina || 1}
-                    totalPages={pagination?.total_paginas || 1}
-                    pageSize={queryParams.items_por_pagina || ITEMS_PER_PAGE}
+                    pagination={pagination}
                     onPageChange={(page) => updateQueryParam('pagina', page)}
                     onPageSizeChange={(size) => updateQueryParams({ items_por_pagina: size, pagina: 1 })}
                     emptyMessage="No se encontraron usuarios"

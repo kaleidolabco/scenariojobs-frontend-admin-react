@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { SystemUser } from '../../services/userService';
 import { UserRole, ROLE_LABELS } from '../../constants/roles';
+import { UserStatus, USER_STATUS_LABELS } from '../../constants/userStatus';
 import InputField from '../Common/Forms/InputField';
 import SelectField from '../Common/Forms/SelectField';
 import CheckboxGroup from '../Common/Forms/CheckboxGroup';
 
 interface UserFormProps {
-    initialData?: SystemUser | null;
+    initialData?: any; // Will be updated to proper type
     isLoading?: boolean;
     onSubmit: (data: any) => void;
     onCancel: () => void;
@@ -15,7 +15,7 @@ interface UserFormProps {
 const UserForm: React.FC<UserFormProps> = ({ initialData, isLoading = false, onSubmit, onCancel }) => {
     const [email, setEmail] = useState('');
     const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
-    const [estado, setEstado] = useState('ACTIVO');
+    const [estado, setEstado] = useState<UserStatus>(UserStatus.ACTIVO);
 
     useEffect(() => {
         if (initialData) {
@@ -26,14 +26,14 @@ const UserForm: React.FC<UserFormProps> = ({ initialData, isLoading = false, onS
         } else {
             setEmail('');
             setSelectedRoles([UserRole.EMPLOYEE]); // Default role
-            setEstado('ACTIVO');
+            setEstado(UserStatus.ACTIVO);
         }
     }, [initialData]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         onSubmit({
-            email,
+            correo: email,
             roles: selectedRoles,
             estado
         });
@@ -47,15 +47,15 @@ const UserForm: React.FC<UserFormProps> = ({ initialData, isLoading = false, onS
     ];
 
     const statusOptions = [
-        { value: 'ACTIVO', label: 'Activo' },
-        { value: 'INACTIVO', label: 'Inactivo' },
-        { value: 'BLOQUEADO', label: 'Bloqueado' }
+        { value: UserStatus.ACTIVO, label: USER_STATUS_LABELS[UserStatus.ACTIVO] },
+        { value: UserStatus.INACTIVO, label: USER_STATUS_LABELS[UserStatus.INACTIVO] },
+        { value: UserStatus.PENDIENTE, label: USER_STATUS_LABELS[UserStatus.PENDIENTE] }
     ];
 
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
             <InputField
-                label="Email Corporativo"
+                label="Correo Corporativo"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="ejemplo@empresa.com"
@@ -76,7 +76,7 @@ const UserForm: React.FC<UserFormProps> = ({ initialData, isLoading = false, onS
                 <SelectField
                     label="Estado de Cuenta"
                     value={estado}
-                    onChange={(e) => setEstado(e.target.value)}
+                    onChange={(e) => setEstado(e.target.value as UserStatus)}
                     options={statusOptions}
                     required
                     helpText="Estado actual de la cuenta"

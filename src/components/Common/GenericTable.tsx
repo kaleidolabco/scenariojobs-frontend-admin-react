@@ -23,9 +23,12 @@ interface GenericTableProps<T> {
     keyExtractor: (item: T) => string | number;
 
     // Pagination
-    currentPage: number;
-    totalPages: number;
-    pageSize: number;
+    pagination?: {
+        pagina: number;
+        total_paginas: number;
+        limite: number;
+        total: number;
+    } | null;
     onPageChange: (page: number) => void;
     onPageSizeChange: (size: number) => void;
 
@@ -43,9 +46,7 @@ function GenericTable<T>({
     columns,
     actions,
     keyExtractor,
-    currentPage,
-    totalPages,
-    pageSize,
+    pagination,
     onPageChange,
     onPageSizeChange,
     sortConfig,
@@ -53,6 +54,10 @@ function GenericTable<T>({
     emptyMessage = 'No se encontraron registros',
     isLoading = false
 }: GenericTableProps<T>) {
+
+    const currentPage = pagination?.pagina || 1;
+    const totalPages = pagination?.total_paginas || 1;
+    const pageSize = pagination?.limite || 10;
 
     const renderSortIcon = (columnKey: string) => {
         if (!sortConfig || sortConfig.key !== columnKey) {
