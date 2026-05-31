@@ -137,6 +137,9 @@ function GenericTable<T>({
             {/* Pagination Controls */}
             <div className="w-full flex justify-between gap-4 items-center p-4 bg-base-100 border-t border-base-200">
                 <div className="flex items-center gap-2">
+                    {pagination?.total && (
+                        <span className="text-xs md:text-sm md:whitespace-nowrap mr-4">Total: {pagination.total}</span>
+                    )}
                     <span className="text-xs md:text-sm md:whitespace-nowrap">Filas por página:</span>
                     <select
                         className="select select-bordered select-sm"
