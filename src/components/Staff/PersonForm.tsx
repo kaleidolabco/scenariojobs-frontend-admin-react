@@ -3,6 +3,8 @@ import { Person } from '../../services/personService';
 import InputField from '../Common/Forms/InputField';
 import SelectField from '../Common/Forms/SelectField';
 import FormSection from '../Common/Forms/FormSection';
+import AutocompleteField from '../Common/Forms/AutocompleteField';
+import { useUserService, SystemUser } from '../../services/userService';
 
 interface PersonFormProps {
     initialData?: Person | null;
@@ -12,6 +14,12 @@ interface PersonFormProps {
 }
 
 const PersonForm: React.FC<PersonFormProps> = ({ initialData, isLoading = false, onSubmit, onCancel }) => {
+    const { getUsers, getUserById } = useUserService();
+    const [usuarios, setUsuarios] = useState<SystemUser[]>([]);
+    const [selectedUser, setSelectedUser] = useState<SystemUser | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [isSearching, setIsSearching] = useState(false);
+
     const [formData, setFormData] = useState({
         nombres: '',
         apellidos: '',
@@ -21,6 +29,47 @@ const PersonForm: React.FC<PersonFormProps> = ({ initialData, isLoading = false,
         fecha_ingreso: '',
         estado: 'ACTIVO'
     });
+
+    // Load initial user details if editing a collaborator that has a linked user
+    useEffect(() => {
+        const loadInitialUser = async () => {
+            if (initialData && initialData.usuario_id) {
+                const response = await getUserById(initialData.usuario_id);
+                if (response && response.success && response.data) {
+                    setSelectedUser(response.data);
+                    setSearchQuery(response.data.email);
+                }
+            } else {
+                setSelectedUser(null);
+                setSearchQuery('');
+            }
+        };
+        loadInitialUser();
+    }, [initialData]);
+
+    // Handle typing in search input (with debounced API call)
+    useEffect(() => {
+        if (searchQuery.trim().length === 0) {
+            setUsuarios([]);
+            return;
+        }
+
+        const timer = setTimeout(async () => {
+            setIsSearching(true);
+            const response = await getUsers({ search: searchQuery, items_por_pagina: 10 });
+            if (response && response.success) {
+                const list: SystemUser[] = response.data.datos || [];
+                // Only show users without collaborator, OR the currently selected one
+                const filtered = list.filter(u => 
+                    !u.colaborador || (selectedUser && u.id === selectedUser.id)
+                );
+                setUsuarios(filtered);
+            }
+            setIsSearching(false);
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
 
     useEffect(() => {
         if (initialData) {
@@ -33,6 +82,18 @@ const PersonForm: React.FC<PersonFormProps> = ({ initialData, isLoading = false,
                 fecha_ingreso: initialData.fecha_ingreso || '',
                 estado: initialData.estado
             });
+        } else {
+            setFormData({
+                nombres: '',
+                apellidos: '',
+                email_personal: '',
+                telefono: '',
+                departamento: '',
+                fecha_ingreso: '',
+                estado: 'ACTIVO'
+            });
+            setSelectedUser(null);
+            setSearchQuery('');
         }
     }, [initialData]);
 
@@ -41,10 +102,33 @@ const PersonForm: React.FC<PersonFormProps> = ({ initialData, isLoading = false,
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
+    const handleSelectUser = (opt: any) => {
+        const matched = usuarios.find(u => u.id === opt.id);
+        if (matched) {
+            setSelectedUser(matched);
+            setSearchQuery(matched.email);
+        }
+    };
+
+    const handleClearUser = () => {
+        setSelectedUser(null);
+        setSearchQuery('');
+        setUsuarios([]);
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSubmit(formData);
+        onSubmit({
+            ...formData,
+            usuario_id: selectedUser ? selectedUser.id : undefined
+        });
     };
+
+    // Map SystemUser objects to AutocompleteOption format
+    const autocompleteOptions = usuarios.map(u => ({
+        id: u.id,
+        name: u.email
+    }));
 
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -80,8 +164,8 @@ const PersonForm: React.FC<PersonFormProps> = ({ initialData, isLoading = false,
                 </div>
             </FormSection>
 
-            <FormSection title="Información Laboral">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormSection title="Información Laboral & Acceso">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
                     <InputField
                         label="Departamento / Área"
                         name="departamento"
@@ -108,6 +192,21 @@ const PersonForm: React.FC<PersonFormProps> = ({ initialData, isLoading = false,
                         ]}
                     />
                 </div>
+
+                <AutocompleteField
+                    label="Usuario de Acceso Asociado"
+                    placeholder="Escriba para buscar cuenta de usuario por correo..."
+                    searchQuery={searchQuery}
+                    onSearchQueryChange={setSearchQuery}
+                    options={autocompleteOptions}
+                    onSelect={handleSelectUser}
+                    onClear={handleClearUser}
+                    selectedItem={selectedUser ? { id: selectedUser.id, name: selectedUser.email } : null}
+                    isLoading={isSearching}
+                    helpText={selectedUser 
+                        ? `Vinculado actualmente a la cuenta: ${selectedUser.email}`
+                        : "Asocie una cuenta de acceso del sistema para este colaborador"}
+                />
             </FormSection>
 
             <div className="modal-action">

@@ -4,6 +4,8 @@ import { UserStatus, USER_STATUS_LABELS } from '../../constants/userStatus';
 import InputField from '../Common/Forms/InputField';
 import SelectField from '../Common/Forms/SelectField';
 import CheckboxGroup from '../Common/Forms/CheckboxGroup';
+import AutocompleteField from '../Common/Forms/AutocompleteField';
+import { usePersonService, Person } from '../../services/personService';
 
 interface UserFormProps {
     initialData?: any; // Will be updated to proper type
@@ -13,29 +15,86 @@ interface UserFormProps {
 }
 
 const UserForm: React.FC<UserFormProps> = ({ initialData, isLoading = false, onSubmit, onCancel }) => {
+    const { getPeople } = usePersonService();
     const [email, setEmail] = useState('');
     const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
     const [estado, setEstado] = useState<UserStatus>(UserStatus.ACTIVO);
 
+    // States for autocomplete / search collaborator
+    const [colaboradores, setColaboradores] = useState<Person[]>([]);
+    const [selectedColaborador, setSelectedColaborador] = useState<Person | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [isSearching, setIsSearching] = useState(false);
+
+    // Load initial collaborator if editing
     useEffect(() => {
         if (initialData) {
             setEmail(initialData.email);
-            // Initialize roles, defaulting to empty array if undefined (though interface enforces it now)
             setSelectedRoles(initialData.roles || []);
             setEstado(initialData.estado);
+            
+            if (initialData.colaborador) {
+                setSelectedColaborador(initialData.colaborador);
+                setSearchQuery(`${initialData.colaborador.nombres} ${initialData.colaborador.apellidos}`);
+            } else {
+                setSelectedColaborador(null);
+                setSearchQuery('');
+            }
         } else {
             setEmail('');
             setSelectedRoles([UserRole.EMPLOYEE]); // Default role
             setEstado(UserStatus.ACTIVO);
+            setSelectedColaborador(null);
+            setSearchQuery('');
         }
     }, [initialData]);
+
+    // Handle typing in search input (with debounced API call)
+    useEffect(() => {
+        if (searchQuery.trim().length === 0) {
+            setColaboradores([]);
+            return;
+        }
+
+        const timer = setTimeout(async () => {
+            setIsSearching(true);
+            const response = await getPeople({ search: searchQuery, items_por_pagina: 10 });
+            if (response && response.success) {
+                const list: Person[] = response.data.datos || response.data.personas || [];
+                // Only show collaborators without user, OR the currently selected one
+                const filtered = list.filter(c => 
+                    !c.usuario_id || (selectedColaborador && c.id === selectedColaborador.id)
+                );
+                setColaboradores(filtered);
+            }
+            setIsSearching(false);
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
+
+    const handleSelectCollaborator = (opt: any) => {
+        // Find the matched collaborator object
+        const matched = colaboradores.find(c => c.id === opt.id);
+        if (matched) {
+            setSelectedColaborador(matched);
+            setSearchQuery(`${matched.nombres} ${matched.apellidos}`);
+        }
+    };
+
+    const handleClearCollaborator = () => {
+        setSelectedColaborador(null);
+        setSearchQuery('');
+        setColaboradores([]);
+    };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         onSubmit({
             correo: email,
             roles: selectedRoles,
-            estado
+            estado,
+            colaborador_id: selectedColaborador ? selectedColaborador.id : undefined
         });
     };
 
@@ -52,6 +111,13 @@ const UserForm: React.FC<UserFormProps> = ({ initialData, isLoading = false, onS
         { value: UserStatus.PENDIENTE, label: USER_STATUS_LABELS[UserStatus.PENDIENTE] }
     ];
 
+    // Map Person objects to AutocompleteOption format
+    const autocompleteOptions = colaboradores.map(c => ({
+        id: c.id,
+        name: `${c.nombres} ${c.apellidos}`,
+        detail: c.email_personal
+    }));
+
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
             <InputField
@@ -62,6 +128,24 @@ const UserForm: React.FC<UserFormProps> = ({ initialData, isLoading = false, onS
                 required
                 type="email"
                 helpText="Será utilizado como usuario de acceso"
+            />
+
+            <AutocompleteField
+                label="Colaborador Asociado (Ficha de Personal)"
+                placeholder="Escriba para buscar colaborador por nombre o correo..."
+                searchQuery={searchQuery}
+                onSearchQueryChange={setSearchQuery}
+                options={autocompleteOptions}
+                onSelect={handleSelectCollaborator}
+                onClear={handleClearCollaborator}
+                selectedItem={selectedColaborador ? {
+                    id: selectedColaborador.id,
+                    name: `${selectedColaborador.nombres} ${selectedColaborador.apellidos}`
+                } : null}
+                isLoading={isSearching}
+                helpText={selectedColaborador 
+                    ? `Vinculado actualmente a: ${selectedColaborador.nombres} ${selectedColaborador.apellidos}`
+                    : "Vincule este usuario de acceso con su ficha personal en el directorio"}
             />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
