@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import PageContainer from '../../components/Common/PageContainer';
 import GenericTable, { TableColumn, TableAction } from '../../components/Common/GenericTable';
@@ -20,6 +19,7 @@ const StaffDirectoryPage: React.FC = () => {
     // State
     const [people, setPeople] = useState<Person[]>([]);
     const [pagination, setPagination] = useState<Pagination | null>(null);
+    const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
 
     // State for FilterBar
     const [queryParams, setQueryParams] = useState<any>({
@@ -43,7 +43,7 @@ const StaffDirectoryPage: React.FC = () => {
     const loadPeople = async () => {
         const response = await getPeople(queryParams);
         if (response && response.success) {
-            setPeople(response.data.personas);
+            setPeople(response.data.datos || response.data.personas || []);
             setPagination(response.data.paginacion);
         }
     };
@@ -130,6 +130,29 @@ const StaffDirectoryPage: React.FC = () => {
         setQueryParams((prev: any) => ({ ...prev, ...updates }));
     };
 
+    const handleSort = (key: string) => {
+        let direction: 'asc' | 'desc' = 'asc';
+        if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+            direction = 'desc';
+        }
+
+        setSortConfig({ key, direction });
+
+        // Map column keys to backend expected fields
+        const sortMap: Record<string, string> = {
+            'nombres': 'nombres',
+            'fecha_ingreso': 'fecha_ingreso'
+        };
+
+        const ordenar_por = sortMap[key] || key;
+
+        updateQueryParams({
+            ordenar_por,
+            orden: direction,
+            pagina: 1
+        });
+    };
+
     // Table Config
     const columns: TableColumn<Person>[] = [
         {
@@ -175,7 +198,8 @@ const StaffDirectoryPage: React.FC = () => {
         {
             key: 'fecha_ingreso',
             label: 'Ingreso',
-            render: (person) => person.fecha_ingreso || '-'
+            sortable: true,
+            render: (person) => person.fecha_ingreso ? new Date(person.fecha_ingreso).toLocaleDateString() : '-'
         }
     ];
 
@@ -242,9 +266,9 @@ const StaffDirectoryPage: React.FC = () => {
                     columns={columns}
                     actions={actions}
                     keyExtractor={(person) => person.id}
-                    currentPage={queryParams.pagina || 1}
-                    totalPages={pagination?.total_paginas || 1}
-                    pageSize={queryParams.items_por_pagina || ITEMS_PER_PAGE}
+                    pagination={pagination}
+                    sortConfig={sortConfig}
+                    onSort={handleSort}
                     onPageChange={(page) => updateQueryParam('pagina', page)}
                     onPageSizeChange={(size) => updateQueryParams({ items_por_pagina: size, pagina: 1 })}
                     emptyMessage="No se encontraron colaboradores"
