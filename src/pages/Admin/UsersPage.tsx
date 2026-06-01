@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import PageContainer from '../../components/Common/PageContainer';
 import GenericTable, { TableColumn, TableAction } from '../../components/Common/GenericTable';
@@ -25,6 +24,9 @@ const UsersPage: React.FC = () => {
     const [users, setUsers] = useState<SystemUser[]>([]);
     const [pagination, setPagination] = useState<Pagination | null>(null);
     const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
+    
+    // Local search term to enable debouncing
+    const [localSearchTerm, setLocalSearchTerm] = useState('');
 
     // State for FilterBar
     const [queryParams, setQueryParams] = useState<any>({
@@ -42,6 +44,18 @@ const UsersPage: React.FC = () => {
     const [userToDelete, setUserToDelete] = useState<SystemUser | null>(null);
     const [resetPasswordModalOpen, setResetPasswordModalOpen] = useState(false);
     const [userToReset, setUserToReset] = useState<SystemUser | null>(null);
+
+    // Debounce the search input to avoid making too many API calls
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setQueryParams((prev: any) => {
+                if (prev.search === localSearchTerm) return prev;
+                return { ...prev, search: localSearchTerm, pagina: 1 };
+            });
+        }, 400);
+
+        return () => clearTimeout(handler);
+    }, [localSearchTerm]);
 
     useEffect(() => {
         loadUsers();
@@ -129,10 +143,11 @@ const UsersPage: React.FC = () => {
     };
 
     const handleSearch = (term: string) => {
-        setQueryParams((prev: any) => ({ ...prev, search: term, pagina: 1 }));
+        setLocalSearchTerm(term);
     };
 
     const clearFilters = () => {
+        setLocalSearchTerm('');
         setQueryParams({
             search: '',
             rol: undefined,
@@ -287,7 +302,7 @@ const UsersPage: React.FC = () => {
         >
             <FilterBar
                 onSearch={handleSearch}
-                searchTerm={queryParams.search || ''}
+                searchTerm={localSearchTerm}
                 searchPlaceholder="Buscar por email o nombre..."
                 filters={filterDefinitions}
                 activeFilters={activeFilters}

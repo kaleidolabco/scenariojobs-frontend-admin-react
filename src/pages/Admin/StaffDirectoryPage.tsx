@@ -20,6 +20,9 @@ const StaffDirectoryPage: React.FC = () => {
     const [people, setPeople] = useState<Person[]>([]);
     const [pagination, setPagination] = useState<Pagination | null>(null);
     const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
+    
+    // Local search term to enable debouncing
+    const [localSearchTerm, setLocalSearchTerm] = useState('');
 
     // State for FilterBar
     const [queryParams, setQueryParams] = useState<any>({
@@ -35,6 +38,18 @@ const StaffDirectoryPage: React.FC = () => {
     const [editingPerson, setEditingPerson] = useState<Person | null>(null);
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [personToDelete, setPersonToDelete] = useState<Person | null>(null);
+
+    // Debounce the search input to avoid making too many API calls
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setQueryParams((prev: any) => {
+                if (prev.search === localSearchTerm) return prev;
+                return { ...prev, search: localSearchTerm, pagina: 1 };
+            });
+        }, 400);
+
+        return () => clearTimeout(handler);
+    }, [localSearchTerm]);
 
     useEffect(() => {
         loadPeople();
@@ -109,10 +124,11 @@ const StaffDirectoryPage: React.FC = () => {
     };
 
     const handleSearch = (term: string) => {
-        setQueryParams((prev: any) => ({ ...prev, search: term, pagina: 1 }));
+        setLocalSearchTerm(term);
     };
 
     const clearFilters = () => {
+        setLocalSearchTerm('');
         setQueryParams({
             search: '',
             departamento: undefined,
@@ -250,7 +266,7 @@ const StaffDirectoryPage: React.FC = () => {
         >
             <FilterBar
                 onSearch={handleSearch}
-                searchTerm={queryParams.search || ''}
+                searchTerm={localSearchTerm}
                 searchPlaceholder="Buscar colaboradores..."
                 filters={filterDefinitions}
                 activeFilters={activeFilters}
