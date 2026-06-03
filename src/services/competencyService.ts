@@ -1,8 +1,7 @@
 import useFetch from '../hooks/useFetch';
-import { FetchResponse, successMock } from './responseType';
-
-// Stores
+import { FetchResponse } from './responseType';
 import useUIStore from '../store/uiStore';
+import useAuthStore from '../store/authStore';
 
 export interface competenciesQueryParams {
     pagina?: number;
@@ -14,6 +13,7 @@ export interface competenciesQueryParams {
 }   
 
 export interface CompetencyLevel {
+    id?: string;
     nivel: number;
     nombre?: string;
     descripcion: string;
@@ -29,7 +29,7 @@ export interface Competency {
     definiciones_niveles?: CompetencyLevel[];
 }
 
-// ─── Mock data ────────────────────────────────────────────────────────────────
+// ─── Static Map / Fallback data ───────────────────────────────────────────────
 
 const MOCK_COMPETENCIES_DATA = [
     // Competencias Organizacionales
@@ -48,7 +48,7 @@ const MOCK_COMPETENCIES_DATA = [
     
     // Competencias de Productividad
     { id: '11', nombre: 'Oportunidad', descripcion: 'Realiza y presenta su gestión, reportes e informes de acuerdo a la programación establecida.', categoria: 'COMPETENCIA_PRODUCTIVIDAD', escala: 4, definiciones_niveles: [ { nivel: 1, nombre: 'Bajo', descripcion: 'Entrega gestión, reportes fuera de plazos establecidos frecuentemente.' }, { nivel: 2, nombre: 'Medio', descripcion: 'Presenta gestión y reportes dentro de plazos establecidos.' }, { nivel: 3, nombre: 'Alto', descripcion: 'Cumple de manera consistente con programación, a veces adelanta entregas.' }, { nivel: 4, nombre: 'Muy Alto', descripcion: 'Se anticipa a plazos, asegura información oportuna y confiable.' } ] },
-    { id: '12', nombre: 'Efectividad', descripcion: 'Cumple con los objetivos de su cargo, trabajando con dedicación para tener resultados con calidad, distribuyendo adecuadamente el tiempo y utilizando adecuadamente los recursos.', categoria: 'COMPETENCIA_PRODUCTIVIDAD', escala: 4, definiciones_niveles: [ { nivel: 1, nombre: 'Bajo', descripcion: 'Presenta dificultades para cumplir objetivos, uso ineficiente de tiempo y recursos.' }, { nivel: 2, nombre: 'Medio', descripcion: 'Cumple objetivos asignados utilizando adecuadamente tiempo y recursos.' }, { nivel: 3, nombre: 'Alto', descripcion: 'Alcanza y supera objetivos de cargo demostrando dedicación y precisión.' }, { nivel: 4, nombre: 'Muy Alto', descripcion: 'Logra resultados excepcionales con dedicación continua y máxima eficiencia.' } ] },
+    { id: '12', nombre: 'Efectividad', descripcion: 'Cumple con los objetivos de su cargo, trabajando con dedicación para tener resultados con calidad, distribuyendo adecuadamente el tiempo y utilizando adecuadamente los recursos.', categoria: 'COMPETENCIA_PRODUCTIVIDAD', escala: 4, definiciones_niveles: [ { nivel: 1, nombre: 'Bajo', descripcion: 'Presenta dificultades para cumplir objetivos, uso ineficiente de tiempo y recursos.' }, { nivel: 2, nombre: 'Medio', descripcion: 'Cumple objetivos asignados utilizando adecuadamente tiempo y recursos.' }, { nivel: 3, fontName: 'Alto', descripcion: 'Alcanza y supera objetivos de cargo demostrando dedicación y precisión.' }, { nivel: 4, nombre: 'Muy Alto', descripcion: 'Logra resultados excepcionales con dedicación continua y máxima eficiencia.' } ] },
     { id: '13', nombre: 'Calidad', descripcion: 'Tiene la habilidad y la mentalidad para realizar sus tareas y responsabilidades de manera precisa a un nivel consistente y alto, cumpliendo o superando los estándares establecidos.', categoria: 'COMPETENCIA_PRODUCTIVIDAD', escala: 4, definiciones_niveles: [ { nivel: 1, nombre: 'Bajo', descripcion: 'Entrega frecuentemente trabajo con errores, debajo de estándares mínimos.' }, { nivel: 2, nombre: 'Medio', descripcion: 'Cumple estándares básicos requiriendo revisión ocasional por errores.' }, { nivel: 3, nombre: 'Alto', descripcion: 'Entrega trabajo consistente, preciso y acorde a estándares establecidos.' }, { nivel: 4, nombre: 'Muy Alto', descripcion: 'Supera estándares, trabajo impecable anticipando problemas de calidad.' } ] },
     
     // Habilidades Blandas (mantener las existentes)
@@ -88,7 +88,6 @@ const MOCK_COMPETENCIES_DATA = [
 /**
  * Get a dynamic map of competency scales from the master data.
  * This function is pure (no hooks) and returns scales for all competencies.
- * Automatically includes any new competencies added to MOCK_COMPETENCIES_DATA.
  */
 export const getCompetenciesScalesMap = (): Record<string, number> => {
     const scalesMap: Record<string, number> = {};
@@ -98,52 +97,58 @@ export const getCompetenciesScalesMap = (): Record<string, number> => {
     return scalesMap;
 };
 
+// ─── Service hook ─────────────────────────────────────────────────────────────
+
 export const useCompetencyService = () => {
     const { fetchData, loading, error } = useFetch<FetchResponse>();
     const { openAlert } = useUIStore();
+    const { token } = useAuthStore();
 
     const getCompetencies = async (params?: competenciesQueryParams): Promise<FetchResponse | null> => {
         try {
-            let filtered = [...MOCK_COMPETENCIES_DATA] as Competency[];
-
+            const backendParams: any = {};
+            
             if (params?.filtro) {
-                const q = params.filtro.toLowerCase();
-                filtered = filtered.filter(c =>
-                    c.nombre.toLowerCase().includes(q) ||
-                    c.descripcion.toLowerCase().includes(q)
-                );
+                backendParams.busqueda = params.filtro;
             }
-
             if (params?.categoria) {
-                filtered = filtered.filter(c => c.categoria === params.categoria);
+                backendParams.categoria = params.categoria;
             }
-
+            if (params?.pagina) {
+                backendParams.pagina = params.pagina;
+            }
+            if (params?.items_por_pagina) {
+                backendParams.limite = params.items_por_pagina;
+            }
             if (params?.orden_por) {
-                filtered.sort((a, b) => {
-                    const aVal = (a as any)[params.orden_por!] || '';
-                    const bVal = (b as any)[params.orden_por!] || '';
-                    const cmp = aVal > bVal ? 1 : -1;
-                    return params.orden === 'desc' ? -cmp : cmp;
-                });
+                backendParams.ordenar_por = params.orden_por;
             }
-
-            const page = params?.pagina ?? 1;
-            const pageSize = params?.items_por_pagina ?? 10;
-            const totalItems = filtered.length;
-            const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
-            const start = (page - 1) * pageSize;
-            const paginated = filtered.slice(start, start + pageSize);
+            if (params?.orden) {
+                backendParams.orden = params.orden;
+            }
 
             const response = (await fetchData({
-                url: '/api/competencies',
-                params: params as any,
-                mockData: successMock({
-                    competencias: paginated,
-                    paginacion: { pagina_actual: page, items_por_pagina: pageSize, total_items: totalItems, total_paginas: totalPages },
-                }),
+                url: `${import.meta.env.VITE_API_URL}/competencies`,
+                params: backendParams,
+                token: token || null
             })) as FetchResponse | null;
 
-            if (response?.success === false) throw new Error(response.message || 'Error al obtener las competencias');
+            if (response?.success === false) {
+                throw new Error(response.message || 'Error al obtener las competencias');
+            }
+
+            // Map backend fields to frontend expectations safely (datos -> competencias)
+            if (response && response.success && response.data?.datos) {
+                return {
+                    ...response,
+                    data: {
+                        ...response.data,
+                        competencias: response.data.datos,
+                        paginacion: response.data.paginacion
+                    }
+                };
+            }
+
             return response;
         } catch (err) {
             openAlert(err instanceof Error ? err.message : String(err), 'error');
@@ -152,14 +157,31 @@ export const useCompetencyService = () => {
     };
 
     const createCompetency = async (competency: Omit<Competency, 'id'>): Promise<FetchResponse | null> => {
+        console.log('Creating competency with data:', competency);
         try {
-            const newCompetency = { ...competency, id: Math.random().toString(36).substr(2, 9) };
-            return (await fetchData({
-                url: '/api/competencies',
+            const response = (await fetchData({
+                url: `${import.meta.env.VITE_API_URL}/competencies`,
                 method: 'POST',
                 body: competency,
-                mockData: successMock({ competencia: newCompetency }),
+                token: token || null
             })) as FetchResponse | null;
+
+            if (response?.success === false) {
+                throw new Error(response.message || 'Error al crear la competencia');
+            }
+
+            // Map backend fields to frontend expectations safely (data -> competencia)
+            if (response && response.success && response.data) {
+                return {
+                    ...response,
+                    data: {
+                        ...response.data,
+                        competencia: response.data
+                    }
+                };
+            }
+
+            return response;
         } catch (err) {
             openAlert(err instanceof Error ? err.message : String(err), 'error');
             return null;
@@ -168,12 +190,29 @@ export const useCompetencyService = () => {
 
     const updateCompetency = async (id: string, competency: Partial<Competency>): Promise<FetchResponse | null> => {
         try {
-            return (await fetchData({
-                url: `/api/competencies/${id}`,
-                method: 'PUT',
+            const response = (await fetchData({
+                url: `${import.meta.env.VITE_API_URL}/competencies/${id}`,
+                method: 'PATCH',
                 body: competency,
-                mockData: successMock({ competencia: { ...competency, id } }),
+                token: token || null
             })) as FetchResponse | null;
+
+            if (response?.success === false) {
+                throw new Error(response.message || 'Error al actualizar la competencia');
+            }
+
+            // Map backend fields to frontend expectations safely (data -> competencia)
+            if (response && response.success && response.data) {
+                return {
+                    ...response,
+                    data: {
+                        ...response.data,
+                        competencia: response.data
+                    }
+                };
+            }
+
+            return response;
         } catch (err) {
             openAlert(err instanceof Error ? err.message : String(err), 'error');
             return null;
@@ -182,11 +221,16 @@ export const useCompetencyService = () => {
 
     const deleteCompetency = async (id: string): Promise<boolean> => {
         try {
-            await fetchData({
-                url: `/api/competencies/${id}`,
+            const response = await fetchData({
+                url: `${import.meta.env.VITE_API_URL}/competencies/${id}`,
                 method: 'DELETE',
-                mockData: successMock({ success: true }),
+                token: token || null
             });
+
+            if (response?.success === false) {
+                throw new Error(response.message || 'Error al eliminar la competencia');
+            }
+
             return true;
         } catch (err) {
             openAlert(err instanceof Error ? err.message : String(err), 'error');

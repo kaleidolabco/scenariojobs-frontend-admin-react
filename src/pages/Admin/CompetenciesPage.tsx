@@ -124,8 +124,8 @@ const BibliotecaTab: React.FC<{ categories: Category[] }> = ({ categories }) => 
     const handleCreate = async (data: Omit<Competency, 'id'>) => {
         const res = await createCompetency(data);
         if (res) {
-            setCompetencies((prev) => [...prev, res.data.competencia]);
             setModalOpen(false);
+            fetchData();
         }
     };
 
@@ -133,16 +133,18 @@ const BibliotecaTab: React.FC<{ categories: Category[] }> = ({ categories }) => 
         if (!editingCompetency) return;
         const res = await updateCompetency(editingCompetency.id, data);
         if (res) {
-            setCompetencies((prev) => prev.map((c) => c.id === editingCompetency.id ? res.data.competencia : c));
             setModalOpen(false);
             setEditingCompetency(null);
+            fetchData();
         }
     };
 
     const handleConfirmDelete = async () => {
         if (!deleteCompetence) return;
         const ok = await deleteCompetency(deleteCompetence.id);
-        if (ok) setCompetencies((prev) => prev.filter((c) => c.id !== deleteCompetence.id));
+        if (ok) {
+            fetchData();
+        }
         setDeleteCompetence(null);
         setShowDeleteModal(false);
     };
@@ -297,7 +299,7 @@ const BibliotecaTab: React.FC<{ categories: Category[] }> = ({ categories }) => 
                                 >»</button>
                             </div>
                             <div className="text-sm text-base-content/60">
-                                Mostrando {(((queryParams.pagina ?? 1) - 1) * (queryParams.items_por_pagina ?? ITEMS_PER_PAGE)) + 1}–{Math.min((queryParams.pagina ?? 1) * (queryParams.items_por_pagina ?? ITEMS_PER_PAGE), pagination.total_items)} de {pagination.total_items}
+                                Mostrando {(((queryParams.pagina ?? 1) - 1) * (queryParams.items_por_pagina ?? ITEMS_PER_PAGE)) + 1}–{Math.min((queryParams.pagina ?? 1) * (queryParams.items_por_pagina ?? ITEMS_PER_PAGE), pagination.total)} de {pagination.total}
                             </div>
                         </div>
                     )}

@@ -7,6 +7,7 @@ import SelectField from '../Common/Forms/SelectField';
 import NumberInputField from '../Common/Forms/NumberInputField';
 import FormSection from '../Common/Forms/FormSection';
 import LevelDefinitionItem from '../Common/Forms/LevelDefinitionItem';
+import useUIStore from '../../store/uiStore'; // Import useUIStore
 
 interface CompetencyFormProps {
     initialData?: Competency | null;
@@ -85,8 +86,23 @@ const CompetencyForm: React.FC<CompetencyFormProps> = ({
         setLevelDefs(updated);
     };
 
+    const { openAlert } = useUIStore(); // Access openAlert from uiStore
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Client-side validation for level descriptions if levels are shown
+        if (showLevels) {
+            const incompleteLevels = levelDefs.filter(level => !level.descripcion.trim());
+            if (incompleteLevels.length > 0) {
+                openAlert(
+                    `Por favor, complete las descripciones para todos los niveles (${incompleteLevels.map(l => l.nivel).join(", ")}).`,
+                    "warning"
+                );
+                return; // Prevent form submission
+            }
+        }
+
         onSubmit({
             nombre: name,
             descripcion: description,
