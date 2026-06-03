@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompetencyService, Competency, competenciesQueryParams } from '../../services/competencyService';
 import { useCategoryService, Category, getCategoryMeta } from '../../services/categoryService';
@@ -116,10 +116,23 @@ const BibliotecaTab: React.FC<{ categories: Category[] }> = ({ categories }) => 
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [queryParams]);
 
+    const prevQueryParamsRef = useRef<competenciesQueryParams | null>(null);
+
     useEffect(() => {
-        setCompetencies([]);
-        fetchData();
-    }, [fetchData]);
+        const currentQueryParams = queryParams;
+        const prevQueryParams = prevQueryParamsRef.current;
+
+        // Only fetch if it's the initial load OR if queryParams have genuinely changed.
+        // This prevents double-fetching in React 18+ StrictMode on initial mount
+        // while still allowing fetches on filter/search changes.
+        if (prevQueryParams === null || JSON.stringify(currentQueryParams) !== JSON.stringify(prevQueryParams)) {
+            setCompetencies([]); // Clear competencies before fetching new data
+            fetchData();
+        }
+
+        prevQueryParamsRef.current = currentQueryParams;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [queryParams]);
 
     const handleCreate = async (data: Omit<Competency, 'id'>) => {
         const res = await createCompetency(data);
