@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     useCategoryService,
@@ -12,6 +12,7 @@ import SelectField from '../Common/Forms/SelectField';
 import GenericModal from '../Common/GenericModal';
 import ConfirmationModal from '../Common/ConfirmationModal';
 import LoadingIndicator from '../Common/LoadingIndicator';
+import FilterBar from '../Common/FilterBar';
 
 // ─── Color options ────────────────────────────────────────────────────────────
 
@@ -29,7 +30,16 @@ const COLOR_OPTIONS: { value: CategoryColor; label: string }[] = [
 // ─── Badge preview ────────────────────────────────────────────────────────────
 
 const CategoryBadge: React.FC<{ nombre: string; color: CategoryColor }> = ({ nombre, color }) => (
-    <div className={`badge badge-${color} badge-outline font-medium`}>{nombre}</div>
+    <div className={`badge 
+        badge-${color} 
+        badge-outline
+        h-auto
+        py-1
+        px-1
+        whitespace-normal
+        text-center`}>
+        {nombre}
+    </div>
 );
 
 // ─── Category form ────────────────────────────────────────────────────────────
@@ -171,30 +181,33 @@ const CategoriesTab: React.FC<CategoriesTabProps> = ({ onCategoriesChanged }) =>
     const [deletingCategory, setDeletingCategory] = useState<Category | null>(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [search, setSearch] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
 
-    const load = async () => {
-        const res = await getCategories(search ? { search } : undefined);
+    const loadCategoriesData = useCallback(async (searchTerm: string = '') => {
+        const res = await getCategories(searchTerm ? { search: searchTerm } : undefined);
         if (res?.success) setCategories(res.data.categorias);
-    };
+    }, [getCategories]);
+
+    // Debounce search input
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedSearch(search);
+        }, 400);
+        return () => clearTimeout(handler);
+    }, [search]);
 
     useEffect(() => {
-        load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+        loadCategoriesData(debouncedSearch);
+    }, [loadCategoriesData, debouncedSearch]);
 
-    // Búsqueda local (las categorías son pocas, no hace falta debounce al servicio)
-    const filtered = search
-        ? categories.filter(
-              (c) =>
-                  c.nombre.toLowerCase().includes(search.toLowerCase()) ||
-                  c.descripcion?.toLowerCase().includes(search.toLowerCase())
-          )
-        : categories;
+    const handleSearch = (searchTerm: string) => {
+        setSearch(searchTerm);
+    };
 
     const handleCreate = async (data: Omit<Category, 'id'>) => {
         const res = await createCategory(data);
         if (res?.success) {
-            await load();
+            await loadCategoriesData(search);
             onCategoriesChanged();
             setModalOpen(false);
         }
@@ -204,7 +217,7 @@ const CategoriesTab: React.FC<CategoriesTabProps> = ({ onCategoriesChanged }) =>
         if (!editingCategory) return;
         const res = await updateCategory(editingCategory.id, data);
         if (res?.success) {
-            await load();
+            await loadCategoriesData(search);
             onCategoriesChanged();
             setModalOpen(false);
             setEditingCategory(null);
@@ -220,7 +233,7 @@ const CategoriesTab: React.FC<CategoriesTabProps> = ({ onCategoriesChanged }) =>
         if (!deletingCategory) return;
         const ok = await deleteCategory(deletingCategory.id);
         if (ok) {
-            await load();
+            await loadCategoriesData(search);
             onCategoriesChanged();
         }
         setDeletingCategory(null);
@@ -234,18 +247,13 @@ const CategoriesTab: React.FC<CategoriesTabProps> = ({ onCategoriesChanged }) =>
     return (
         <div className="space-y-5">
             {/* Toolbar */}
-            <div className="flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center">
-                <div className="relative w-full sm:w-72">
-                    <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-base-content/40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                    <input
-                        className="input input-bordered w-full pl-9 text-sm"
-                        placeholder="Buscar categorías..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                    />
-                </div>
+            <div className="flex flex-col-reverse sm:flex-row gap-3 justify-between items-start">
+                <FilterBar
+                    onSearch={handleSearch}
+                    searchTerm={search}
+                    searchPlaceholder="Buscar categorías..."
+                    className="flex-1"
+                />
                 <button className="btn btn-primary shrink-0 w-full sm:w-auto" onClick={openCreate}>
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -257,14 +265,24 @@ const CategoriesTab: React.FC<CategoriesTabProps> = ({ onCategoriesChanged }) =>
             {/* Content */}
             {loading && !categories.length ? (
                 <LoadingIndicator />
-            ) : filtered.length === 0 ? (
+            ) : categories.length === 0 && search === '' ? (
                 <div className="text-center py-14 text-base-content/40">
                     <svg className="h-10 w-10 mx-auto mb-3 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                     </svg>
                     <p className="font-medium">No hay categorías</p>
                     <p className="text-sm mt-1">
-                        {search ? 'Ninguna categoría coincide con la búsqueda.' : 'Crea la primera categoría para comenzar.'}
+                        Crea la primera categoría para comenzar.
+                    </p>
+                </div>
+            ) : categories.length === 0 && search !== '' ? (
+                <div className="text-center py-14 text-base-content/40">
+                    <svg className="h-10 w-10 mx-auto mb-3 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <p className="font-medium">No se encontraron categorías</p>
+                    <p className="text-sm mt-1">
+                        Ninguna categoría coincide con la búsqueda "{search}".
                     </p>
                 </div>
             ) : (
@@ -280,7 +298,7 @@ const CategoriesTab: React.FC<CategoriesTabProps> = ({ onCategoriesChanged }) =>
                         </thead>
                         <tbody>
                             <AnimatePresence>
-                                {filtered.map((cat) => (
+                                {categories.map((cat) => (
                                     <motion.tr
                                         key={cat.id}
                                         layout
@@ -338,9 +356,9 @@ const CategoriesTab: React.FC<CategoriesTabProps> = ({ onCategoriesChanged }) =>
             )}
 
             {/* Info footer */}
-            {filtered.length > 0 && (
+            {categories.length > 0 && (
                 <p className="text-xs text-base-content/40 text-right">
-                    {filtered.length} {filtered.length === 1 ? 'categoría' : 'categorías'}
+                    {categories.length} {categories.length === 1 ? 'categoría' : 'categorías'}
                 </p>
             )}
 

@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import useFetch from '../hooks/useFetch';
 import { FetchResponse } from './responseType';
 import useUIStore from '../store/uiStore';
@@ -104,7 +105,7 @@ export const useCompetencyService = () => {
     const { openAlert } = useUIStore();
     const { token } = useAuthStore();
 
-    const getCompetencies = async (params?: competenciesQueryParams): Promise<FetchResponse | null> => {
+    const getCompetencies = useCallback(async (params?: competenciesQueryParams): Promise<FetchResponse | null> => {
         try {
             const backendParams: any = {};
             
@@ -154,9 +155,9 @@ export const useCompetencyService = () => {
             openAlert(err instanceof Error ? err.message : String(err), 'error');
             return null;
         }
-    };
+    }, [fetchData, token, openAlert]);
 
-    const createCompetency = async (competency: Omit<Competency, 'id'>): Promise<FetchResponse | null> => {
+    const createCompetency = useCallback(async (competency: Omit<Competency, 'id'>): Promise<FetchResponse | null> => {
         console.log('Creating competency with data:', competency);
         try {
             const response = (await fetchData({
@@ -186,9 +187,9 @@ export const useCompetencyService = () => {
             openAlert(err instanceof Error ? err.message : String(err), 'error');
             return null;
         }
-    };
+    }, [fetchData, token, openAlert]);
 
-    const updateCompetency = async (id: string, competency: Partial<Competency>): Promise<FetchResponse | null> => {
+    const updateCompetency = useCallback(async (id: string, competency: Partial<Competency>): Promise<FetchResponse | null> => {
         try {
             const response = (await fetchData({
                 url: `${import.meta.env.VITE_API_URL}/competencies/${id}`,
@@ -217,9 +218,9 @@ export const useCompetencyService = () => {
             openAlert(err instanceof Error ? err.message : String(err), 'error');
             return null;
         }
-    };
+    }, [fetchData, token, openAlert]);
 
-    const deleteCompetency = async (id: string): Promise<boolean> => {
+    const deleteCompetency = useCallback(async (id: string): Promise<boolean> => {
         try {
             const response = await fetchData({
                 url: `${import.meta.env.VITE_API_URL}/competencies/${id}`,
@@ -236,7 +237,7 @@ export const useCompetencyService = () => {
             openAlert(err instanceof Error ? err.message : String(err), 'error');
             return false;
         }
-    };
+    }, [fetchData, token, openAlert]);
 
     return { getCompetencies, createCompetency, updateCompetency, deleteCompetency, loading, error };
 };

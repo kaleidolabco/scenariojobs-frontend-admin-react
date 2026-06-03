@@ -177,7 +177,7 @@ const BibliotecaTab: React.FC<{ categories: Category[] }> = ({ categories }) => 
     return (
         <>
             {/* Toolbar: search/filters + action */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+            <div className="flex flex-col-reverse sm:flex-row gap-3 justify-between items-start">
                 <div className="flex-1">
                     <FilterBar
                         onSearch={(t) => setSearchInput(t)}
@@ -218,12 +218,20 @@ const BibliotecaTab: React.FC<{ categories: Category[] }> = ({ categories }) => 
                                             className="card bg-base-100 shadow-sm border border-base-200 hover:shadow-md transition-shadow"
                                         >
                                             <div className="card-body p-5">
-                                                <div className="flex justify-between items-start mb-1">
-                                                    <h2 className="card-title text-lg font-bold text-base-content">
+                                                <div className="flex justify-between gap-3 items-start mb-1">
+                                                    <h2 className="card-title text-lg font-bold flex-1">
                                                         {comp.nombre}
                                                     </h2>
-                                                    <div className={`badge badge-${catMeta.color} badge-outline`}>
-                                                        {catMeta.nombre}
+
+                                                    <div className={`badge
+                                                        badge-${catMeta.color}
+                                                        badge-outline
+                                                        h-auto
+                                                        py-1
+                                                        px-1
+                                                        whitespace-normal
+                                                        text-center`}>
+                                                        {catMeta.nombre} 
                                                     </div>
                                                 </div>
                                                 <p className="text-sm text-base-content/70 h-10 overflow-hidden text-ellipsis line-clamp-2">

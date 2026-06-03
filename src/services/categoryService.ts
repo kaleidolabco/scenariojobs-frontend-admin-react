@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import useFetch from '../hooks/useFetch';
 import { FetchResponse } from './responseType';
 import useUIStore from '../store/uiStore';
@@ -62,7 +63,7 @@ export const useCategoryService = () => {
 
     // ── GET list ──────────────────────────────────────────────────────────────
 
-    const getCategories = async (params?: CategoryQueryParams): Promise<FetchResponse | null> => {
+    const getCategories = useCallback(async (params?: CategoryQueryParams): Promise<FetchResponse | null> => {
         try {
             const backendParams: any = {};
             
@@ -102,11 +103,11 @@ export const useCategoryService = () => {
             openAlert(err instanceof Error ? err.message : String(err), 'error');
             return null;
         }
-    };
+    }, [fetchData, token, openAlert]);
 
     // ── CREATE ────────────────────────────────────────────────────────────────
 
-    const createCategory = async (
+    const createCategory = useCallback(async (
         data: Omit<Category, 'id'>
     ): Promise<FetchResponse | null> => {
         try {
@@ -137,11 +138,11 @@ export const useCategoryService = () => {
             openAlert(err instanceof Error ? err.message : String(err), 'error');
             return null;
         }
-    };
+    }, [fetchData, token, openAlert]);
 
     // ── UPDATE ────────────────────────────────────────────────────────────────
 
-    const updateCategory = async (
+    const updateCategory = useCallback(async (
         id: string,
         data: Partial<Omit<Category, 'id'>>
     ): Promise<FetchResponse | null> => {
@@ -175,11 +176,11 @@ export const useCategoryService = () => {
             openAlert(err instanceof Error ? err.message : String(err), 'error');
             return null;
         }
-    };
+    }, [fetchData, token, openAlert]);
 
     // ── DELETE ────────────────────────────────────────────────────────────────
 
-    const deleteCategory = async (id: string): Promise<boolean> => {
+    const deleteCategory = useCallback(async (id: string): Promise<boolean> => {
         try {
             const response = await fetchData({
                 url: `${import.meta.env.VITE_API_URL}/competencies/categories/${id}`,
@@ -196,7 +197,7 @@ export const useCategoryService = () => {
             openAlert(err instanceof Error ? err.message : String(err), 'error');
             return false;
         }
-    };
+    }, [fetchData, token, openAlert]);
 
     return {
         getCategories,
