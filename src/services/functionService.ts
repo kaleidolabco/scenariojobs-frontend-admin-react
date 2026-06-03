@@ -42,9 +42,19 @@ export interface FileResource {
 }
 
 /**
- * Módulo - Contiene información de conocimiento (tipo, fuentes, nivel)
+ * Módulo - Contiene temas y archivos asociados
  */
 export interface Module {
+    id: string;
+    titulo: string;
+    temas: Topic[];
+    archivos: FileResource[];
+}
+
+/**
+ * Conocimiento - Agrupa módulos y contiene información de tipo, fuentes y nivel requerido
+ */
+export interface Knowledge {
     id: string;
     titulo: string;
     tipoConocimiento: KnowledgeType;
@@ -52,16 +62,6 @@ export interface Module {
     nivelDesarrollo: DevelopmentLevel;
     origenEmpleadoId?: string;      // ID del empleado si fuente es INTERNA
     origenExternoReferencia?: string; // Referencia/nombre si fuente es EXTERNA
-    temas: Topic[];
-    archivos: FileResource[];
-}
-
-/**
- * Conocimiento - Agrupa módulos
- */
-export interface Knowledge {
-    id: string;
-    titulo: string;
     modulos: Module[];
 }
 
@@ -131,11 +131,6 @@ export const createEmptyFileResource = (): FileResource => ({
 export const createEmptyModule = (): Module => ({
     id: generateId(),
     titulo: '',
-    tipoConocimiento: 'ESTANDAR',
-    fuentes: ['INTERNA'],
-    nivelDesarrollo: 1,
-    origenEmpleadoId: undefined,
-    origenExternoReferencia: undefined,
     temas: [createEmptyTopic()],
     archivos: []
 });
@@ -146,6 +141,11 @@ export const createEmptyModule = (): Module => ({
 export const createEmptyKnowledge = (): Knowledge => ({
     id: generateId(),
     titulo: '',
+    tipoConocimiento: 'ESTANDAR',
+    fuentes: ['INTERNA'],
+    nivelDesarrollo: 1,
+    origenEmpleadoId: undefined,
+    origenExternoReferencia: undefined,
     modulos: [createEmptyModule()]
 });
 

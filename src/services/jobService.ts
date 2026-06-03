@@ -54,10 +54,10 @@ export const convertLegacyFunctionsToHierarchical = (
 
     const knowledge = createEmptyKnowledge();
     knowledge.titulo = 'Funciones Operacionales';
+    knowledge.tipoConocimiento = 'ESTANDAR';
 
     const module = createEmptyModule();
     module.titulo = 'Funciones Base';
-    module.tipoConocimiento = 'ESTANDAR';
 
     // Convertir cada string de función en un tema
     const topics = funcionesTexto.map(funcionTexto => {

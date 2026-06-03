@@ -134,13 +134,13 @@ export const MIGRATED_JOB_1_EXAMPLE = {
                         {
                             id: 'know_001',
                             titulo: 'Planificación Estratégica',
+                            tipoConocimiento: 'ESTANDAR' as const,
+                            fuentes: ['INTERNA' as const],
+                            nivelDesarrollo: 3 as const,
                             modulos: [
                                 {
                                     id: 'mod_001',
                                     titulo: 'Análisis FODA',
-                                    tipoConocimiento: 'ESTANDAR' as const,
-                                    fuentes: ['INTERNA' as const],
-                                    nivelDesarrollo: 3 as const,
                                     temas: [
                                         {
                                             id: 'tema_001',
@@ -180,13 +180,13 @@ export const MIGRATED_JOB_1_EXAMPLE = {
                         {
                             id: 'know_002',
                             titulo: 'Estilos de Liderazgo',
+                            tipoConocimiento: 'INTERNO' as const,
+                            fuentes: ['INTERNA' as const],
+                            nivelDesarrollo: 3 as const,
                             modulos: [
                                 {
                                     id: 'mod_002',
                                     titulo: 'Liderazgo Situacional',
-                                    tipoConocimiento: 'INTERNO' as const,
-                                    fuentes: ['INTERNA' as const],
-                                    nivelDesarrollo: 3 as const,
                                     temas: [
                                         {
                                             id: 'tema_002',
