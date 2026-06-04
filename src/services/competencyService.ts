@@ -4,14 +4,15 @@ import { FetchResponse } from './responseType';
 import useUIStore from '../store/uiStore';
 import useAuthStore from '../store/authStore';
 
-export interface competenciesQueryParams {
+export interface CompetenciesQueryParams {
     pagina?: number;
     items_por_pagina?: number;
     orden?: string;
     orden_por?: string;
     categoria?: string;
     filtro?: string;
-}   
+    id_exacto?: string;
+}
 
 export interface CompetencyLevel {
     id?: string;
@@ -26,6 +27,7 @@ export interface Competency {
     descripcion: string;
     /** Slug de la categoría — referencia a Category.slug en categoryService */
     categoria: string;
+    categoria_nombre?: string; // Nombre legible de la categoría, opcional si ya se tiene el slug
     escala: number;
     definiciones_niveles?: CompetencyLevel[];
 }
@@ -105,7 +107,7 @@ export const useCompetencyService = () => {
     const { openAlert } = useUIStore();
     const { token } = useAuthStore();
 
-    const getCompetencies = useCallback(async (params?: competenciesQueryParams): Promise<FetchResponse | null> => {
+    const getCompetencies = useCallback(async (params?: CompetenciesQueryParams): Promise<FetchResponse | null> => {
         try {
             const backendParams: any = {};
             

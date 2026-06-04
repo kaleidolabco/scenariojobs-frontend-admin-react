@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useCompetencyService, Competency, competenciesQueryParams } from '../../services/competencyService';
+import { useCompetencyService, Competency, CompetenciesQueryParams } from '../../services/competencyService';
 import { useCategoryService, Category, getCategoryMeta } from '../../services/categoryService';
 import { Pagination } from '../../services/responseType';
 import CompetencyForm from '../../components/Competencies/CompetencyForm';
@@ -27,7 +27,7 @@ const BibliotecaTab: React.FC<{ categories: Category[] }> = ({ categories }) => 
     const [deleteCompetence, setDeleteCompetence] = useState<Competency | null>(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [searchInput, setSearchInput] = useState('');
-    const [queryParams, setQueryParams] = useState<competenciesQueryParams>({
+    const [queryParams, setQueryParams] = useState<CompetenciesQueryParams>({
         pagina: 1,
         items_por_pagina: ITEMS_PER_PAGE,
         orden: 'asc',
@@ -36,10 +36,10 @@ const BibliotecaTab: React.FC<{ categories: Category[] }> = ({ categories }) => 
         categoria: undefined,
     });
 
-    const updateQueryParam = (key: keyof competenciesQueryParams, value: any) =>
+    const updateQueryParam = (key: keyof CompetenciesQueryParams, value: any) =>
         setQueryParams((prev) => ({ ...prev, [key]: value }));
 
-    const updateQueryParams = (updates: Partial<competenciesQueryParams>) =>
+    const updateQueryParams = (updates: Partial<CompetenciesQueryParams>) =>
         setQueryParams((prev) => ({ ...prev, ...updates }));
 
     // Debounce de búsqueda
@@ -63,7 +63,7 @@ const BibliotecaTab: React.FC<{ categories: Category[] }> = ({ categories }) => 
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [queryParams]);
 
-    const prevQueryParamsRef = useRef<competenciesQueryParams | null>(null);
+    const prevQueryParamsRef = useRef<CompetenciesQueryParams | null>(null);
 
     useEffect(() => {
         const currentQueryParams = queryParams;

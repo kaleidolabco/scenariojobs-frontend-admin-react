@@ -66,6 +66,47 @@ const CalificationListPage: React.FC = () => {
     const [pageSize, setPageSize] = useState(10);
     const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
 
+    // Build evaluation rows from processes and persons
+    const evaluationRows: EvaluationRow[] = useMemo(() => {
+        const rows: EvaluationRow[] = [];
+        
+        processes.forEach((process) => {
+            const personsToEvaluate = (process.personas_a_evaluar || [])
+                .map((personId) => personsData[personId])
+                .filter(Boolean);
+            
+            const competenciesCount = (process.competencias_asignadas || []).length;
+            
+            personsToEvaluate.forEach((person) => {
+                // Determine if evaluation is completed or pending
+                const processResponses = evaluationResponses[process.id];
+                const personResponse = processResponses?.[person.id];
+                const isCompleted = personResponse?.estado === 'COMPLETADO';
+                
+                rows.push({
+                    id: `${process.id}_${person.id}`,
+                    processId: process.id,
+                    personId: person.id,
+                    processName: process.nombre,
+                    personName: `${person.nombres} ${person.apellidos}`,
+                    personPosition: person.puesto_nombre || '-',
+                    competenciesCount,
+                    status: isCompleted ? 'completed' : 'pending',
+                });
+            });
+        });
+        
+        return rows;
+    }, [processes, personsData, evaluationResponses]);
+
+    // Pagination object for GenericTable
+    const pagination = useMemo(() => ({
+        pagina: currentPage,
+        limite: pageSize,
+        total_paginas: Math.ceil(evaluationRows.length / pageSize),
+        total: evaluationRows.length,
+    }), [currentPage, pageSize, evaluationRows.length]);
+
     // Load initial data
     const loadData = useCallback(async () => {
         setLoading(true);
@@ -126,39 +167,6 @@ const CalificationListPage: React.FC = () => {
         loadData();
     }, [loadData]);
 
-    // Build evaluation rows from processes and persons
-    const evaluationRows: EvaluationRow[] = useMemo(() => {
-        const rows: EvaluationRow[] = [];
-        
-        processes.forEach((process) => {
-            const personsToEvaluate = (process.personas_a_evaluar || [])
-                .map((personId) => personsData[personId])
-                .filter(Boolean);
-            
-            const competenciesCount = (process.competencias_asignadas || []).length;
-            
-            personsToEvaluate.forEach((person) => {
-                // Determine if evaluation is completed or pending
-                const processResponses = evaluationResponses[process.id];
-                const personResponse = processResponses?.[person.id];
-                const isCompleted = personResponse?.estado === 'COMPLETADO';
-                
-                rows.push({
-                    id: `${process.id}_${person.id}`,
-                    processId: process.id,
-                    personId: person.id,
-                    processName: process.nombre,
-                    personName: `${person.nombres} ${person.apellidos}`,
-                    personPosition: person.puesto_nombre || '-',
-                    competenciesCount,
-                    status: isCompleted ? 'completed' : 'pending',
-                });
-            });
-        });
-        
-        return rows;
-    }, [processes, personsData, evaluationResponses]);
-
     // Sort rows
     const sortedRows = useMemo(() => {
         let sorted = [...evaluationRows];
@@ -186,8 +194,6 @@ const CalificationListPage: React.FC = () => {
         const startIndex = (currentPage - 1) * pageSize;
         return sortedRows.slice(startIndex, startIndex + pageSize);
     }, [sortedRows, currentPage, pageSize]);
-
-    const totalPages = Math.ceil(sortedRows.length / pageSize);
 
     // Table columns
     const columns: TableColumn<EvaluationRow>[] = [
@@ -305,11 +311,9 @@ const CalificationListPage: React.FC = () => {
                     columns={columns}
                     actions={actions}
                     keyExtractor={(row) => row.id}
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    pageSize={pageSize}
+                    pagination={pagination}
                     onPageChange={setCurrentPage}
-                    onPageSizeChange={() => setPageSize(pageSize)}
+                    onPageSizeChange={setPageSize}
                     sortConfig={sortConfig}
                     onSort={handleSort}
                     isLoading={loading}

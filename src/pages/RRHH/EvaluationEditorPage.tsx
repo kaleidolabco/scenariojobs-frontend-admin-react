@@ -262,7 +262,7 @@ const EvaluationEditorPage: React.FC = () => {
 
             // Cargar funciones del cargo del evaluado
             if (ev.persona_puesto) {
-                const job = getJobByName(ev.persona_puesto);
+                const job = await getJobByName(ev.persona_puesto);
                 if (job && job.funciones) {
                     // Extraer funciones disponibles
                     // Si son strings (legacy), convertir a objeto con id y titulo

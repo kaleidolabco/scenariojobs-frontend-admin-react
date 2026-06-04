@@ -294,10 +294,8 @@ const OrgUnitDetailPage: React.FC = () => {
                         columns={positionColumns}
                         actions={positionActions}
                         keyExtractor={(pos) => pos.id}
-                        currentPage={queryParams.pagina || 1}
-                        totalPages={pagination?.total_paginas || 1}
-                        pageSize={queryParams.items_por_pagina || ITEMS_PER_PAGE}
-                        onPageChange={(page) => updateQueryParam('pagina', page)}
+                        pagination={pagination}
+                        onPageChange={(page) => updateQueryParam("pagina", page)}
                         onPageSizeChange={(size) => updateQueryParams({ items_por_pagina: size, pagina: 1 })}
                         emptyMessage="No hay puestos en esta unidad"
                         isLoading={positionLoading}

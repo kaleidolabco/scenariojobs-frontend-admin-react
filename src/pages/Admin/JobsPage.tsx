@@ -286,14 +286,13 @@ const JobsPage: React.FC = () => {
                     columns={columns}
                     actions={actions}
                     keyExtractor={(job) => job.id}
-                    currentPage={queryParams.pagina || 1}
-                    totalPages={pagination?.total_paginas || 1}
-                    pageSize={queryParams.items_por_pagina || ITEMS_PER_PAGE}
+                    pagination={pagination}
                     onPageChange={(page) => updateQueryParam('pagina', page)}
                     onPageSizeChange={(size) => updateQueryParams({ items_por_pagina: size, pagina: 1 })}
                     sortConfig={sortConfig}
                     onSort={handleSort}
                     emptyMessage="No se encontraron cargos"
+                    isLoading={loading}
                 />
             )}
 

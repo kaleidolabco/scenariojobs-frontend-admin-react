@@ -16,7 +16,7 @@ import { CURRENCIES } from '../../components/Common/Forms/CurrencySelectField';
 const JobDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const { getJobs, updateJob, deleteJob, loading } = useJobService();
+    const { getJobById, updateJob, deleteJob, syncJobCompetencies, syncJobFunctions, loading } = useJobService();
 
     const [job, setJob] = useState<Job | null>(null);
     const [activeTab, setActiveTab] = useState<string>('info');
@@ -38,25 +38,20 @@ const JobDetailPage: React.FC = () => {
     }, [id]);
 
     const loadJobData = async () => {
-        const response = await getJobs();
-        if (response && response.success) {
-            const found = response.data.cargos.find((j: Job) => j.id === id);
-            if (found) {
-                setJob(found);
-                setCompetencias(found.competencias_requeridas || []);
-                setFunciones(found.funciones as JobFunction[] || []);
-            }
+        if (!id) return;
+        const response = await getJobById(id);
+        if (response && response.success && response.data) {
+            const found = response.data;
+            setJob(found);
+            setCompetencias(found.competencias_requeridas || []);
+            setFunciones(found.funciones as JobFunction[] || []);
         }
     };
 
     const handleUpdateBasic = async (data: Omit<Job, 'id'>) => {
         if (!job) return;
         setSaving(true);
-        const response = await updateJob(job.id, {
-            ...data,
-            competencias_requeridas: competencias,
-            funciones: funciones
-        });
+        const response = await updateJob(job.id, data);
         setSaving(false);
         if (response) {
             setEditModalOpen(false);
@@ -67,11 +62,9 @@ const JobDetailPage: React.FC = () => {
     const handleSaveCompetencies = async () => {
         if (!job) return;
         setSaving(true);
-        const response = await updateJob(job.id, {
-            competencias_requeridas: competencias
-        });
+        const success = await syncJobCompetencies(job.id, competencias);
         setSaving(false);
-        if (response) {
+        if (success) {
             loadJobData();
         }
     };
@@ -79,11 +72,9 @@ const JobDetailPage: React.FC = () => {
     const handleSaveFunctions = async (updatedFunciones: JobFunction[]) => {
         if (!job) return;
         setSaving(true);
-        const response = await updateJob(job.id, {
-            funciones: updatedFunciones
-        });
+        const success = await syncJobFunctions(job.id, updatedFunciones);
         setSaving(false);
-        if (response) {
+        if (success) {
             setFunciones(updatedFunciones);
             loadJobData();
         }

@@ -8,75 +8,110 @@ interface JobCompetencySelectorProps {
     onChange: (value: CompetencyRequirement[]) => void;
 }
 
-const CATEGORY_LABELS: Record<string, string> = {
-    'HABILIDAD_BLANDA': 'Soft Skill',
-    'HABILIDAD_TECNICA': 'Hard Skill',
-    'IDIOMA': 'Idioma',
-    'CONOCIMIENTO_ESPECIFICO': 'Conocimiento Específico'
-};
+import AutocompleteField from '../Common/Forms/AutocompleteField';
+
+interface AutocompleteOption {
+    id: string;
+    name: string;
+    detail?: string;
+}
 
 const JobCompetencySelector: React.FC<JobCompetencySelectorProps> = ({ value, onChange }) => {
     const { getCompetencies, loading } = useCompetencyService();
-    const [allCompetencies, setAllCompetencies] = useState<Competency[]>([]);
-    const [searchTerm, setSearchTerm] = useState('');
+    const [competencyOptions, setCompetencyOptions] = useState<AutocompleteOption[]>([]);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [isSearching, setIsSearching] = useState(false);
+    const [selectedCompetency, setSelectedCompetency] = useState<AutocompleteOption | null>(null);
 
+    // State para almacenar todas las competencias cargadas para referencia (p.ej. escala, definiciones)
+    const [allCompetenciesMap, setAllCompetenciesMap] = useState<Map<string, Competency>>(new Map());
+
+    // Debounce search query and fetch competencies
     useEffect(() => {
-        const fetchCompetencies = async () => {
-            const response = await getCompetencies({ pagina: 1, items_por_pagina: 1000 });
-            if (response && response.data.competencias) {
-                setAllCompetencies(response.data.competencias);
+        if (searchQuery.trim().length === 0) {
+            setCompetencyOptions([]);
+            return;
+        }
+
+        const timer = setTimeout(async () => {
+            setIsSearching(true);
+            const response = await getCompetencies({ filtro: searchQuery, items_por_pagina: 10 });
+            if (response && response.success) {
+                const competenciesList: Competency[] = response.data.competencias || [];
+                const newOptions = competenciesList.map(comp => ({
+                    id: comp.id,
+                    name: comp.nombre,
+                    detail: comp.categoria_nombre
+                }));
+                setCompetencyOptions(newOptions);
+
+                // Update map with fetched competencies for later reference
+                const newMap = new Map(allCompetenciesMap);
+                competenciesList.forEach(comp => newMap.set(comp.id, comp));
+                setAllCompetenciesMap(newMap);
+            }
+            setIsSearching(false);
+        }, 400);
+
+        return () => clearTimeout(timer);
+    }, [searchQuery]); // Remueve allCompetenciesMap de dependencias
+
+    // Cuando las competencias iniciales cambian, asegurar que estén en el mapa de referencia
+    useEffect(() => {
+        const fetchMissingCompetencies = async () => {
+            const missingIds = value.filter(req => !allCompetenciesMap.has(req.competencia_id)).map(req => req.competencia_id);
+            if (missingIds.length > 0) {
+                const newMap = new Map(allCompetenciesMap);
+                for (const id of missingIds) {
+                    const response = await getCompetencies({ id_exacto: id }); // Assuming an exact ID filter exists
+                    if (response?.success && response.data?.competencias?.length > 0) {
+                        newMap.set(id, response.data.competencias[0]);
+                    }
+                }
+                setAllCompetenciesMap(newMap);
             }
         };
-        fetchCompetencies();
-    }, []);
+        fetchMissingCompetencies();
+    }, [value, allCompetenciesMap, getCompetencies]); // Agrega getCompetencies a dependencias
 
-    const handleAdd = (comp: Competency) => {
-        if (!value.find(v => v.competencia_id === comp.id)) {
-            onChange([...value, { competencia_id: comp.id, competencia_nombre: comp.nombre, nivel_esperado: 1 }]);
+    const handleAddCompetency = (opt: AutocompleteOption) => {
+        if (!value.find(req => req.competencia_id === opt.id)) {
+            onChange([...value, { competencia_id: opt.id, competencia_nombre: opt.name, nivel_esperado: 1 }]);
         }
-        setSearchTerm('');
+        setSearchQuery('');
+        setSelectedCompetency(null);
     };
 
     const handleRemove = (id: string) => {
-        onChange(value.filter(v => v.competencia_id !== id));
+        onChange(value.filter(req => req.competencia_id !== id));
     };
 
     const handleLevelChange = (id: string, newLevel: number) => {
-        onChange(value.map(v => v.competencia_id === id ? { ...v, nivel_esperado: newLevel } : v));
+        onChange(value.map(req => req.competencia_id === id ? { ...req, nivel_esperado: newLevel } : req));
     };
 
-    const availableCompetencies = allCompetencies.filter(c =>
-        !value.find(v => v.competencia_id === c.id) &&
-        (c.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            c.categoria.toLowerCase().includes(searchTerm.toLowerCase()))
+    // Filtrar opciones ya seleccionadas
+    const filteredOptions = competencyOptions.filter(
+        opt => !value.some(req => req.competencia_id === opt.id)
     );
 
     return (
         <div className="space-y-4">
-            <div className="dropdown w-full">
-                <input
-                    tabIndex={0}
-                    type="text"
-                    placeholder="Buscar y añadir competencia..."
-                    className="input input-bordered w-full"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                {(searchTerm || availableCompetencies.length > 0) && (
-                    <ul tabIndex={0} className="dropdown-content z-1 menu p-2 shadow bg-base-100 rounded-box w-full max-h-60 overflow-y-auto mt-1 border border-base-300">
-                        {loading && <li><span className="loading loading-spinner loading-sm m-auto"></span></li>}
-                        {!loading && availableCompetencies.length === 0 && <li><a className="text-base-content/50 cursor-default hover:bg-transparent">No se encontraron resultados</a></li>}
-                        {!loading && availableCompetencies.map(comp => (
-                            <li key={comp.id}>
-                                <a onClick={() => handleAdd(comp)} className="flex justify-between items-center">
-                                    <span>{comp.nombre}</span>
-                                    <span className="badge badge-sm badge-ghost">{CATEGORY_LABELS[comp.categoria] || comp.categoria}</span>
-                                </a>
-                            </li>
-                        ))}
-                    </ul>
-                )}
-            </div>
+            <AutocompleteField
+                label="Añadir Competencia"
+                placeholder="Buscar y añadir competencia por nombre o categoría..."
+                searchQuery={searchQuery}
+                onSearchQueryChange={setSearchQuery}
+                options={filteredOptions}
+                onSelect={handleAddCompetency}
+                onClear={() => {
+                    setSelectedCompetency(null);
+                    setSearchQuery('');
+                }}
+                selectedItem={selectedCompetency}
+                isLoading={isSearching || loading}
+                helpText="Seleccione una competencia para añadirla a este cargo."
+            />
 
             <div className="overflow-x-auto border border-base-300 rounded-lg">
                 <table className="table table-sm w-full">
@@ -96,7 +131,7 @@ const JobCompetencySelector: React.FC<JobCompetencySelectorProps> = ({ value, on
                             </tr>
                         ) : (
                             value.map(req => {
-                                const fullComp = allCompetencies.find(c => c.id === req.competencia_id);
+                                const fullComp = allCompetenciesMap.get(req.competencia_id);
                                 const maxScale = fullComp?.escala || 5;
 
                                 return (
@@ -105,7 +140,7 @@ const JobCompetencySelector: React.FC<JobCompetencySelectorProps> = ({ value, on
                                             <div className="font-medium">{req.competencia_nombre}</div>
                                             {fullComp && (
                                                 <div className="text-xs opacity-60">
-                                                    {CATEGORY_LABELS[fullComp.categoria] || fullComp.categoria}
+                                                    {fullComp.categoria_nombre}
                                                 </div>
                                             )}
                                         </td>
@@ -120,12 +155,19 @@ const JobCompetencySelector: React.FC<JobCompetencySelectorProps> = ({ value, on
                                                     onChange={(val) => handleLevelChange(req.competencia_id, val)}
                                                 />
                                                 <div className="w-16 text-center font-semibold text-sm">
-                                                    Nivel {req.nivel_esperado}
+                                                    {
+                                                        fullComp?.definiciones_niveles && (
+                                                            fullComp.definiciones_niveles.find(n => n.nivel === req.nivel_esperado)?.nombre 
+                                                            
+                                                            || "Nivel " + req.nivel_esperado
+                                                        )
+                                                    }
                                                 </div>
+
                                             </div>
                                             {fullComp?.definiciones_niveles && (
                                                 <div className="text-xs opacity-70 mt-1 max-w-xs truncate">
-                                                    {fullComp.definiciones_niveles.find(n => n.nivel === req.nivel_esperado)?.descripcion || ''}
+                                                    {fullComp.definiciones_niveles.find(n => n.nivel === req.nivel_esperado)?.descripcion || ""}
                                                 </div>
                                             )}
                                         </td>
