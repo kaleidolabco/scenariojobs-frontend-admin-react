@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useJobService, Job, JobQueryParams } from '../../services/jobService';
 import { Pagination } from '../../services/responseType';
@@ -23,6 +23,7 @@ const JobsPage: React.FC = () => {
     const [editingJob, setEditingJob] = useState<Job | null>(null);
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [jobToDelete, setJobToDelete] = useState<Job | null>(null);
+    const isFirstRender = useRef(true);
 
     // Filters
     const [searchInput, setSearchInput] = useState('');
@@ -46,6 +47,10 @@ const JobsPage: React.FC = () => {
 
     // Search debounce
     useEffect(() => {
+        if (isFirstRender.current) {
+            isFirstRender.current = false;
+            return;
+        }
         const timeout = setTimeout(() => {
             updateQueryParams({ filtro: searchInput, pagina: 1 });
         }, 500);
