@@ -10,63 +10,10 @@ import GenericModal from '../../components/Common/GenericModal';
 import ConfirmationModal from '../../components/Common/ConfirmationModal';
 import FilterBar, { FilterDefinition } from '../../components/Common/FilterBar';
 import LoadingIndicator from '../../components/Common/LoadingIndicator';
+import Tabs from '../../components/Common/Tabs';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-type ActiveTab = 'biblioteca' | 'categorias';
 
 const ITEMS_PER_PAGE = 9;
-
-// ─── Tab header ───────────────────────────────────────────────────────────────
-
-const TabHeader: React.FC<{
-    active: ActiveTab;
-    onChange: (tab: ActiveTab) => void;
-}> = ({ active, onChange }) => {
-    const tabs: { id: ActiveTab; label: string; icon: React.ReactNode }[] = [
-        {
-            id: 'biblioteca',
-            label: 'Biblioteca',
-            icon: (
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                </svg>
-            ),
-        },
-        {
-            id: 'categorias',
-            label: 'Categorías',
-            icon: (
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                </svg>
-            ),
-        },
-    ];
-
-    return (
-        <div className="border-b border-base-200 mb-5">
-            <div className="flex gap-0">
-                {tabs.map((tab) => (
-                    <button
-                        key={tab.id}
-                        onClick={() => onChange(tab.id)}
-                        className={`
-                            flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all duration-150
-                            ${active === tab.id
-                                ? 'border-primary text-primary'
-                                : 'border-transparent text-base-content/50 hover:text-base-content hover:border-base-300'
-                            }
-                        `}
-                    >
-                        {tab.icon}
-                        {tab.label}
-                    </button>
-                ))}
-            </div>
-        </div>
-    );
-};
 
 // ─── Biblioteca tab ───────────────────────────────────────────────────────────
 
@@ -365,7 +312,7 @@ const BibliotecaTab: React.FC<{ categories: Category[] }> = ({ categories }) => 
 
 const CompetenciesPage: React.FC = () => {
     const { getCategories } = useCategoryService();
-    const [activeTab, setActiveTab] = useState<ActiveTab>('biblioteca');
+    const [activeTab, setActiveTab] = useState<string>("biblioteca");
     const [categories, setCategories] = useState<Category[]>([]);
 
     const loadCategories = useCallback(async () => {
@@ -383,7 +330,31 @@ const CompetenciesPage: React.FC = () => {
             title="Competencias"
             subtitle="Gestiona las habilidades y competencias y sus categorías para la organización."
         >
-            <TabHeader active={activeTab} onChange={setActiveTab} />
+            <Tabs
+                tabs={[
+                    {
+                        id: 'biblioteca',
+                        label: 'Biblioteca',
+                        icon: (
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                            </svg>
+                        ),
+                    },
+                    {
+                        id: 'categorias',
+                        label: 'Categorías',
+                        icon: (
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                            </svg>
+                        ),
+                    },
+                ]}
+                activeTab={activeTab}
+                onChange={setActiveTab}
+                variant="bordered"
+            />
 
             <AnimatePresence mode="wait">
                 {activeTab === 'biblioteca' ? (

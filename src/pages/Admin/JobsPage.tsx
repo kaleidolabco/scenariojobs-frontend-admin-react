@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useJobService, Job, JobQueryParams } from '../../services/jobService';
 import { Pagination } from '../../services/responseType';
 import PageContainer from '../../components/Common/PageContainer';
@@ -12,6 +13,7 @@ import JobForm from '../../components/Jobs/JobForm';
 const ITEMS_PER_PAGE = 10;
 
 const JobsPage: React.FC = () => {
+    const navigate = useNavigate();
     const { getJobs, createJob, updateJob, deleteJob, loading } = useJobService();
     const [jobs, setJobs] = useState<Job[]>([]);
     const [pagination, setPagination] = useState<Pagination | null>(null);
@@ -105,8 +107,7 @@ const JobsPage: React.FC = () => {
     };
 
     const openEditModal = (job: Job) => {
-        setEditingJob(job);
-        setModalOpen(true);
+        navigate(`/cargos/${job.id}`);
     };
 
     const openCreateModal = () => {
@@ -308,6 +309,7 @@ const JobsPage: React.FC = () => {
                     isLoading={loading}
                     onSubmit={editingJob ? handleUpdate : handleCreate}
                     onCancel={closeModal}
+                    isSimplified={true}
                 />
             </GenericModal>
 

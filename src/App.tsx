@@ -16,6 +16,7 @@ import NotFound from "./pages/NotFound/NotFound";
 import Login from "./pages/Login/Login";
 import CompetenciesPage from "./pages/Admin/CompetenciesPage";
 import JobsPage from "./pages/Admin/JobsPage";
+import JobDetailPage from "./pages/Admin/JobDetailPage";
 import UnderConstruction from "./components/Common/UnderConstruction";
 import OrgChartPage from "./pages/Admin/OrgChartPage";
 import OrgUnitDetailPage from "./pages/Admin/OrgUnitDetailPage";
@@ -75,6 +76,7 @@ function App() {
 
           {/* Módulo Gestión de Talento */}
           <Route path={ROUTES.JOBS} element={<PageAnimation key={location.pathname}><JobsPage /></PageAnimation>} />
+          <Route path="/cargos/:id" element={<PageAnimation key={location.pathname}><JobDetailPage /></PageAnimation>} />
           <Route path={ROUTES.COMPETENCIES} element={<PageAnimation key={location.pathname}><CompetenciesPage /></PageAnimation>} />
           <Route path={ROUTES.STAFF_DIRECTORY} element={<PageAnimation key={location.pathname}><StaffDirectoryPage /></PageAnimation>} />
 

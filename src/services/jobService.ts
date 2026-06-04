@@ -16,6 +16,8 @@ export interface JobQueryParams {
 // Types
 export type SeniorityLevel = 'JUNIOR' | 'SEMI_SENIOR' | 'SENIOR' | 'LIDER' | 'GERENTE' | 'DIRECTOR';
 
+export type SalaryPeriod = 'MENSUAL' | 'ANUAL' | 'HORARIO';
+
 export interface CompetencyRequirement {
     competencia_id: string;
     competencia_nombre: string;
@@ -31,6 +33,8 @@ export interface Job {
     funciones: JobFunction[] | string[]; // Permite ambos formatos durante transición
     banda_salarial_min?: number;
     banda_salarial_max?: number;
+    moneda?: string;
+    periodo_salarial?: SalaryPeriod;
 }
 
 /**

@@ -75,6 +75,7 @@ export const ROUTE_LABELS: Record<string, string> = {
     [ROUTES.ORG_CHART]: 'Organigrama',
     [ROUTES.ORG_POSITIONS]: 'Puestos',
     [ROUTES.JOBS]: 'Cargos (Perfiles)',
+    '/cargos/:id': 'Detalle de Cargo',
     [ROUTES.COMPETENCIES]: 'Competencias',
     [ROUTES.STAFF_DIRECTORY]: 'Directorio',
     [ROUTES.ASSESSMENTS]: 'Evaluaciones',
