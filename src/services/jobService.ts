@@ -324,43 +324,42 @@ export const useJobService = () => {
 
     const syncJobFunctions = async (id: string, funciones: JobFunction[]): Promise<boolean> => {
         try {
-            // Clean function IDs if they are temporary/locally generated
             const cleanFunciones = funciones.map(f => {
-                // Remove local IDs to avoid backend conflicts if backend auto-generates them,
-                // but if backend needs them or allows them, send them. Let's send the full object
-                // according to docs/jobs.md where the nested structure is specified.
                 return {
                     titulo: f.titulo,
                     descripcion: f.descripcion,
                     capacidades: (f.capacidades || []).map(cap => ({
                         titulo: cap.titulo,
                         descripcion: cap.descripcion,
-                        conocimientos: (cap.conocimientos || []).map(know => ({
-                            titulo: know.titulo,
-                            tipoConocimiento: know.tipoConocimiento,
-                            fuentes: know.fuentes,
-                            nivelDesarrollo: know.nivelDesarrollo,
-                            origenEmpleadoId: know.origenEmpleadoId || null,
-                            origenExternoReferencia: know.origenExternoReferencia || null,
-                            modulos: (know.modulos || []).map(mod => ({
-                                titulo: mod.titulo,
-                                archivos: (mod.archivos || []).map(arc => ({
-                                    nombre: arc.nombre,
-                                    url: arc.archivoUrl || (arc as any).url || ''
-                                })),
-                                temas: (mod.temas || []).map(tem => ({
-                                    titulo: tem.titulo,
-                                    archivos: (tem.archivos || []).map(arc => ({
+                        conocimientos: (cap.conocimientos || []).map(know => {
+                            const k: any = {
+                                titulo: know.titulo,
+                                tipoConocimiento: know.tipoConocimiento,
+                                fuentes: know.fuentes,
+                                nivelDesarrollo: know.nivelDesarrollo,
+                                modulos: (know.modulos || []).map(mod => ({
+                                    titulo: mod.titulo,
+                                    archivos: (mod.archivos || []).map(arc => ({
                                         nombre: arc.nombre,
                                         url: arc.archivoUrl || (arc as any).url || ''
                                     })),
-                                    detalles: (tem.detalles || []).map(det => ({
-                                        titulo: det.titulo,
-                                        descripcion: det.descripcion
+                                    temas: (mod.temas || []).map(tem => ({
+                                        titulo: tem.titulo,
+                                        archivos: (tem.archivos || []).map(arc => ({
+                                            nombre: arc.nombre,
+                                            url: arc.archivoUrl || (arc as any).url || ''
+                                        })),
+                                        detalles: (tem.detalles || []).map(det => ({
+                                            titulo: det.titulo,
+                                            descripcion: det.descripcion
+                                        }))
                                     }))
                                 }))
-                            }))
-                        }))
+                            };
+                            if (know.origenEmpleadoId) k.origenEmpleadoId = know.origenEmpleadoId;
+                            if (know.origenExternoReferencia) k.origenExternoReferencia = know.origenExternoReferencia;
+                            return k;
+                        })
                     }))
                 };
             });
