@@ -6,7 +6,7 @@ import {
     addCapabilityToFunction,
     removeCapabilityFromFunction,
     updateJobFunction,
-    isJobFunctionValid,
+    validateFunctions,
     calculateFunctionStats,
 } from '../../services/functionService';
 import InputField from '../Common/Forms/InputField';
@@ -30,10 +30,15 @@ const FunctionEditor: React.FC<FunctionEditorProps> = ({
 }) => {
     const [localFunction, setLocalFunction] = useState<JobFunction>(jobFunction);
     const [isValid, setIsValid] = useState(false);
+    const [validationError, setValidationError] = useState<string | null>(null);
     const stats = calculateFunctionStats(localFunction);
 
     useEffect(() => { setLocalFunction(jobFunction); }, [jobFunction]);
-    useEffect(() => { setIsValid(isJobFunctionValid(localFunction)); }, [localFunction]);
+    useEffect(() => {
+        const error = validateFunctions([localFunction]);
+        setIsValid(error === null);
+        setValidationError(error);
+    }, [localFunction]);
 
     const update = (fn: JobFunction) => { setLocalFunction(fn); onUpdate(fn); };
 
@@ -89,13 +94,13 @@ const FunctionEditor: React.FC<FunctionEditorProps> = ({
             </div>
 
             {/* Validation alert */}
-            {!isValid && localFunction.capacidades.length > 0 && (
+            {!isValid && validationError && (
                 <div className="alert alert-warning py-2 text-sm">
                     <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
                               d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
                     </svg>
-                    <span>Completa los campos requeridos en cada nivel</span>
+                    <span>{validationError}</span>
                 </div>
             )}
 

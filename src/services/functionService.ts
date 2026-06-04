@@ -398,33 +398,40 @@ export const updateJobFunction = (
     updatedAt: new Date().toISOString()
 });
 
-// ============ VALIDATION FUNCTIONS ============
-
 /**
- * Valida que una función esté completa (sin campos vacíos críticos)
+ * Valida que un conjunto de funciones tenga todos los campos requeridos
  */
-export const isJobFunctionValid = (jobFunction: JobFunction): boolean => {
-    if (!jobFunction.titulo.trim()) return false;
-    if (jobFunction.capacidades.length === 0) return false;
-
-    return jobFunction.capacidades.every(cap =>
-        cap.titulo.trim() &&
-        cap.conocimientos.length > 0 &&
-        cap.conocimientos.every(know =>
-            know.titulo.trim() &&
-            know.modulos.length > 0 &&
-            know.modulos.every(mod =>
-                mod.titulo.trim() &&
-                mod.temas.length > 0 &&
-                mod.temas.every(tema =>
-                    tema.titulo.trim() &&
-                    tema.detalles.length > 0 &&
-                    tema.detalles.every(det => det.titulo.trim())
-                )
-            )
-        )
-    );
+export const validateFunctions = (functions: JobFunction[]): string | null => {
+    if (!functions || functions.length === 0) return "Debe haber al menos una función.";
+    for (const func of functions) {
+        if (!func.titulo || !func.titulo.trim()) return `La función debe tener un título.`;
+        if (!func.capacidades || func.capacidades.length === 0) return `La función "${func.titulo}" debe tener al menos una capacidad.`;
+        for (const cap of func.capacidades) {
+            if (!cap.titulo || !cap.titulo.trim()) return `La capacidad en la función "${func.titulo}" debe tener un título.`;
+            if (!cap.conocimientos || cap.conocimientos.length === 0) return `La capacidad "${cap.titulo}" debe tener al menos un conocimiento.`;
+            for (const know of cap.conocimientos) {
+                if (!know.titulo || !know.titulo.trim()) return `El conocimiento en la capacidad "${cap.titulo}" debe tener un título.`;
+                if (!know.tipoConocimiento) return `El conocimiento "${know.titulo}" debe tener un tipo.`;
+                if (!know.fuentes || know.fuentes.length === 0) return `El conocimiento "${know.titulo}" debe tener al menos una fuente.`;
+                if (know.nivelDesarrollo === undefined) return `El conocimiento "${know.titulo}" debe tener un nivel de desarrollo.`;
+                if (!know.modulos || know.modulos.length === 0) return `El conocimiento "${know.titulo}" debe tener al menos un módulo.`;
+                for (const mod of know.modulos) {
+                    if (!mod.titulo || !mod.titulo.trim()) return `El módulo en el conocimiento "${know.titulo}" debe tener un título.`;
+                    if (!mod.temas || mod.temas.length === 0) return `El módulo "${mod.titulo}" debe tener al menos un tema.`;
+                    for (const tema of mod.temas) {
+                        if (!tema.titulo || !tema.titulo.trim()) return `El tema en el módulo "${mod.titulo}" debe tener un título.`;
+                        if (!tema.detalles || tema.detalles.length === 0) return `El tema "${tema.titulo}" debe tener al menos un detalle.`;
+                        for (const det of tema.detalles) {
+                            if (!det.titulo || !det.titulo.trim()) return `El detalle en el tema "${tema.titulo}" debe tener un título.`;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return null;
 };
+
 
 /**
  * Calcula estadísticas de una función

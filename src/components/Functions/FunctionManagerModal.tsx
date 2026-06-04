@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { JobFunction, createEmptyJobFunction } from '../../services/functionService';
+import { JobFunction, createEmptyJobFunction, validateFunctions } from '../../services/functionService';
 import GenericModal from '../Common/GenericModal';
 import FunctionEditor from './FunctionEditor';
 import { exportFunctionsToExcel, exportFunctionsSummaryToExcel } from '../../utils/excelExportHelper';
+import useUIStore from '../../store/uiStore';
 
 interface FunctionManagerModalProps {
     isOpen: boolean;
@@ -22,6 +23,7 @@ const FunctionManagerModal: React.FC<FunctionManagerModalProps> = ({
     const [functions, setFunctions] = useState<JobFunction[]>([]);
     const [selectedFunctionId, setSelectedFunctionId] = useState<string | null>(null);
     const [isSaving, setIsSaving] = useState(false);
+    const { openAlert } = useUIStore();
 
     useEffect(() => {
         if (initialFunctions.length > 0) {
@@ -56,6 +58,11 @@ const FunctionManagerModal: React.FC<FunctionManagerModalProps> = ({
     };
 
     const handleSave = async () => {
+        const error = validateFunctions(functions);
+        if (error) {
+            openAlert(error, 'error');
+            return;
+        }
         setIsSaving(true);
         try {
             onSave(functions);
