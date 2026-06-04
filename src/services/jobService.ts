@@ -106,7 +106,7 @@ export const useJobService = () => {
             const backendParams: any = {};
             if (params?.pagina) backendParams.pagina = params.pagina;
             if (params?.items_por_pagina) backendParams.limite = params.items_por_pagina;
-            if (params?.filtro) backendParams.filtro = params.filtro;
+            if (params?.filtro) backendParams.busqueda = params.filtro;
             if (params?.nivel_jerarquico) backendParams.nivel_jerarquico = params.nivel_jerarquico;
             if (params?.orden_por) backendParams.ordenar_por = params.orden_por;
             if (params?.orden) backendParams.orden = params.orden;
