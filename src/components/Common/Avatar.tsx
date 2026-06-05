@@ -9,6 +9,8 @@ interface AvatarProps {
     placeholderClass?: string;
 }
 
+const avatarSVG = (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></g></svg>);
+
 const Avatar: React.FC<AvatarProps> = ({
     src,
     name,
@@ -20,9 +22,9 @@ const Avatar: React.FC<AvatarProps> = ({
     const [imgError, setImgError] = useState(false);
 
     const getInitials = (fullName?: string | null) => {
-        if (!fullName) return '?';
+        if (!fullName) return avatarSVG;
         const updatedName = fullName.trim();
-        if (updatedName.length === 0) return '?';
+        if (updatedName.length === 0) return avatarSVG;
 
         const parts = updatedName.split(' ').filter(part => part.length > 0);
         if (parts.length === 1) {
@@ -44,7 +46,7 @@ const Avatar: React.FC<AvatarProps> = ({
 
     return (
         <div className={`avatar placeholder ${className}`}>
-            <div className={`flex items-center justify-center ${getSizeClass()} rounded-full ${(!src || imgError) ? placeholderClass : ''}`}>
+            <div className={`bg-secondary text-white flex items-center justify-center ${getSizeClass()} rounded-full ${(!src || imgError) ? placeholderClass : ''}`}>
                 {src && !imgError ? (
                     <img
                         src={src}
