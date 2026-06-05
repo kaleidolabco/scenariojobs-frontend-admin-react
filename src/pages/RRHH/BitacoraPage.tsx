@@ -823,7 +823,7 @@ const BitacoraPage: React.FC = () => {
                 {/* Count badge */}
                 {pagination && (
                     <span className="text-xs text-base-content/40 ml-auto">
-                        {pagination.total_items} {pagination.total_items === 1 ? 'entrada' : 'entradas'}
+                        {pagination.total} {pagination.total === 1 ? 'entrada' : 'entradas'}
                     </span>
                 )}
             </div>

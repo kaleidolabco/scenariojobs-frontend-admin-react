@@ -589,21 +589,19 @@ const EvaluationCompetencyPage: React.FC = () => {
             {loading && !evaluations.length ? (
                 <LoadingIndicator />
             ) : (
-                <GenericTable
-                    data={evaluations}
-                    columns={columns}
-                    actions={actions}
-                    keyExtractor={(e) => e.id}
-                    currentPage={queryParams.pagina || 1}
-                    totalPages={pagination?.total_paginas || 1}
-                    pageSize={queryParams.items_por_pagina || ITEMS_PER_PAGE}
-                    onPageChange={(page) => setQueryParams((p: any) => ({ ...p, pagina: page }))}
-                    onPageSizeChange={(size) => setQueryParams((p: any) => ({ ...p, items_por_pagina: size, pagina: 1 }))}
-                    sortConfig={sortConfig}
-                    onSort={handleSort}
-                    emptyMessage="No se encontraron procesos. ¡Crea el primero!"
-                    isLoading={false}
-                />
+                    <GenericTable
+                        data={evaluations}
+                        columns={columns}
+                        actions={actions}
+                        keyExtractor={(e) => e.id}
+                        pagination={pagination}
+                        onPageChange={(page) => setQueryParams((p: any) => ({ ...p, pagina: page }))}
+                        onPageSizeChange={(size) => setQueryParams((p: any) => ({ ...p, items_por_pagina: size, pagina: 1 }))}
+                        sortConfig={sortConfig}
+                        onSort={handleSort}
+                        emptyMessage="No se encontraron procesos. ¡Crea el primero!"
+                        isLoading={false}
+                    />
             )}
 
             {/* Form Modal */}

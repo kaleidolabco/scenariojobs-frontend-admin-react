@@ -123,7 +123,7 @@ function processKnowledge(know: Knowledge, rows: Row[], merges: CellMerge[]) {
     }
 
     for (const mod of know.modulos) {
-        processModule(mod, rows, merges);
+        processModule(mod, know, rows, merges);
     }
 
     const knowEnd = rows.length - 1;
@@ -131,15 +131,15 @@ function processKnowledge(know: Knowledge, rows: Row[], merges: CellMerge[]) {
     addMerge(merges, knowStart, knowEnd, COL.CONOCIMIENTO);
 }
 
-function processModule(mod: Module, rows: Row[], merges: CellMerge[]) {
+function processModule(mod: Module, know: Knowledge, rows: Row[], merges: CellMerge[]) {
     const modStart = rows.length;
 
     if (mod.temas.length === 0) {
         const row = emptyRow();
         row[COL.MODULO]   = mod.titulo;
-        row[COL.TIPO]     = mod.tipoConocimiento;
-        row[COL.FUENTES]  = mod.fuentes.join(', ');
-        row[COL.NIVEL]    = NIVEL_LABEL[mod.nivelDesarrollo] ?? mod.nivelDesarrollo;
+        row[COL.TIPO]     = know.tipoConocimiento;
+        row[COL.FUENTES]  = know.fuentes.join(', ');
+        row[COL.NIVEL]    = NIVEL_LABEL[know.nivelDesarrollo] ?? know.nivelDesarrollo;
         rows.push(row);
         return;
     }
@@ -152,9 +152,9 @@ function processModule(mod: Module, rows: Row[], merges: CellMerge[]) {
 
     // Backfill module columns into first row of this module's block
     rows[modStart][COL.MODULO]  = mod.titulo;
-    rows[modStart][COL.TIPO]    = mod.tipoConocimiento;
-    rows[modStart][COL.FUENTES] = mod.fuentes.join(', ');
-    rows[modStart][COL.NIVEL]   = NIVEL_LABEL[mod.nivelDesarrollo] ?? mod.nivelDesarrollo;
+    rows[modStart][COL.TIPO]    = know.tipoConocimiento;
+    rows[modStart][COL.FUENTES] = know.fuentes.join(', ');
+    rows[modStart][COL.NIVEL]   = NIVEL_LABEL[know.nivelDesarrollo] ?? know.nivelDesarrollo;
 
     addMerge(merges, modStart, modEnd, COL.MODULO);
     addMerge(merges, modStart, modEnd, COL.TIPO);

@@ -414,9 +414,7 @@ const EvaluacionesIntegralPage: React.FC = () => {
                                 columns={columns}
                                 actions={actions}
                                 keyExtractor={(evaluacion) => evaluacion.id}
-                                currentPage={queryParams.pagina || 1}
-                                totalPages={pagination?.total_paginas || 1}
-                                pageSize={queryParams.items_por_pagina || ITEMS_PER_PAGE}
+                                pagination={pagination}
                                 onPageChange={(page) =>
                                     updateQueryParams({ pagina: page })
                                 }

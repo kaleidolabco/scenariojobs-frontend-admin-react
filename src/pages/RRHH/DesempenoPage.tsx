@@ -10,6 +10,7 @@ import {
     logroBadgeColor,
     calcPuntajeFinalNumerico,
 } from '../../services/performanceService';
+import { Pagination } from '../../services/responseType';
 import { usePersonService, Person } from '../../services/personService';
 import PageContainer from '../../components/Common/PageContainer';
 import GenericModal from '../../components/Common/GenericModal';
@@ -190,6 +191,7 @@ const EvaluationsTab: React.FC<EvaluationsTabProps> = ({ newOpen, setNewOpen }) 
     const { getPeople } = usePersonService();
 
     const [evals, setEvals] = useState<EmployeeEvaluation[]>([]);
+    const [pagination, setPagination] = useState<Pagination | null>(null);
     const [cycles, setCycles] = useState<EvaluationCycle[]>([]);
     const [queryParams, setQueryParams] = useState<any>({
         search: '',
@@ -198,7 +200,6 @@ const EvaluationsTab: React.FC<EvaluationsTabProps> = ({ newOpen, setNewOpen }) 
         pagina: 1,
         items_por_pagina: 10,
     });
-    const [totalP, setTotalP] = useState(1);
 
     const [people, setPeople] = useState<Person[]>([]);
     const [pSearch, setPSearch] = useState('');
@@ -215,7 +216,7 @@ const EvaluationsTab: React.FC<EvaluationsTabProps> = ({ newOpen, setNewOpen }) 
             pagina: queryParams.pagina,
             items_por_pagina: queryParams.items_por_pagina
         });
-        if (r?.success) { setEvals(r.data.evaluaciones); setTotalP(r.data.paginacion.total_paginas); }
+        if (r?.success) { setEvals(r.data.evaluaciones); setPagination(r.data.paginacion); }
         /* eslint-disable-next-line */
     }, [queryParams]);
 
@@ -364,9 +365,7 @@ const EvaluationsTab: React.FC<EvaluationsTabProps> = ({ newOpen, setNewOpen }) 
                         },
                     ] as TableAction<EmployeeEvaluation>[]}
                     keyExtractor={(ev) => ev.id}
-                    currentPage={queryParams.pagina || 1}
-                    totalPages={totalP}
-                    pageSize={queryParams.items_por_pagina || 10}
+                    pagination={pagination}
                     onPageChange={(page) => setQueryParams((p: any) => ({ ...p, pagina: page }))}
                     onPageSizeChange={(size) => setQueryParams((p: any) => ({ ...p, items_por_pagina: size, pagina: 1 }))}
                     emptyMessage="No se encontraron evaluaciones"

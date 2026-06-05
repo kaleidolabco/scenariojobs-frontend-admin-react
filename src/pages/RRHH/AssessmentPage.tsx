@@ -173,7 +173,7 @@ const AssessmentsPage: React.FC = () => {
         getAssessmentStats,
         deleteAssessment,
         cloneAssessment,
-        loading: serviceLoading,
+        // loading: serviceLoading,
     } = useAssessmentService();
 
     // State
@@ -317,14 +317,14 @@ const AssessmentsPage: React.FC = () => {
         setQueryParams({ search: '', tipo: undefined, estado: undefined, pagina: 1, items_por_pagina: ITEMS_PER_PAGE, orden: 'asc', orden_por: 'nombre' });
 
     // ── Sorting ───────────────────────────────────────────────────────────────
-    const handleSort = (key: string) => {
-        const newDirection = queryParams.orden_por === key && queryParams.orden === 'asc' ? 'desc' : 'asc';
-        setQueryParams((p: any) => ({ ...p, orden_por: key, orden: newDirection, pagina: 1 }));
-    };
+    // const handleSort = (key: string) => {
+    //     const newDirection = queryParams.orden_por === key && queryParams.orden === 'asc' ? 'desc' : 'asc';
+    //     setQueryParams((p: any) => ({ ...p, orden_por: key, orden: newDirection, pagina: 1 }));
+    // };
 
-    const sortConfig = queryParams.orden_por
-        ? { key: queryParams.orden_por, direction: queryParams.orden as 'asc' | 'desc' }
-        : null;
+    // const sortConfig = queryParams.orden_por
+    //     ? { key: queryParams.orden_por, direction: queryParams.orden as 'asc' | 'desc' }
+    //     : null;
 
     // ── Table config ──────────────────────────────────────────────────────────
     const columns: TableColumn<AssessmentSummary>[] = [
@@ -499,21 +499,16 @@ const AssessmentsPage: React.FC = () => {
             {loading && !assessments.length ? (
                 <LoadingIndicator />
             ) : (
-                <GenericTable
-                    data={assessments}
-                    columns={columns}
-                    actions={actions}
-                    keyExtractor={(a) => a.id}
-                    currentPage={queryParams.pagina || 1}
-                    totalPages={pagination?.total_paginas || 1}
-                    pageSize={queryParams.items_por_pagina || ITEMS_PER_PAGE}
-                    onPageChange={(page) => setQueryParams((p: any) => ({ ...p, pagina: page }))}
-                    onPageSizeChange={(size) => setQueryParams((p: any) => ({ ...p, items_por_pagina: size, pagina: 1 }))}
-                    sortConfig={sortConfig}
-                    onSort={handleSort}
-                    emptyMessage="No se encontraron evaluaciones. ¡Crea la primera!"
-                    isLoading={serviceLoading}
-                />
+                    <GenericTable
+                        data={assessments}
+                        columns={columns}
+                        actions={actions}
+                        keyExtractor={(a) => a.id}
+                        pagination={pagination}
+                        onPageChange={(page) => setQueryParams((p: any) => ({ ...p, pagina: page }))}
+                        onPageSizeChange={(size) => setQueryParams((p: any) => ({ ...p, items_por_pagina: size, pagina: 1 }))}
+                        isLoading={loading}
+                    />
             )}
 
             {/* ── Detail Modal ── */}
