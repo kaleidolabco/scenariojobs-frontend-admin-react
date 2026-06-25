@@ -35,6 +35,7 @@ Obtiene la estructura jerárquica completa del organigrama en formato de árbol 
       "descripcion": "Unidad principal",
       "padre_id": null,
       "tipo": { "codigo": "GERENCIA", "valor": "Gerencia" },
+      "total_puestos": 3,
       "subnodos": [
         {
           "id": "uuid-sub",
@@ -42,6 +43,7 @@ Obtiene la estructura jerárquica completa del organigrama en formato de árbol 
           "descripcion": "Área de tecnología",
           "padre_id": "uuid",
           "tipo": { "codigo": "DEPARTAMENTO", "valor": "Departamento" },
+          "total_puestos": 5,
           "subnodos": []
         }
       ]
@@ -67,7 +69,8 @@ Obtiene la información detallada de una unidad organizacional específica.
     "nombre": "Gerencia General",
     "descripcion": "Unidad principal",
     "padre_id": null,
-    "tipo": { "codigo": "GERENCIA", "valor": "Gerencia" }
+    "tipo": { "codigo": "GERENCIA", "valor": "Gerencia" },
+    "total_puestos": 3
   }
   ```
 
@@ -131,3 +134,9 @@ El API retorna errores estándar de NestJS.
 - **400 Bad Request:** Datos inválidos, `padre_id` inexistente, o intento de eliminar unidad con hijos.
 - **403 Forbidden:** Usuario sin permisos para la acción.
 - **404 Not Found:** Unidad solicitada no encontrada.
+
+---
+
+## 8. Notas sobre `total_puestos`
+
+El campo `total_puestos` indica la cantidad de puestos de trabajo **activos** (no eliminados) directamente asociados a esa unidad organizacional. No es un conteo acumulado de los subnodos; cada nodo informa únicamente sus propios puestos directos. Este valor es útil para el frontend al decidir si mostrar un indicador de ocupación o vacantes en la vista de detalle de una unidad.

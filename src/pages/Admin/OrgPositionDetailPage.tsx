@@ -6,15 +6,21 @@ import ConfirmationModal from '../../components/Common/ConfirmationModal';
 import LoadingIndicator from '../../components/Common/LoadingIndicator';
 import { usePositionService, Position } from '../../services/positionService';
 import { useJobService, Job } from '../../services/jobService';
+import { usePersonService } from '../../services/personService';
 import PositionForm from '../../components/Positions/PositionForm';
 import Avatar from '../../components/Common/Avatar';
 import { ROUTES } from '../../constants/routes';
+import AutocompleteField from '../../components/Common/Forms/AutocompleteField';
+import InputField from '../../components/Common/Forms/InputField';
+import useUIStore from '../../store/uiStore';
 
 const OrgPositionDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const { getPositionById, updatePosition, deletePosition, assignPerson, loading } = usePositionService();
-    const { getJobs } = useJobService();
+    const { openAlert } = useUIStore();
+    const { getPositionById, updatePosition, deletePosition, assignPerson, unassignPerson, loading } = usePositionService();
+    const { getJobById } = useJobService();
+    const { getPeople } = usePersonService();
 
     const [position, setPosition] = useState<Position | null>(null);
     const [job, setJob] = useState<Job | null>(null);
@@ -23,7 +29,14 @@ const OrgPositionDetailPage: React.FC = () => {
     const [editModalOpen, setEditModalOpen] = useState(false);
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [assignModalOpen, setAssignModalOpen] = useState(false);
-    const [personName, setPersonName] = useState('');
+    const [unassignModalOpen, setUnassignModalOpen] = useState(false);
+
+    // Collaborator assignment state
+    const [personSearchQuery, setPersonSearchQuery] = useState('');
+    const [personOptions, setPersonOptions] = useState<any[]>([]);
+    const [isSearchingPerson, setIsSearchingPerson] = useState(false);
+    const [selectedPerson, setSelectedPerson] = useState<any | null>(null);
+    const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
 
     useEffect(() => {
         if (id) {
@@ -38,22 +51,51 @@ const OrgPositionDetailPage: React.FC = () => {
             const pos = response.data.puesto;
             setPosition(pos);
 
-            // Load job details
+            // Load job details with competencies and functions
             if (pos.cargo_id) {
-                const jobsResponse = await getJobs();
-                if (jobsResponse && jobsResponse.success) {
-                    const foundJob = jobsResponse.data.cargos.find((j: Job) => j.id === pos.cargo_id);
-                    if (foundJob) setJob(foundJob);
+                const jobResponse = await getJobById(pos.cargo_id);
+                if (jobResponse && jobResponse.success) {
+                    setJob(jobResponse.data);
                 }
             }
         }
     };
 
+    // Debounce Person Search Query
+    useEffect(() => {
+        if (personSearchQuery.trim().length === 0) {
+            setPersonOptions([]);
+            return;
+        }
+
+        if (selectedPerson && personSearchQuery === selectedPerson.name) {
+            return;
+        }
+
+        const timer = setTimeout(async () => {
+            setIsSearchingPerson(true);
+            const response = await getPeople({ search: personSearchQuery, items_por_pagina: 10 });
+            if (response && response.success) {
+                const peopleList = response.data.datos || [];
+                const newOptions = peopleList.map((p: any) => ({
+                    id: p.id,
+                    name: `${p.nombres} ${p.apellidos}`,
+                    detail: p.email_personal || p.departamento || 'Sin departamento'
+                }));
+                setPersonOptions(newOptions);
+            }
+            setIsSearchingPerson(false);
+        }, 400);
+
+        return () => clearTimeout(timer);
+    }, [personSearchQuery, selectedPerson]);
+
     const handleUpdate = async (data: Omit<Position, 'id' | 'estado'>) => {
         if (!position) return;
         const response = await updatePosition(position.id, data);
-        if (response) {
+        if (response && response.success) {
             setEditModalOpen(false);
+            openAlert('Puesto actualizado exitosamente', 'success');
             loadPositionData();
         }
     };
@@ -62,20 +104,33 @@ const OrgPositionDetailPage: React.FC = () => {
         if (!position) return;
         const success = await deletePosition(position.id);
         if (success) {
+            openAlert('Puesto eliminado exitosamente', 'success');
             navigate(ROUTES.ORG_UNIT_DETAIL(position.unidad_id));
         }
     };
 
     const handleAssignPerson = async () => {
-        if (!position || !personName.trim()) return;
+        if (!position || !selectedPerson) return;
 
-        // Mock person ID (in real app, would select from directory)
-        const mockPersonId = 'per_' + Math.random().toString(36).substr(2, 9);
-        const response = await assignPerson(position.id, mockPersonId, new Date().toISOString());
+        const response = await assignPerson(position.id, selectedPerson.id, startDate);
 
-        if (response) {
+        if (response && response.success) {
             setAssignModalOpen(false);
-            setPersonName('');
+            setSelectedPerson(null);
+            setPersonSearchQuery('');
+            openAlert('Persona asignada exitosamente al puesto', 'success');
+            loadPositionData();
+        }
+    };
+
+    const handleUnassignPerson = async () => {
+        if (!position) return;
+
+        const response = await unassignPerson(position.id);
+
+        if (response && response.success) {
+            setUnassignModalOpen(false);
+            openAlert('Persona desasignada exitosamente (puesto vacante)', 'success');
             loadPositionData();
         }
     };
@@ -177,19 +232,27 @@ const OrgPositionDetailPage: React.FC = () => {
                                     <span>Este puesto está vacante</span>
                                 </div>
                             ) : (
-                                <div className="flex items-center gap-4 mt-4 p-4 bg-base-200 rounded-lg">
-                                    <Avatar
-                                        name={position.persona_nombre}
-                                        size="lg"
-                                        placeholderClass="bg-primary text-primary-content"
-                                    />
-                                    <div className="flex-1">
-                                        <h4 className="font-semibold text-lg">{position.persona_nombre}</h4>
-                                        <p className="text-sm text-base-content/70">Asignado al puesto</p>
+                                <div className="flex flex-col md:flex-row items-start md:items-center gap-4 mt-4 p-4 bg-base-200 rounded-lg">
+                                    <div className="flex items-center gap-4 flex-1">
+                                        <Avatar
+                                            name={position.persona_nombre || 'Persona'}
+                                            size="lg"
+                                            src={position.colaborador_foto}
+                                            placeholderClass="bg-primary text-primary-content"
+                                        />
+                                        <div>
+                                            <h4 className="font-semibold text-lg">{position.persona_nombre}</h4>
+                                            <p className="text-sm text-base-content/70">Asignado al puesto</p>
+                                        </div>
                                     </div>
-                                    <button className="btn btn-outline btn-sm">
-                                        Cambiar Asignación
-                                    </button>
+                                    <div className="flex gap-2 w-full md:w-auto mt-2 md:mt-0">
+                                        <button className="btn btn-outline btn-sm flex-1 md:flex-initial" onClick={() => setAssignModalOpen(true)}>
+                                            Cambiar Asignación
+                                        </button>
+                                        <button className="btn btn-outline btn-error btn-sm flex-1 md:flex-initial" onClick={() => setUnassignModalOpen(true)}>
+                                            Vaciar Puesto
+                                        </button>
+                                    </div>
                                 </div>
                             )}
                         </div>
@@ -203,11 +266,11 @@ const OrgPositionDetailPage: React.FC = () => {
                             <h3 className="card-title text-base">Competencias Requeridas</h3>
                             <p className="text-sm text-base-content/70 mb-3">Heredadas del cargo</p>
 
-                            {job && job.competencias_requeridas.length > 0 ? (
+                            {job && job.competencias_requeridas && job.competencias_requeridas.length > 0 ? (
                                 <div className="space-y-2">
                                     {job.competencias_requeridas.map((comp, idx) => (
                                         <div key={idx} className="flex justify-between items-center p-2 bg-base-200 rounded">
-                                            <span className="text-sm">{comp.competencia_nombre}</span>
+                                            <span className="text-sm font-medium">{comp.competencia_nombre}</span>
                                             <div className="badge badge-primary badge-sm">
                                                 Nivel {comp.nivel_esperado}
                                             </div>
@@ -225,16 +288,17 @@ const OrgPositionDetailPage: React.FC = () => {
                             <h3 className="card-title text-base">Funciones</h3>
                             <p className="text-sm text-base-content/70 mb-3">Heredadas del cargo</p>
 
-                            {/* {job && job.funciones.length > 0 ? (
+                            {job && job.funciones && job.funciones.length > 0 ? (
                                 <ul className="list-disc list-inside space-y-1 text-sm">
-                                    {job.funciones.map((func, idx) => (
-                                        <li key={idx} className="text-base-content/80">{typeof func === 'string' ? func : func.description}</li>
+                                    {job.funciones.map((func: any, idx: number) => (
+                                        <li key={idx} className="text-base-content/80">
+                                            {typeof func === 'string' ? func : (func.titulo || func.description)}
+                                        </li>
                                     ))}
                                 </ul>
                             ) : (
                                 <p className="text-sm text-base-content/50">Sin funciones definidas</p>
-                            )} */}
-                            <p className="text-sm text-base-content/50">Sin funciones definidas</p>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -260,17 +324,29 @@ const OrgPositionDetailPage: React.FC = () => {
                 onClose={() => setDeleteModalOpen(false)}
                 onConfirm={handleDelete}
                 title="Eliminar Puesto"
-                message={`¿Está seguro de eliminar el puesto "${position.nombre}" ? ${!isVacant ? 'La persona asignada quedará sin puesto.' : ''} `}
+                message={`¿Está seguro de eliminar el puesto "${position.nombre}"? ${!isVacant ? 'La persona asignada quedará sin puesto.' : ''}`}
                 confirmText="Eliminar"
                 variant="danger"
             />
 
-            {/* Simple Assignment Modal (will be replaced with PersonAssignmentModal) */}
+            {/* Unassign Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={unassignModalOpen}
+                onClose={() => setUnassignModalOpen(false)}
+                onConfirm={handleUnassignPerson}
+                title="Vaciar Puesto (Desasignar Persona)"
+                message={`¿Está seguro de que desea desasignar a ${position.persona_nombre} de este puesto? El puesto quedará VACANTE.`}
+                confirmText="Desasignar"
+                variant="warning"
+            />
+
+            {/* Autocomplete-based Assignment Modal */}
             <GenericModal
                 isOpen={assignModalOpen}
                 onClose={() => {
                     setAssignModalOpen(false);
-                    setPersonName('');
+                    setSelectedPerson(null);
+                    setPersonSearchQuery('');
                 }}
                 title="Asignar Persona al Puesto"
                 size="md"
@@ -280,28 +356,45 @@ const OrgPositionDetailPage: React.FC = () => {
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="stroke-current shrink-0 w-6 h-6">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
-                        <span>Versión simplificada. En el futuro se integrará con el Directorio de Personal.</span>
+                        <span>Busque un colaborador de la empresa para asignarlo a este puesto de trabajo.</span>
                     </div>
 
-                    <div className="form-control flex flex-col">
-                        <label className="label">
-                            <span className="label-text font-medium">Nombre de la Persona</span>
-                        </label>
-                        <input
-                            type="text"
-                            placeholder="Ej. Juan Pérez"
-                            className="input input-bordered"
-                            value={personName}
-                            onChange={(e) => setPersonName(e.target.value)}
-                        />
-                    </div>
+                    <AutocompleteField
+                        label="Colaborador"
+                        placeholder="Buscar por nombres, apellidos o correo..."
+                        searchQuery={personSearchQuery}
+                        onSearchQueryChange={setPersonSearchQuery}
+                        options={personOptions}
+                        onSelect={(opt) => {
+                            setSelectedPerson(opt);
+                            setPersonSearchQuery(opt.name);
+                        }}
+                        onClear={() => {
+                            setSelectedPerson(null);
+                            setPersonSearchQuery('');
+                        }}
+                        selectedItem={selectedPerson}
+                        isLoading={isSearchingPerson}
+                        required
+                        helpText="Seleccione el colaborador que ocupará la vacante"
+                    />
+
+                    <InputField
+                        label="Fecha de Inicio"
+                        type="date"
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                        required
+                        helpText="Fecha en formato ISO de inicio de la labor"
+                    />
 
                     <div className="flex justify-end gap-2 mt-6">
                         <button
                             className="btn btn-ghost"
                             onClick={() => {
                                 setAssignModalOpen(false);
-                                setPersonName('');
+                                setSelectedPerson(null);
+                                setPersonSearchQuery('');
                             }}
                         >
                             Cancelar
@@ -309,7 +402,7 @@ const OrgPositionDetailPage: React.FC = () => {
                         <button
                             className="btn btn-primary"
                             onClick={handleAssignPerson}
-                            disabled={!personName.trim()}
+                            disabled={!selectedPerson || !startDate}
                         >
                             Asignar
                         </button>

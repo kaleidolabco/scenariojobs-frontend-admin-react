@@ -25,7 +25,6 @@ const PersonForm: React.FC<PersonFormProps> = ({ initialData, isLoading = false,
         apellidos: '',
         email_personal: '',
         telefono: '',
-        departamento: '',
         fecha_ingreso: '',
         estado: 'ACTIVO'
     });
@@ -78,7 +77,6 @@ const PersonForm: React.FC<PersonFormProps> = ({ initialData, isLoading = false,
                 apellidos: initialData.apellidos,
                 email_personal: initialData.email_personal || '',
                 telefono: initialData.telefono || '',
-                departamento: initialData.departamento || '',
                 fecha_ingreso: initialData.fecha_ingreso || '',
                 estado: initialData.estado
             });
@@ -88,7 +86,6 @@ const PersonForm: React.FC<PersonFormProps> = ({ initialData, isLoading = false,
                 apellidos: '',
                 email_personal: '',
                 telefono: '',
-                departamento: '',
                 fecha_ingreso: '',
                 estado: 'ACTIVO'
             });
@@ -167,13 +164,6 @@ const PersonForm: React.FC<PersonFormProps> = ({ initialData, isLoading = false,
             <FormSection title="Información Laboral & Acceso">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
                     <InputField
-                        label="Departamento / Área"
-                        name="departamento"
-                        value={formData.departamento}
-                        onChange={handleChange}
-                        placeholder="Ej. Ventas, Marketing"
-                    />
-                    <InputField
                         label="Fecha de Ingreso"
                         name="fecha_ingreso"
                         type="date"
@@ -214,7 +204,7 @@ const PersonForm: React.FC<PersonFormProps> = ({ initialData, isLoading = false,
                     Cancelar
                 </button>
                 <button type="submit" className="btn btn-primary" disabled={isLoading}>
-                    {isLoading ? <span className="loading loading-spinner"></span> : initialData ? 'Guardar Cambios' : 'Ingresar Persona'}
+                    {isLoading ? <span className="loading loading-spinner"></span> : initialData ? 'Guardar Cambios' : 'Crear Colaborador'}
                 </button>
             </div>
         </form>

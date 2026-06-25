@@ -14,7 +14,7 @@ export interface OrgUnit {
     descripcion?: string;
     subnodos?: OrgUnit[]; // Recursive structure for UI
     nivel?: number; // Helper for indentation if needed
-    position_count?: number; // Number of positions in this unit
+    total_puestos?: number; // Number of positions in this unit
 }
 
 // Helper to map backend Org Unit to frontend expectation
@@ -25,7 +25,7 @@ const mapUnit = (u: any): OrgUnit => {
         tipo: u.tipo && typeof u.tipo === 'object' ? u.tipo.codigo : (u.tipo_codigo || u.tipo),
         padre_id: u.padre_id || null,
         descripcion: u.descripcion || '',
-        position_count: u.position_count || 0,
+        total_puestos: u.total_puestos || 0,
         subnodos: Array.isArray(u.subnodos) ? u.subnodos.map(mapUnit) : []
     };
 };
