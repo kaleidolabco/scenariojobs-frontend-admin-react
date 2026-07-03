@@ -176,8 +176,8 @@ const OrgChartPage: React.FC = () => {
                 onClose={() => setDeleteModalOpen(false)}
                 onConfirm={handleConfirmDelete}
                 title="Eliminar Unidad"
-                message={unitToDelete?.subnodos && unitToDelete.subnodos.length > 0
-                    ? `⚠️ Esta unidad tiene ${unitToDelete.subnodos.length} sub-unidades. No se puede eliminar hasta que mueva o elimine sus dependientes.`
+                message={unitToDelete?.subunidades && unitToDelete.subunidades.length > 0
+                    ? `⚠️ Esta unidad tiene ${unitToDelete.subunidades.length} sub-unidades. No se puede eliminar hasta que mueva o elimine sus dependientes.`
                     : `¿Está seguro de eliminar "${unitToDelete?.nombre}"? Esta acción no se puede deshacer.`}
                 confirmText="Eliminar"
                 variant="danger"

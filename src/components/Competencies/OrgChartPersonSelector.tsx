@@ -42,7 +42,7 @@ interface TreeNodeProps {
 
 const TreeNode: React.FC<TreeNodeProps> = ({ unit, level, selectedUnitId, onSelectUnit }) => {
     const [isExpanded, setIsExpanded] = useState(false);
-    const hasChildren = unit.subnodos && unit.subnodos.length > 0;
+    const hasChildren = unit.subunidades && unit.subunidades.length > 0;
     const isSelected = selectedUnitId === unit.id;
 
     const getTypeBadgeClass = (type: string) => {
@@ -128,7 +128,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({ unit, level, selectedUnitId, onSele
                         className="overflow-hidden"
                     >
                         <div className="space-y-1">
-                            {unit.subnodos?.map((child) => (
+                            {unit.subunidades?.map((child) => (
                                 <TreeNode
                                     key={child.id}
                                     unit={child}

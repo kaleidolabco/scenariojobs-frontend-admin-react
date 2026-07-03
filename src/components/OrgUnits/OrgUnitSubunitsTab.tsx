@@ -38,18 +38,18 @@ const OrgUnitSubunitsTab: React.FC<OrgUnitSubunitsTabProps> = ({ unit, onUnitUpd
             </div>
             
             <div className="bg-base-100/50 p-6 rounded-xl border border-base-200 min-h-[150px] overflow-auto">
-                {unitLoading && !unit.subnodos?.length ? (
+                {unitLoading && !unit.subunidades?.length ? (
                     <LoadingIndicator />
                 ) : (
                     <>
-                        {unit.subnodos && unit.subnodos.length === 0 ? (
+                        {unit.subunidades && unit.subunidades.length === 0 ? (
                             <div className="text-center py-6 opacity-60">
                                 <p>No hay sub-unidades definidas.</p>
                                 <button className="btn btn-link" onClick={() => setAddSubunitModalOpen(true)}>Añadir primera sub-unidad</button>
                             </div>
                         ) : (
                             <div className="space-y-4">
-                                {unit.subnodos?.map(node => (
+                                {unit.subunidades?.map(node => (
                                     <OrgUnitNode
                                         key={node.id}
                                         unit={node}

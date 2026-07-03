@@ -75,8 +75,8 @@ const OrgUnitInfoTab: React.FC<OrgUnitInfoTabProps> = ({ unit, onUnitUpdated }) 
                 onClose={() => setDeleteUnitModalOpen(false)}
                 onConfirm={handleDeleteUnit}
                 title="Eliminar Unidad Organizacional"
-                message={unit.subnodos && unit.subnodos.length > 0
-                    ? `⚠️ Esta unidad tiene ${unit.subnodos.length} sub-unidades. No se puede eliminar hasta que mueva o elimine sus dependientes.`
+                message={unit.subunidades && unit.subunidades.length > 0
+                    ? `⚠️ Esta unidad tiene ${unit.subunidades.length} sub-unidades. No se puede eliminar hasta que mueva o elimine sus dependientes.`
                     : `¿Está seguro de eliminar la unidad "${unit.nombre}"? Esta acción no se puede deshacer.`}
                 confirmText="Eliminar"
                 variant="danger"

@@ -12,7 +12,7 @@ export interface OrgUnit {
     tipo: OrgUnitType;
     padre_id?: string | null;
     descripcion?: string;
-    subnodos?: OrgUnit[]; // Recursive structure for UI
+    subunidades?: OrgUnit[]; // Recursive structure for UI
     nivel?: number; // Helper for indentation if needed
     total_puestos?: number; // Number of positions in this unit
 }
@@ -26,7 +26,7 @@ const mapUnit = (u: any): OrgUnit => {
         padre_id: u.padre_id || null,
         descripcion: u.descripcion || '',
         total_puestos: u.total_puestos || 0,
-        subnodos: Array.isArray(u.subnodos) ? u.subnodos.map(mapUnit) : []
+        subunidades: Array.isArray(u.subunidades) ? u.subunidades.map(mapUnit) : []
     };
 };
 
@@ -67,7 +67,7 @@ export const useOrgUnitService = () => {
     };
 
     // CREATE
-    const createUnit = async (unit: Omit<OrgUnit, 'id' | 'subnodos'>): Promise<FetchResponse | null> => {
+    const createUnit = async (unit: Omit<OrgUnit, 'id' | 'subunidades'>): Promise<FetchResponse | null> => {
         try {
             const requestData = {
                 nombre: unit.nombre,

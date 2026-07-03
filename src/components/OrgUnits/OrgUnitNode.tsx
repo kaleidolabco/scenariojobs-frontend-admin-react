@@ -13,7 +13,7 @@ interface OrgUnitNodeProps {
 
 const OrgUnitNode: React.FC<OrgUnitNodeProps> = ({ unit, level = 0, onEdit, onAddChild, onDelete, onViewDetails }) => {
     const [isExpanded, setIsExpanded] = useState(true);
-    const hasChildren = unit.subnodos && unit.subnodos.length > 0;
+    const hasChildren = unit.subunidades && unit.subunidades.length > 0;
 
     const toggleExpand = () => setIsExpanded(!isExpanded);
 
@@ -87,9 +87,9 @@ const OrgUnitNode: React.FC<OrgUnitNodeProps> = ({ unit, level = 0, onEdit, onAd
                                     )}
 
                                     {/* Sub-units Count */}
-                                    {unit.subnodos && unit.subnodos.length > 0 && (
+                                    {unit.subunidades && unit.subunidades.length > 0 && (
                                         <span className="text-xs text-base-content/50">
-                                            {unit.subnodos.length} sub-unidad{unit.subnodos.length !== 1 ? 'es' : ''}
+                                            {unit.subunidades.length} sub-unidad{unit.subunidades.length !== 1 ? 'es' : ''}
                                         </span>
                                     )}
                                 </div>
@@ -138,7 +138,7 @@ const OrgUnitNode: React.FC<OrgUnitNodeProps> = ({ unit, level = 0, onEdit, onAd
                         exit={{ opacity: 0, height: 0 }}
                         className="pl-8 ml-3 border-l border-base-300 relative mb-2"
                     >
-                        {unit.subnodos!.map((child) => (
+                        {unit.subunidades!.map((child) => (
                             <OrgUnitNode
                                 key={child.id}
                                 unit={child}
