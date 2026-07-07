@@ -127,7 +127,7 @@ const KnowledgeEditor: React.FC<KnowledgeEditorProps> = ({
                     {knowledge.fuentes[0] === 'INTERNA' ? (
                         <div>
                             <label className="text-xs text-base-content/50 uppercase tracking-wide mb-1 block">
-                                Empleado responsable
+                                Cargos portadores del conocimiento
                             </label>
                             <div className="bg-base-200/50 rounded-lg p-2">
                                 <OrgChartPersonSelector
