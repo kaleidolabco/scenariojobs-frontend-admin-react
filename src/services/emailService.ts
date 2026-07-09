@@ -1,6 +1,9 @@
+import React, { useCallback } from 'react';
 import useFetch from '../hooks/useFetch';
 import { FetchResponse, successMock } from './responseType';
 import useUIStore from '../store/uiStore';
+
+// ... (rest of the types and metadata remain the same)
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -218,7 +221,7 @@ export const useEmailService = () => {
 
     // ── Templates CRUD ──────────────────────────────────────────────────────────
 
-    const getTemplates = async (params?: emailTemplateQueryParams): Promise<FetchResponse | null> => {
+    const getTemplates = useCallback(async (params?: emailTemplateQueryParams): Promise<FetchResponse | null> => {
         try {
             let filtered = [...MOCK_TEMPLATES];
 
@@ -275,9 +278,9 @@ export const useEmailService = () => {
             openAlert(err instanceof Error ? err.message : String(err), 'error');
             return null;
         }
-    };
+    }, [fetchData, openAlert]);
 
-    const getTemplateById = async (id: string): Promise<FetchResponse | null> => {
+    const getTemplateById = useCallback(async (id: string): Promise<FetchResponse | null> => {
         try {
             const template = MOCK_TEMPLATES.find(t => t.id === id) ?? null;
             if (!template) throw new Error('Plantilla no encontrada');
@@ -290,9 +293,9 @@ export const useEmailService = () => {
             openAlert(err instanceof Error ? err.message : String(err), 'error');
             return null;
         }
-    };
+    }, [fetchData, openAlert]);
 
-    const createTemplate = async (template: Omit<EmailTemplate, 'id' | 'creado_en' | 'actualizado_en'>): Promise<FetchResponse | null> => {
+    const createTemplate = useCallback(async (template: Omit<EmailTemplate, 'id' | 'creado_en' | 'actualizado_en'>): Promise<FetchResponse | null> => {
         try {
             const now = new Date().toISOString();
             const newTemplate: EmailTemplate = {
@@ -313,9 +316,9 @@ export const useEmailService = () => {
             openAlert(err instanceof Error ? err.message : String(err), 'error');
             return null;
         }
-    };
+    }, [fetchData, openAlert]);
 
-    const updateTemplate = async (id: string, template: Partial<EmailTemplate>): Promise<FetchResponse | null> => {
+    const updateTemplate = useCallback(async (id: string, template: Partial<EmailTemplate>): Promise<FetchResponse | null> => {
         try {
             const idx = MOCK_TEMPLATES.findIndex(t => t.id === id);
             if (idx !== -1) {
@@ -332,9 +335,9 @@ export const useEmailService = () => {
             openAlert(err instanceof Error ? err.message : String(err), 'error');
             return null;
         }
-    };
+    }, [fetchData, openAlert]);
 
-    const deleteTemplate = async (id: string): Promise<boolean> => {
+    const deleteTemplate = useCallback(async (id: string): Promise<boolean> => {
         try {
             const idx = MOCK_TEMPLATES.findIndex(t => t.id === id);
             if (idx !== -1) MOCK_TEMPLATES.splice(idx, 1);
@@ -349,11 +352,11 @@ export const useEmailService = () => {
             openAlert(err instanceof Error ? err.message : String(err), 'error');
             return false;
         }
-    };
+    }, [fetchData, openAlert]);
 
     // ── SMTP Config ─────────────────────────────────────────────────────────────
 
-    const getSmtpConfig = async (): Promise<FetchResponse | null> => {
+    const getSmtpConfig = useCallback(async (): Promise<FetchResponse | null> => {
         try {
             return (await fetchData({
                 url: '/api/smtp-config',
@@ -363,9 +366,9 @@ export const useEmailService = () => {
             openAlert(err instanceof Error ? err.message : String(err), 'error');
             return null;
         }
-    };
+    }, [fetchData, openAlert]);
 
-    const updateSmtpConfig = async (config: Partial<SmtpConfig>): Promise<FetchResponse | null> => {
+    const updateSmtpConfig = useCallback(async (config: Partial<SmtpConfig>): Promise<FetchResponse | null> => {
         try {
             return (await fetchData({
                 url: '/api/smtp-config',
@@ -377,7 +380,7 @@ export const useEmailService = () => {
             openAlert(err instanceof Error ? err.message : String(err), 'error');
             return null;
         }
-    };
+    }, [fetchData, openAlert]);
 
     return {
         getTemplates,

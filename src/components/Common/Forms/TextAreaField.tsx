@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { forwardRef } from 'react';
 
 interface TextAreaFieldProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
     label: string;
@@ -8,7 +8,7 @@ interface TextAreaFieldProps extends React.TextareaHTMLAttributes<HTMLTextAreaEl
     rows?: number;
 }
 
-const TextAreaField: React.FC<TextAreaFieldProps> = ({
+const TextAreaField = forwardRef<HTMLTextAreaElement, TextAreaFieldProps>(({
     label,
     required = false,
     helpText,
@@ -16,7 +16,7 @@ const TextAreaField: React.FC<TextAreaFieldProps> = ({
     rows = 3,
     className = '',
     ...props
-}) => {
+}, ref) => {
     return (
         <div className="space-y-2">
             <label className="block">
@@ -24,6 +24,7 @@ const TextAreaField: React.FC<TextAreaFieldProps> = ({
                 {required && <span className="text-error ml-1">*</span>}
             </label>
             <textarea
+                ref={ref}
                 rows={rows}
                 required={required}
                 className={`textarea textarea-bordered w-full focus:border-primary focus:ring-2 focus:ring-primary/20 text-base ${error ? 'textarea-error' : ''} ${className}`}
@@ -33,6 +34,8 @@ const TextAreaField: React.FC<TextAreaFieldProps> = ({
             {helpText && !error && <p className="text-xs text-base-content/60">{helpText}</p>}
         </div>
     );
-};
+});
+
+TextAreaField.displayName = 'TextAreaField';
 
 export default TextAreaField;
