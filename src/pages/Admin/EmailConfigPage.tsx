@@ -6,6 +6,7 @@ import ConfirmationModal from '../../components/Common/ConfirmationModal';
 import LoadingIndicator from '../../components/Common/LoadingIndicator';
 import Tabs from '../../components/Common/Tabs';
 import FilterBar, { FilterDefinition } from '../../components/Common/FilterBar';
+import { StatsGrid } from '../../components/Common/StatsCard';
 import EmailTemplateForm from '../../components/EmailConfig/EmailTemplateForm';
 import SmtpConfigForm from '../../components/EmailConfig/SmtpConfigForm';
 import TemplateCard from '../../components/EmailConfig/TemplateCard';
@@ -268,22 +269,42 @@ const EmailConfigPage: React.FC = () => {
             {activeTab === 'plantillas' && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
                     {/* Stats bar */}
-                    <div className="flex flex-wrap items-center gap-3 mb-5">
-                        <div className="stats stats-horizontal shadow-none border border-base-200 bg-base-100 h-14">
-                            <div className="stat px-4 py-2">
-                                <div className="stat-title text-xs">Total</div>
-                                <div className="stat-value text-lg">{templates.length}</div>
-                            </div>
-                            <div className="stat px-4 py-2">
-                                <div className="stat-title text-xs">Activas</div>
-                                <div className="stat-value text-lg text-success">{activeCount}</div>
-                            </div>
-                            <div className="stat px-4 py-2">
-                                <div className="stat-title text-xs">Inactivas</div>
-                                <div className="stat-value text-lg text-base-content/30">{inactiveCount}</div>
-                            </div>
-                        </div>
-                    </div>
+                    <StatsGrid
+                        className="mb-5"
+                        columns={3}
+                        stats={[
+                            {
+                                label: 'Total',
+                                value: templates.length,
+                                variant: 'primary',
+                                icon: (
+                                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                    </svg>
+                                ),
+                            },
+                            {
+                                label: 'Activas',
+                                value: activeCount,
+                                variant: 'success',
+                                icon: (
+                                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                ),
+                            },
+                            {
+                                label: 'Inactivas',
+                                value: inactiveCount,
+                                variant: 'neutral',
+                                icon: (
+                                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                    </svg>
+                                ),
+                            },
+                        ]}
+                    />
 
                     {/* Filters */}
                     <FilterBar
