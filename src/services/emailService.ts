@@ -1,18 +1,15 @@
-import React, { useCallback } from 'react';
 import useFetch from '../hooks/useFetch';
-import { FetchResponse, successMock } from './responseType';
+import { FetchResponse } from './responseType';
 import useUIStore from '../store/uiStore';
-
-// ... (rest of the types and metadata remain the same)
-
-// ─── Types ────────────────────────────────────────────────────────────────────
+import useAuthStore from '../store/authStore';
 
 export type EmailTemplateType =
+    | 'BIENVENIDA'
+    | 'RESTABLECER_CONTRASENA'
     | 'EVALUACION_ASIGNADA'
     | 'EVALUADOR_ASIGNADO'
     | 'RECORDATORIO_EVALUACION'
     | 'RESULTADO_EVALUACION'
-    | 'BIENVENIDA'
     | 'PERSONALIZADO';
 
 export interface EmailTemplate {
@@ -23,6 +20,7 @@ export interface EmailTemplate {
     cuerpo: string;
     activo: boolean;
     descripcion?: string;
+    variables?: string[];
     creado_en?: string;
     actualizado_en?: string;
 }
@@ -45,351 +43,419 @@ export interface SmtpConfig {
     remitente_nombre: string;
     remitente_email: string;
     usar_tls: boolean;
+    password_configurada?: boolean;
+    actualizado_en?: string;
 }
 
-// ─── Metadata de tipos ────────────────────────────────────────────────────────
+export interface GlobalTemplate {
+    id: string;
+    nombre: string;
+    tipo: EmailTemplateType;
+    asunto: string;
+    cuerpo: string;
+    descripcion?: string;
+    variables?: string[];
+    actualizado_en?: string;
+}
 
 export const EMAIL_TEMPLATE_TYPE_META: Record<EmailTemplateType, { label: string; color: string }> = {
-    EVALUACION_ASIGNADA:     { label: 'Evaluación Asignada',   color: 'primary'  },
-    EVALUADOR_ASIGNADO:      { label: 'Evaluador Asignado',    color: 'secondary'},
-    RECORDATORIO_EVALUACION: { label: 'Recordatorio',          color: 'warning'  },
-    RESULTADO_EVALUACION:    { label: 'Resultado',             color: 'success'  },
-    BIENVENIDA:              { label: 'Bienvenida',            color: 'info'     },
-    PERSONALIZADO:           { label: 'Personalizado',         color: 'neutral'  },
+    BIENVENIDA:              { label: 'Bienvenida',              color: 'info'     },
+    RESTABLECER_CONTRASENA:  { label: 'Restablecer Contraseña',  color: 'accent'  },
+    EVALUACION_ASIGNADA:     { label: 'Evaluación Asignada',     color: 'primary'  },
+    EVALUADOR_ASIGNADO:      { label: 'Evaluador Asignado',      color: 'secondary'},
+    RECORDATORIO_EVALUACION: { label: 'Recordatorio',            color: 'warning'  },
+    RESULTADO_EVALUACION:    { label: 'Resultado',               color: 'success'  },
+    PERSONALIZADO:           { label: 'Personalizado',           color: 'neutral'  },
 };
 
-/** Variables de ejemplo para la previsualización de plantillas */
 export const TEMPLATE_PREVIEW_VARS: Record<string, string> = {
-    nombre_colaborador: 'Ana García',
+    nombre_usuario: 'Juan Pérez',
     nombre_evaluacion:  'Evaluación de Desempeño Q1 2025',
     fecha_limite:       '30 de mayo de 2025',
     link_evaluacion:    'https://app.scenariojobs.com/mis-evaluaciones/123',
-    nombre_empresa:     'Kaleido Labs',
+    link_acceso:        'https://app.scenariojobs.com/login',
+    nombre_empresa:     'Kaleido Lab',
     nombre_evaluador:   'Carlos Rodríguez',
     cargo_colaborador:  'Desarrollador Senior',
     periodo:            'Primer trimestre 2025',
 };
 
-// ─── Mock data ────────────────────────────────────────────────────────────────
-
-const MOCK_TEMPLATES: EmailTemplate[] = [
-    {
-        id: '1',
-        nombre: 'Notificación de Evaluación Asignada',
-        tipo: 'EVALUACION_ASIGNADA',
-        asunto: 'Tienes una nueva evaluación: {{nombre_evaluacion}}',
-        cuerpo: `Hola {{nombre_colaborador}},
-
-Te informamos que se te ha asignado una nueva evaluación en la plataforma {{nombre_empresa}}.
-
-📋 Evaluación: {{nombre_evaluacion}}
-📅 Fecha límite: {{fecha_limite}}
-🏢 Empresa: {{nombre_empresa}}
-
-Por favor accede a la siguiente liga para completar tu evaluación:
-{{link_evaluacion}}
-
-Si tienes alguna pregunta, no dudes en contactar a tu equipo de RRHH.
-
-Saludos,
-El equipo de {{nombre_empresa}}`,
-        activo: true,
-        descripcion: 'Se envía al colaborador cuando se le asigna una evaluación.',
-        creado_en: '2025-01-10T08:00:00Z',
-        actualizado_en: '2025-03-15T10:30:00Z',
-    },
-    {
-        id: '2',
-        nombre: 'Notificación a Evaluador Asignado',
-        tipo: 'EVALUADOR_ASIGNADO',
-        asunto: 'Has sido asignado como evaluador — {{nombre_evaluacion}}',
-        cuerpo: `Estimado/a {{nombre_evaluador}},
-
-Has sido designado como evaluador para la siguiente evaluación en {{nombre_empresa}}:
-
-📋 Evaluación: {{nombre_evaluacion}}
-👤 Colaborador a evaluar: {{nombre_colaborador}}
-📅 Fecha límite: {{fecha_limite}}
-
-Accede a la plataforma para revisar y calificar:
-{{link_evaluacion}}
-
-Gracias por tu colaboración.
-
-Atentamente,
-Equipo de {{nombre_empresa}}`,
-        activo: true,
-        descripcion: 'Se envía al evaluador cuando es asignado a una evaluación.',
-        creado_en: '2025-01-10T08:00:00Z',
-        actualizado_en: '2025-02-20T09:00:00Z',
-    },
-    {
-        id: '3',
-        nombre: 'Recordatorio de Evaluación Pendiente',
-        tipo: 'RECORDATORIO_EVALUACION',
-        asunto: '⏰ Recordatorio: {{nombre_evaluacion}} vence el {{fecha_limite}}',
-        cuerpo: `Hola {{nombre_colaborador}},
-
-Te recordamos que tienes una evaluación pendiente por completar:
-
-📋 Evaluación: {{nombre_evaluacion}}
-⏳ Fecha límite: {{fecha_limite}}
-
-Por favor complétala a la brevedad posible:
-{{link_evaluacion}}
-
-Recuerda que completar tus evaluaciones a tiempo es fundamental para tu desarrollo profesional.
-
-Saludos,
-{{nombre_empresa}}`,
-        activo: true,
-        descripcion: 'Recordatorio automático enviado días antes del vencimiento.',
-        creado_en: '2025-01-12T09:00:00Z',
-        actualizado_en: '2025-01-12T09:00:00Z',
-    },
-    {
-        id: '4',
-        nombre: 'Entrega de Resultados de Evaluación',
-        tipo: 'RESULTADO_EVALUACION',
-        asunto: '✅ Resultados disponibles: {{nombre_evaluacion}}',
-        cuerpo: `Hola {{nombre_colaborador}},
-
-Tus resultados de evaluación ya están disponibles en la plataforma.
-
-📋 Evaluación: {{nombre_evaluacion}}
-📅 Período: {{periodo}}
-🏢 Empresa: {{nombre_empresa}}
-
-Accede a tus resultados aquí:
-{{link_evaluacion}}
-
-Recuerda que estos resultados son parte de tu plan de desarrollo profesional. Si tienes dudas, consulta con tu equipo de RRHH.
-
-Felicitaciones por completar tu evaluación.
-
-Atentamente,
-Equipo de {{nombre_empresa}}`,
-        activo: true,
-        descripcion: 'Se envía cuando los resultados de la evaluación están disponibles.',
-        creado_en: '2025-01-15T10:00:00Z',
-        actualizado_en: '2025-04-01T11:00:00Z',
-    },
-    {
-        id: '5',
-        nombre: 'Bienvenida al Sistema',
-        tipo: 'BIENVENIDA',
-        asunto: '👋 Bienvenido/a a {{nombre_empresa}}',
-        cuerpo: `¡Bienvenido/a {{nombre_colaborador}}!
-
-Nos complace darte la bienvenida a la plataforma de gestión de talento de {{nombre_empresa}}.
-
-A través de esta plataforma podrás:
-✅ Completar tus evaluaciones de desempeño
-✅ Revisar tus objetivos
-✅ Ver tus resultados y retroalimentación
-
-Para comenzar, accede aquí:
-{{link_evaluacion}}
-
-Si tienes alguna pregunta, escríbenos a soporte@{{nombre_empresa}}.com
-
-¡Éxito en tu desarrollo profesional!
-
-El equipo de Talento Humano
-{{nombre_empresa}}`,
-        activo: false,
-        descripcion: 'Correo de bienvenida al ingresar por primera vez a la plataforma.',
-        creado_en: '2025-01-05T07:00:00Z',
-        actualizado_en: '2025-01-05T07:00:00Z',
-    },
-];
-
-const MOCK_SMTP_CONFIG: SmtpConfig = {
-    host: 'smtp.gmail.com',
-    puerto: 587,
-    usuario: 'notificaciones@empresa.com',
-    remitente_nombre: 'ScenarioJobs',
-    remitente_email: 'no-reply@empresa.com',
-    usar_tls: true,
-};
-
-// ─── Service Hook ─────────────────────────────────────────────────────────────
-
 export const useEmailService = () => {
     const { fetchData, loading, error } = useFetch<FetchResponse>();
     const { openAlert } = useUIStore();
+    const { token } = useAuthStore();
 
-    // ── Templates CRUD ──────────────────────────────────────────────────────────
-
-    const getTemplates = useCallback(async (params?: emailTemplateQueryParams): Promise<FetchResponse | null> => {
+    const getTemplates = async (params?: emailTemplateQueryParams): Promise<FetchResponse | null> => {
         try {
-            let filtered = [...MOCK_TEMPLATES];
+            const backendParams: Record<string, any> = {};
 
-            if (params?.filtro) {
-                const q = params.filtro.toLowerCase();
-                filtered = filtered.filter(t =>
-                    t.nombre.toLowerCase().includes(q) ||
-                    t.asunto.toLowerCase().includes(q) ||
-                    (t.descripcion?.toLowerCase().includes(q) ?? false)
-                );
-            }
-
-            if (params?.tipo) {
-                filtered = filtered.filter(t => t.tipo === params.tipo);
-            }
-
-            if (params?.activo !== undefined) {
-                filtered = filtered.filter(t => t.activo === params.activo);
-            }
-
-            if (params?.orden_por) {
-                filtered.sort((a, b) => {
-                    const aVal = (a as any)[params.orden_por!] ?? '';
-                    const bVal = (b as any)[params.orden_por!] ?? '';
-                    const cmp = aVal > bVal ? 1 : -1;
-                    return params.orden === 'desc' ? -cmp : cmp;
-                });
-            }
-
-            const page     = params?.pagina ?? 1;
-            const pageSize = params?.items_por_pagina ?? 9;
-            const total    = filtered.length;
-            const pages    = Math.max(1, Math.ceil(total / pageSize));
-            const start    = (page - 1) * pageSize;
-            const paginated = filtered.slice(start, start + pageSize);
+            if (params?.filtro) backendParams.busqueda = params.filtro;
+            if (params?.tipo) backendParams.tipo = params.tipo;
+            if (params?.activo !== undefined) backendParams.activo = params.activo;
+            if (params?.pagina) backendParams.pagina = params.pagina;
+            if (params?.items_por_pagina) backendParams.limite = params.items_por_pagina;
+            if (params?.orden_por) backendParams.ordenar_por = params.orden_por;
+            if (params?.orden) backendParams.orden = params.orden;
 
             const response = (await fetchData({
-                url: '/api/email-templates',
-                params: params as any,
-                mockData: successMock({
-                    plantillas: paginated,
-                    paginacion: {
-                        pagina_actual:    page,
-                        items_por_pagina: pageSize,
-                        total_items:      total,
-                        total_paginas:    pages,
-                    },
-                }),
+                url: `${import.meta.env.VITE_API_URL}/emails/templates`,
+                params: backendParams,
+                token: token || null,
             })) as FetchResponse | null;
 
-            if (response?.success === false) throw new Error(response.message || 'Error al obtener las plantillas');
-            return response;
-        } catch (err) {
-            openAlert(err instanceof Error ? err.message : String(err), 'error');
-            return null;
-        }
-    }, [fetchData, openAlert]);
-
-    const getTemplateById = useCallback(async (id: string): Promise<FetchResponse | null> => {
-        try {
-            const template = MOCK_TEMPLATES.find(t => t.id === id) ?? null;
-            if (!template) throw new Error('Plantilla no encontrada');
-
-            return (await fetchData({
-                url: `/api/email-templates/${id}`,
-                mockData: successMock({ plantilla: template }),
-            })) as FetchResponse | null;
-        } catch (err) {
-            openAlert(err instanceof Error ? err.message : String(err), 'error');
-            return null;
-        }
-    }, [fetchData, openAlert]);
-
-    const createTemplate = useCallback(async (template: Omit<EmailTemplate, 'id' | 'creado_en' | 'actualizado_en'>): Promise<FetchResponse | null> => {
-        try {
-            const now = new Date().toISOString();
-            const newTemplate: EmailTemplate = {
-                ...template,
-                id: Math.random().toString(36).substr(2, 9),
-                creado_en: now,
-                actualizado_en: now,
-            };
-            MOCK_TEMPLATES.push(newTemplate);
-
-            return (await fetchData({
-                url: '/api/email-templates',
-                method: 'POST',
-                body: template,
-                mockData: successMock({ plantilla: newTemplate }),
-            })) as FetchResponse | null;
-        } catch (err) {
-            openAlert(err instanceof Error ? err.message : String(err), 'error');
-            return null;
-        }
-    }, [fetchData, openAlert]);
-
-    const updateTemplate = useCallback(async (id: string, template: Partial<EmailTemplate>): Promise<FetchResponse | null> => {
-        try {
-            const idx = MOCK_TEMPLATES.findIndex(t => t.id === id);
-            if (idx !== -1) {
-                MOCK_TEMPLATES[idx] = { ...MOCK_TEMPLATES[idx], ...template, actualizado_en: new Date().toISOString() };
+            if (response?.success === false) {
+                throw new Error(response.message || 'Error al obtener las plantillas');
             }
 
-            return (await fetchData({
-                url: `/api/email-templates/${id}`,
-                method: 'PUT',
-                body: template,
-                mockData: successMock({ plantilla: idx !== -1 ? MOCK_TEMPLATES[idx] : { ...template, id } }),
-            })) as FetchResponse | null;
+            if (response?.success && response.data) {
+                return {
+                    ...response,
+                    data: {
+                        plantillas: response.data.datos ?? [],
+                        paginacion: response.data.paginacion ?? null,
+                    },
+                };
+            }
+
+            return response;
         } catch (err) {
-            openAlert(err instanceof Error ? err.message : String(err), 'error');
+            const msg = err instanceof Error ? err.message : String(err);
+            openAlert(msg, 'error');
             return null;
         }
-    }, [fetchData, openAlert]);
+    };
 
-    const deleteTemplate = useCallback(async (id: string): Promise<boolean> => {
+    const getTemplateById = async (id: string): Promise<FetchResponse | null> => {
         try {
-            const idx = MOCK_TEMPLATES.findIndex(t => t.id === id);
-            if (idx !== -1) MOCK_TEMPLATES.splice(idx, 1);
+            const response = (await fetchData({
+                url: `${import.meta.env.VITE_API_URL}/emails/templates/${id}`,
+                token: token || null,
+            })) as FetchResponse | null;
 
-            await fetchData({
-                url: `/api/email-templates/${id}`,
+            if (response?.success === false) {
+                throw new Error(response.message || 'Error al obtener la plantilla');
+            }
+
+            if (response?.success && response.data) {
+                return {
+                    ...response,
+                    data: {
+                        plantilla: response.data,
+                    },
+                };
+            }
+
+            return response;
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            openAlert(msg, 'error');
+            return null;
+        }
+    };
+
+    const createTemplate = async (data: Omit<EmailTemplate, 'id' | 'creado_en' | 'actualizado_en'>): Promise<FetchResponse | null> => {
+        try {
+            const response = (await fetchData({
+                url: `${import.meta.env.VITE_API_URL}/emails/templates`,
+                method: 'POST',
+                body: data,
+                token: token || null,
+            })) as FetchResponse | null;
+
+            if (response?.success === false) {
+                throw new Error(response.message || 'Error al crear la plantilla');
+            }
+
+            if (response?.success && response.data) {
+                return {
+                    ...response,
+                    data: {
+                        plantilla: response.data,
+                    },
+                };
+            }
+
+            return response;
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            openAlert(msg, 'error');
+            return null;
+        }
+    };
+
+    const updateTemplate = async (id: string, data: Partial<EmailTemplate>): Promise<FetchResponse | null> => {
+        try {
+            const response = (await fetchData({
+                url: `${import.meta.env.VITE_API_URL}/emails/templates/${id}`,
+                method: 'PATCH',
+                body: data,
+                token: token || null,
+            })) as FetchResponse | null;
+
+            if (response?.success === false) {
+                throw new Error(response.message || 'Error al actualizar la plantilla');
+            }
+
+            if (response?.success && response.data) {
+                return {
+                    ...response,
+                    data: {
+                        plantilla: response.data,
+                    },
+                };
+            }
+
+            return response;
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            openAlert(msg, 'error');
+            return null;
+        }
+    };
+
+    const toggleActive = async (id: string, activo: boolean): Promise<FetchResponse | null> => {
+        try {
+            const response = (await fetchData({
+                url: `${import.meta.env.VITE_API_URL}/emails/templates/${id}/activo`,
+                method: 'PATCH',
+                body: { activo },
+                token: token || null,
+            })) as FetchResponse | null;
+
+            if (response?.success === false) {
+                throw new Error(response.message || 'Error al cambiar el estado de la plantilla');
+            }
+
+            return response;
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            openAlert(msg, 'error');
+            return null;
+        }
+    };
+
+    const deleteTemplate = async (id: string): Promise<boolean> => {
+        try {
+            const response = await fetchData({
+                url: `${import.meta.env.VITE_API_URL}/emails/templates/${id}`,
                 method: 'DELETE',
-                mockData: successMock({ success: true }),
+                token: token || null,
             });
+
+            if (response?.success === false) {
+                throw new Error(response.message || 'Error al eliminar la plantilla');
+            }
+
             return true;
         } catch (err) {
-            openAlert(err instanceof Error ? err.message : String(err), 'error');
+            const msg = err instanceof Error ? err.message : String(err);
+            openAlert(msg, 'error');
             return false;
         }
-    }, [fetchData, openAlert]);
+    };
 
-    // ── SMTP Config ─────────────────────────────────────────────────────────────
-
-    const getSmtpConfig = useCallback(async (): Promise<FetchResponse | null> => {
+    const previewTemplate = async (id: string, variables?: Record<string, string>): Promise<FetchResponse | null> => {
         try {
-            return (await fetchData({
-                url: '/api/smtp-config',
-                mockData: successMock({ smtp: MOCK_SMTP_CONFIG }),
+            const response = (await fetchData({
+                url: `${import.meta.env.VITE_API_URL}/emails/templates/${id}/preview`,
+                method: 'POST',
+                body: variables ? { variables } : {},
+                token: token || null,
             })) as FetchResponse | null;
+
+            if (response?.success === false) {
+                throw new Error(response.message || 'Error al previsualizar la plantilla');
+            }
+
+            return response;
         } catch (err) {
-            openAlert(err instanceof Error ? err.message : String(err), 'error');
+            const msg = err instanceof Error ? err.message : String(err);
+            openAlert(msg, 'error');
             return null;
         }
-    }, [fetchData, openAlert]);
+    };
 
-    const updateSmtpConfig = useCallback(async (config: Partial<SmtpConfig>): Promise<FetchResponse | null> => {
+    const getGlobalTemplates = async (): Promise<FetchResponse | null> => {
         try {
-            return (await fetchData({
-                url: '/api/smtp-config',
+            const response = (await fetchData({
+                url: `${import.meta.env.VITE_API_URL}/emails/global-templates`,
+                token: token || null,
+            })) as FetchResponse | null;
+
+            if (response?.success === false) {
+                throw new Error(response.message || 'Error al obtener las plantillas globales');
+            }
+
+            if (response?.success && response.data) {
+                return {
+                    ...response,
+                    data: {
+                        plantillas: response.data,
+                    },
+                };
+            }
+
+            return response;
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            openAlert(msg, 'error');
+            return null;
+        }
+    };
+
+    const getGlobalTemplateById = async (id: string): Promise<FetchResponse | null> => {
+        try {
+            const response = (await fetchData({
+                url: `${import.meta.env.VITE_API_URL}/emails/global-templates/${id}`,
+                token: token || null,
+            })) as FetchResponse | null;
+
+            if (response?.success === false) {
+                throw new Error(response.message || 'Error al obtener la plantilla global');
+            }
+
+            return response;
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            openAlert(msg, 'error');
+            return null;
+        }
+    };
+
+    const importGlobalTemplate = async (id: string, nombre?: string): Promise<FetchResponse | null> => {
+        try {
+            const body = nombre ? { nombre } : {};
+            const response = (await fetchData({
+                url: `${import.meta.env.VITE_API_URL}/emails/global-templates/${id}/import`,
+                method: 'POST',
+                body,
+                token: token || null,
+            })) as FetchResponse | null;
+
+            if (response?.success === false) {
+                throw new Error(response.message || 'Error al importar la plantilla global');
+            }
+
+            if (response?.success && response.data) {
+                return {
+                    ...response,
+                    data: {
+                        plantilla: response.data,
+                    },
+                };
+            }
+
+            return response;
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            openAlert(msg, 'error');
+            return null;
+        }
+    };
+
+    const getSmtpConfig = async (): Promise<FetchResponse | null> => {
+        try {
+            const response = (await fetchData({
+                url: `${import.meta.env.VITE_API_URL}/emails/smtp`,
+                token: token || null,
+            })) as FetchResponse | null;
+
+            if (response?.success === false) {
+                throw new Error(response.message || 'Error al obtener la configuración SMTP');
+            }
+
+            if (response?.success && response.data) {
+                return {
+                    ...response,
+                    data: {
+                        smtp: response.data,
+                    },
+                };
+            }
+
+            return response;
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            openAlert(msg, 'error');
+            return null;
+        }
+    };
+
+    const updateSmtpConfig = async (config: Partial<SmtpConfig>): Promise<FetchResponse | null> => {
+        try {
+
+            // Elimino la propiedad password si está vacía para no enviarla al backend y no sobrescribir la contraseña existente
+            if (config.password === '') {
+                delete config.password;
+            }
+
+            // Elimino los campos que no deben ser enviados
+            const { password_configurada, actualizado_en, ...configToSend } = config;
+            // console.log('Config to send:', configToSend);
+            
+            const response = (await fetchData({
+                url: `${import.meta.env.VITE_API_URL}/emails/smtp`,
                 method: 'PUT',
-                body: config,
-                mockData: successMock({ smtp: { ...MOCK_SMTP_CONFIG, ...config } }),
+                body: configToSend,
+                token: token || null,
             })) as FetchResponse | null;
+
+            if (response?.success === false) {
+                throw new Error(response.message || 'Error al guardar la configuración SMTP');
+            }
+
+            if (response?.success && response.data) {
+                return {
+                    ...response,
+                    data: {
+                        smtp: response.data,
+                    },
+                };
+            }
+
+            return response;
         } catch (err) {
-            openAlert(err instanceof Error ? err.message : String(err), 'error');
+            const msg = err instanceof Error ? err.message : String(err);
+            openAlert(msg, 'error');
             return null;
         }
-    }, [fetchData, openAlert]);
+    };
+
+    const testSmtpConnection = async (params?: { correo_destino?: string; solo_verificar?: boolean; plantilla_id?: string; asunto_personalizado?: string }): Promise<FetchResponse | null> => {
+        try {
+            const response = (await fetchData({
+                url: `${import.meta.env.VITE_API_URL}/emails/smtp/test`,
+                method: 'POST',
+                body: params ?? {},
+                token: token || null,
+            })) as FetchResponse | null;
+
+            if (response?.success === false) {
+                throw new Error(response.message || 'Error al probar la conexión SMTP');
+            }
+
+            return response;
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            openAlert(msg, 'error');
+            return null;
+        }
+    };
 
     return {
         getTemplates,
         getTemplateById,
         createTemplate,
         updateTemplate,
+        toggleActive,
         deleteTemplate,
+        previewTemplate,
+        getGlobalTemplates,
+        getGlobalTemplateById,
+        importGlobalTemplate,
         getSmtpConfig,
         updateSmtpConfig,
+        testSmtpConnection,
         loading,
         error,
     };

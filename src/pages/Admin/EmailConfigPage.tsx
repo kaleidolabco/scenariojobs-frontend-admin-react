@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PageContainer from '../../components/Common/PageContainer';
 import GenericModal from '../../components/Common/GenericModal';
@@ -17,11 +17,10 @@ import {
     EmailTemplate,
     EmailTemplateType,
     SmtpConfig,
+    GlobalTemplate,
     EMAIL_TEMPLATE_TYPE_META,
     emailTemplateQueryParams,
 } from '../../services/emailService';
-
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 type TabId = 'plantillas' | 'smtp';
 
@@ -29,16 +28,19 @@ type TemplateFormData = Omit<EmailTemplate, 'id' | 'creado_en' | 'actualizado_en
 
 const ITEMS_PER_PAGE = 9;
 
-// ─── Main Page ────────────────────────────────────────────────────────────────
-
 const EmailConfigPage: React.FC = () => {
     const {
         getTemplates,
+        getTemplateById,
         getSmtpConfig,
         createTemplate,
         updateTemplate,
+        toggleActive,
         deleteTemplate,
         updateSmtpConfig,
+        getGlobalTemplates,
+        importGlobalTemplate,
+        testSmtpConnection,
         loading,
     } = useEmailService();
 
@@ -63,6 +65,12 @@ const EmailConfigPage: React.FC = () => {
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | null>(null);
 
+    // Global templates
+    const [globalModalOpen, setGlobalModalOpen] = useState(false);
+    const [globalTemplates, setGlobalTemplates] = useState<GlobalTemplate[]>([]);
+    const [loadingGlobal, setLoadingGlobal] = useState(false);
+    const [importingId, setImportingId] = useState<string | null>(null);
+
     // SMTP
     const [smtpConfig, setSmtpConfig] = useState<SmtpConfig | null>(null);
     const [savingSmtp, setSavingSmtp] = useState(false);
@@ -73,8 +81,7 @@ const EmailConfigPage: React.FC = () => {
     const updateQueryParams = (updates: Partial<emailTemplateQueryParams>) =>
         setQueryParams((prev) => ({ ...prev, ...updates }));
 
-    // Fetch Templates
-    const loadTemplates = useCallback(async () => {
+    const loadTemplates = async () => {
         const params = Object.fromEntries(
             Object.entries(queryParams).filter(([, v]) => v !== undefined && v !== '' && v !== null)
         );
@@ -83,26 +90,54 @@ const EmailConfigPage: React.FC = () => {
             setTemplates(res.data?.plantillas ?? []);
             setPagination(res.data?.paginacion ?? null);
         }
-    }, [getTemplates, queryParams]);
+    };
 
-    // Debounce search
     useEffect(() => {
         const t = setTimeout(() => updateQueryParams({ filtro: searchInput, pagina: 1 }), 500);
         return () => clearTimeout(t);
     }, [searchInput]);
 
-    // Load SMTP config
     const loadSmtp = async () => {
         const res = await getSmtpConfig();
         if (res?.success) setSmtpConfig(res.data?.smtp ?? null);
     };
 
-    useEffect(() => { loadTemplates(); }, [loadTemplates]);
+    useEffect(() => { loadTemplates(); }, [queryParams]);
     useEffect(() => { if (activeTab === 'smtp') loadSmtp(); }, [activeTab]);
 
-    // Handlers
-    const handleEdit = (t: EmailTemplate) => {
-        setSelectedTemplate(t);
+    const loadGlobalTemplates = async () => {
+        setLoadingGlobal(true);
+        const res = await getGlobalTemplates();
+        if (res?.success) {
+            setGlobalTemplates(res.data?.plantillas ?? []);
+        }
+        setLoadingGlobal(false);
+    };
+
+    const openGlobalModal = () => {
+        setGlobalModalOpen(true);
+        loadGlobalTemplates();
+    };
+
+    const handleImport = async (gt: GlobalTemplate) => {
+        setImportingId(gt.id);
+        const res = await importGlobalTemplate(gt.id);
+        if (res?.success) {
+            setGlobalModalOpen(false);
+            setImportingId(null);
+            loadTemplates();
+        } else {
+            setImportingId(null);
+        }
+    };
+
+    const handleEdit = async (t: EmailTemplate) => {
+        const res = await getTemplateById(t.id);
+        if (res?.success) {
+            setSelectedTemplate(res.data?.plantilla ?? t);
+        } else {
+            setSelectedTemplate(t);
+        }
         setEditorOpen(true);
     };
 
@@ -111,8 +146,13 @@ const EmailConfigPage: React.FC = () => {
         setEditorOpen(true);
     };
 
-    const handlePreview = (t: EmailTemplate) => {
-        setSelectedTemplate(t);
+    const handlePreview = async (t: EmailTemplate) => {
+        const res = await getTemplateById(t.id);
+        if (res?.success) {
+            setSelectedTemplate(res.data?.plantilla ?? t);
+        } else {
+            setSelectedTemplate(t);
+        }
         setPreviewOpen(true);
     };
 
@@ -122,7 +162,7 @@ const EmailConfigPage: React.FC = () => {
     };
 
     const handleToggleActive = async (t: EmailTemplate) => {
-        await updateTemplate(t.id, { activo: !t.activo });
+        await toggleActive(t.id, !t.activo);
         loadTemplates();
     };
 
@@ -168,8 +208,12 @@ const EmailConfigPage: React.FC = () => {
     const handleTestConnection = async () => {
         setTestingConn(true);
         setTestResult('idle');
-        await new Promise((r) => setTimeout(r, 1800));
-        setTestResult(Math.random() > 0.3 ? 'success' : 'error');
+        const res = await testSmtpConnection({ solo_verificar: true });
+        if (res?.success) {
+            setTestResult('success');
+        } else {
+            setTestResult('error');
+        }
         setTestingConn(false);
     };
 
@@ -178,11 +222,9 @@ const EmailConfigPage: React.FC = () => {
         updateQueryParams({ pagina: page });
     };
 
-    // Filter helpers
     const activeCount = templates.filter((t) => t.activo).length;
     const inactiveCount = templates.filter((t) => !t.activo).length;
 
-    // FilterBar filters
     const typeOptions = (Object.entries(EMAIL_TEMPLATE_TYPE_META) as [EmailTemplateType, { label: string }][]).map(
         ([key, { label }]) => ({ value: key, label })
     );
@@ -209,6 +251,10 @@ const EmailConfigPage: React.FC = () => {
     };
 
     const handleFilterChange = (key: string, value: string | number) => {
+        if (value === '') {
+            updateQueryParams({ [key]: undefined, pagina: 1 });
+            return;
+        }
         if (key === 'tipo') {
             updateQueryParams({ tipo: value as EmailTemplateType, pagina: 1 });
         }
@@ -228,12 +274,20 @@ const EmailConfigPage: React.FC = () => {
             subtitle="Administra las plantillas de notificación y los parámetros del servidor de correo saliente."
             actions={
                 activeTab === 'plantillas' ? (
-                    <button className="btn btn-primary w-full sm:w-auto" onClick={handleCreate}>
-                        <svg className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                        </svg>
-                        Nueva plantilla
-                    </button>
+                    <div className="flex gap-2 flex-col sm:flex-row w-full sm:w-auto">
+                        <button className="btn btn-outline" onClick={openGlobalModal}>
+                            <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                            </svg>
+                            Importar global
+                        </button>
+                        <button className="btn btn-primary w-full sm:w-auto" onClick={handleCreate}>
+                            <svg className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                            </svg>
+                            Nueva plantilla
+                        </button>
+                    </div>
                 ) : undefined
             }
         >
@@ -268,7 +322,6 @@ const EmailConfigPage: React.FC = () => {
             {/* ── Tab: Plantillas ── */}
             {activeTab === 'plantillas' && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
-                    {/* Stats bar */}
                     <StatsGrid
                         className="mb-5"
                         columns={3}
@@ -306,7 +359,6 @@ const EmailConfigPage: React.FC = () => {
                         ]}
                     />
 
-                    {/* Filters */}
                     <FilterBar
                         onSearch={setSearchInput}
                         searchTerm={searchInput}
@@ -317,7 +369,6 @@ const EmailConfigPage: React.FC = () => {
                         onClearFilters={clearFilters}
                     />
 
-                    {/* Grid */}
                     {loading && !templates.length ? (
                         <LoadingIndicator />
                     ) : templates.length === 0 ? (
@@ -326,7 +377,7 @@ const EmailConfigPage: React.FC = () => {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                             </svg>
                             <p className="text-sm font-medium">No se encontraron plantillas</p>
-                            <p className="text-xs mt-1">Crea tu primera plantilla haciendo clic en &quot;Nueva plantilla&quot;</p>
+                            <p className="text-xs mt-1">Crea tu primera plantilla o importa una desde el catálogo global.</p>
                         </div>
                     ) : (
                         <>
@@ -348,7 +399,6 @@ const EmailConfigPage: React.FC = () => {
                                 </AnimatePresence>
                             </motion.div>
 
-                            {/* Pagination */}
                             {pagination && (
                                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-8">
                                     <div className="flex items-center gap-2 text-sm">
@@ -403,16 +453,23 @@ const EmailConfigPage: React.FC = () => {
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
                     {!smtpConfig && loading ? (
                         <LoadingIndicator />
-                    ) : smtpConfig ? (
+                    ) : (
                         <SmtpConfigForm
-                            config={smtpConfig}
+                            config={smtpConfig ?? {
+                                host: '',
+                                puerto: 587,
+                                usuario: '',
+                                remitente_nombre: '',
+                                remitente_email: '',
+                                usar_tls: true,
+                            }}
                             onSave={handleSaveSmtp}
                             saving={savingSmtp}
                             onTestConnection={handleTestConnection}
                             testing={testingConn}
                             testResult={testResult}
                         />
-                    ) : null}
+                    )}
                 </motion.div>
             )}
 
@@ -457,6 +514,71 @@ const EmailConfigPage: React.FC = () => {
                 onConfirm={handleConfirmDelete}
                 onClose={() => { setDeleteOpen(false); setSelectedTemplate(null); }}
             />
+
+            {/* ── Global Templates Modal ── */}
+            <GenericModal
+                isOpen={globalModalOpen}
+                onClose={() => { setGlobalModalOpen(false); }}
+                title="Plantillas Globales"
+                size="lg"
+            >
+                {loadingGlobal ? (
+                    <LoadingIndicator />
+                ) : globalTemplates.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-base-content/40">
+                        <svg className="w-12 h-12 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                        </svg>
+                        <p className="text-sm font-medium">No hay plantillas globales disponibles</p>
+                    </div>
+                ) : (
+                    <div className="flex flex-col gap-3 max-h-[60vh] overflow-y-auto pr-1">
+                        {globalTemplates.map((gt) => {
+                            const meta = EMAIL_TEMPLATE_TYPE_META[gt.tipo];
+                            return (
+                                <div
+                                    key={gt.id}
+                                    className="flex items-start gap-4 p-4 rounded-xl border border-base-200 bg-base-100 hover:border-primary/30 hover:bg-base-200/40 transition-all"
+                                >
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                                            <span className={`badge badge-${meta.color} badge-sm font-medium`}>
+                                                {meta.label}
+                                            </span>
+                                        </div>
+                                        <p className="font-semibold text-sm truncate">{gt.nombre}</p>
+                                        <p className="text-xs text-base-content/50 mt-0.5 truncate">{gt.asunto}</p>
+                                        {gt.descripcion && (
+                                            <p className="text-xs text-base-content/40 mt-1 line-clamp-1">{gt.descripcion}</p>
+                                        )}
+                                        {gt.variables && gt.variables.length > 0 && (
+                                            <div className="flex flex-wrap gap-1 mt-2">
+                                                {gt.variables.map((v) => (
+                                                    <span key={v} className="badge badge-ghost badge-xs font-mono">
+                                                        {`{{${v}}}`}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <button
+                                        className={`btn btn-primary btn-sm ${importingId === gt.id ? 'loading' : ''}`}
+                                        onClick={() => handleImport(gt)}
+                                        disabled={importingId !== null}
+                                    >
+                                        {importingId !== gt.id && (
+                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                            </svg>
+                                        )}
+                                        Importar
+                                    </button>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+            </GenericModal>
         </PageContainer>
     );
 };

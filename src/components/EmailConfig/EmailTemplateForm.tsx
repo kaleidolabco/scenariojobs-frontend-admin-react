@@ -21,6 +21,14 @@ const TEMPLATE_VARIABLES = Object.keys(TEMPLATE_PREVIEW_VARS);
 const interpolate = (text: string, vars: Record<string, string>): string =>
     text.replace(/\{\{(\w+)\}\}/g, (_, key) => vars[key] ?? `{{${key}}}`);
 
+const interpolateHtml = (html: string, vars: Record<string, string>): string =>
+    html.replace(/\{\{(\w+)\}\}/g, (_, key) => {
+        const value = vars[key];
+        return value
+            ? `<mark class="bg-amber-100 text-amber-800 px-0.5 rounded text-xs font-medium">${value}</mark>`
+            : `<span class="text-red-500">{{${key}}}</span>`;
+    });
+
 interface EmailTemplateFormProps {
     template: EmailTemplate | null;
     onSave: (data: TemplateFormData) => Promise<void>;
@@ -41,7 +49,6 @@ const EmailTemplateForm: React.FC<EmailTemplateFormProps> = ({ template, onSave,
             }
             : EMPTY_TEMPLATE
     );
-    const [previewMode, setPreviewMode] = useState(false);
     const bodyRef = useRef<HTMLTextAreaElement>(null);
 
     const set = (key: keyof TemplateFormData, value: any) =>
@@ -181,9 +188,12 @@ const EmailTemplateForm: React.FC<EmailTemplateFormProps> = ({ template, onSave,
                                 </p>
                             </div>
                             <div className="px-4 py-4">
-                                <pre className="text-sm text-base-content/80 whitespace-pre-wrap font-sans leading-relaxed">
-                                    {interpolate(form.cuerpo || '(sin contenido)', TEMPLATE_PREVIEW_VARS)}
-                                </pre>
+                                <div
+                                    className="prose prose-sm max-w-none"
+                                    dangerouslySetInnerHTML={{
+                                        __html: interpolateHtml(form.cuerpo || '<p class="text-base-content/40 italic">(sin contenido)</p>', TEMPLATE_PREVIEW_VARS),
+                                    }}
+                                />
                             </div>
                         </div>
                         <p className="text-xs text-base-content/40 mt-4 text-center italic">

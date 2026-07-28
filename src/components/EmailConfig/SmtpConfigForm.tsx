@@ -80,21 +80,21 @@ const SmtpConfigForm: React.FC<SmtpConfigFormProps> = ({
                                 onChange={(e) => setFormKey('usuario', e.target.value)}
                                 required
                             />
-                            <div className="form-control">
-                                <label className="label py-1">
+                            <div className="space-y-2">
+                                <label className="block">
                                     <span className="label-text font-medium">Contraseña</span>
                                 </label>
                                 <div className="flex gap-2">
                                     <input
                                         type={showPass ? 'text' : 'password'}
-                                        className="input input-bordered input-sm flex-1"
+                                        className="input input-bordered w-full focus:border-primary focus:ring-2 focus:ring-primary/20 text-base"
                                         placeholder="••••••••••••"
                                         value={form.password ?? ''}
                                         onChange={(e) => setFormKey('password', e.target.value)}
                                     />
                                     <button
                                         type="button"
-                                        className="btn btn-square btn-sm btn-ghost border border-base-300"
+                                        className="btn btn-square btn-ghost border border-base-300"
                                         onClick={() => setShowPass(!showPass)}
                                         title={showPass ? 'Ocultar' : 'Mostrar'}
                                     >
@@ -110,9 +110,7 @@ const SmtpConfigForm: React.FC<SmtpConfigFormProps> = ({
                                         )}
                                     </button>
                                 </div>
-                                <label className="label py-1">
-                                    <span className="label-text-alt text-base-content/40">Dejar en blanco para conservar la contraseña actual</span>
-                                </label>
+                                <span className="text-xs text-base-content/60">Dejar en blanco para conservar la contraseña actual</span>
                             </div>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
@@ -136,16 +134,23 @@ const SmtpConfigForm: React.FC<SmtpConfigFormProps> = ({
 
                     <div className="flex justify-end">
                         <button
-                            className={`btn btn-primary btn-sm ${saving ? 'loading' : ''}`}
+                            className={`btn btn-primary ${saving ? 'loading' : ''}`}
                             onClick={() => onSave(form)}
                             disabled={saving}
                         >
-                            {!saving && (
-                                <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-                                </svg>
+                            {saving ? (
+                                <>
+                                    <span className="loading loading-spinner loading-sm"></span>
+                                    <span className="ml-2">Guardando...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <svg className="w-4 h-4 mr-2 hidden md:inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    <span>Guardar configuración</span>
+                                </>
                             )}
-                            Guardar configuración
                         </button>
                     </div>
                 </div>
@@ -159,11 +164,12 @@ const SmtpConfigForm: React.FC<SmtpConfigFormProps> = ({
                                 Verifica que la configuración SMTP sea correcta enviando un correo de prueba a la dirección del usuario.
                             </p>
                             <button
-                                className={`btn btn-outline btn-sm w-full ${testing ? 'loading' : ''}`}
+                                className={`btn btn-outline w-full`}
                                 onClick={onTestConnection}
                                 disabled={testing}
                             >
-                                {testing ? 'Probando...' : 'Enviar correo de prueba'}
+                                {testing && <span className="loading loading-spinner"></span>}
+                                {testing ? 'Probando...' : 'Probar conexión SMTP'}
                             </button>
 
                             <AnimatePresence>
@@ -175,7 +181,7 @@ const SmtpConfigForm: React.FC<SmtpConfigFormProps> = ({
                                         className={`alert alert-sm py-2 text-xs ${testResult === 'success' ? 'alert-success' : 'alert-error'}`}
                                     >
                                         {testResult === 'success'
-                                            ? '✓ Conexión exitosa. Correo enviado.'
+                                            ? '✓ Conexión exitosa.'
                                             : '✗ No se pudo conectar. Revisa los datos.'}
                                     </motion.div>
                                 )}
@@ -209,7 +215,7 @@ const SmtpConfigForm: React.FC<SmtpConfigFormProps> = ({
                     <div className="card bg-info/5 border border-info/20">
                         <div className="card-body p-4 gap-2">
                             <div className="flex items-center gap-2">
-                                <svg className="w-4 h-4 text-info flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg className="w-4 h-4 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                                 <span className="text-xs font-semibold text-info">Configuraciones comunes</span>
