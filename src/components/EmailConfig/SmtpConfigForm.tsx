@@ -32,7 +32,7 @@ const SmtpConfigForm: React.FC<SmtpConfigFormProps> = ({
         <div className="flex flex-col gap-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Left column: Form Fields */}
-                <div className="lg:col-span-2 flex flex-col gap-6">
+                <div className="lg:col-span-2 flex flex-col gap-6 h-full">
                     <FormSection title="Configuración del Servidor" description="Parámetros de conexión para el envío de correos electrónicos">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div className="md:col-span-2">
@@ -131,32 +131,10 @@ const SmtpConfigForm: React.FC<SmtpConfigFormProps> = ({
                             />
                         </div>
                     </FormSection>
-
-                    <div className="flex justify-end">
-                        <button
-                            className={`btn btn-primary ${saving ? 'loading' : ''}`}
-                            onClick={() => onSave(form)}
-                            disabled={saving}
-                        >
-                            {saving ? (
-                                <>
-                                    <span className="loading loading-spinner loading-sm"></span>
-                                    <span className="ml-2">Guardando...</span>
-                                </>
-                            ) : (
-                                <>
-                                    <svg className="w-4 h-4 mr-2 hidden md:inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    <span>Guardar configuración</span>
-                                </>
-                            )}
-                        </button>
-                    </div>
                 </div>
 
                 {/* Right - Test connection & Summary */}
-                <div className="flex flex-col gap-6">
+                <div className="grid gap-6 auto-rows-1fr h-full lg:sticky lg:top-6 lg:self-start">
                     <div className="card bg-base-100 border border-base-200">
                         <div className="card-body p-5 gap-3">
                             <h3 className="font-semibold text-sm">Probar conexión</h3>
@@ -229,6 +207,28 @@ const SmtpConfigForm: React.FC<SmtpConfigFormProps> = ({
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <div className="flex justify-end border-t border-base-200 pt-6">
+                <button
+                    className={`btn btn-primary ${saving ? 'loading' : ''}`}
+                    onClick={() => onSave(form)}
+                    disabled={saving}
+                >
+                    {saving ? (
+                        <>
+                            <span className="loading loading-spinner loading-sm"></span>
+                            <span className="ml-2">Guardando...</span>
+                        </>
+                    ) : (
+                        <>
+                            <svg className="w-4 h-4 mr-2 hidden md:inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>Guardar configuración</span>
+                        </>
+                    )}
+                </button>
             </div>
         </div>
     );

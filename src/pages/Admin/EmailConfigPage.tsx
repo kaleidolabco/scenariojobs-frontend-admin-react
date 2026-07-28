@@ -272,24 +272,6 @@ const EmailConfigPage: React.FC = () => {
         <PageContainer
             title="Configuración de Correos"
             subtitle="Administra las plantillas de notificación y los parámetros del servidor de correo saliente."
-            actions={
-                activeTab === 'plantillas' ? (
-                    <div className="flex gap-2 flex-col sm:flex-row w-full sm:w-auto">
-                        <button className="btn btn-outline" onClick={openGlobalModal}>
-                            <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                            </svg>
-                            Importar global
-                        </button>
-                        <button className="btn btn-primary w-full sm:w-auto" onClick={handleCreate}>
-                            <svg className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                            </svg>
-                            Nueva plantilla
-                        </button>
-                    </div>
-                ) : undefined
-            }
         >
             {/* ── Tabs ── */}
             <Tabs
@@ -359,15 +341,33 @@ const EmailConfigPage: React.FC = () => {
                         ]}
                     />
 
-                    <FilterBar
-                        onSearch={setSearchInput}
-                        searchTerm={searchInput}
-                        searchPlaceholder="Buscar por nombre o asunto..."
-                        filters={filterDefinitions}
-                        activeFilters={activeFilters}
-                        onFilterChange={handleFilterChange}
-                        onClearFilters={clearFilters}
-                    />
+                    <div className="flex flex-col-reverse sm:flex-row gap-3 justify-between items-start">
+                        <div className="flex-1">
+                            <FilterBar
+                                onSearch={setSearchInput}
+                                searchTerm={searchInput}
+                                searchPlaceholder="Buscar por nombre o asunto..."
+                                filters={filterDefinitions}
+                                activeFilters={activeFilters}
+                                onFilterChange={handleFilterChange}
+                                onClearFilters={clearFilters}
+                            />
+                        </div>
+                        <div className="flex gap-2 shrink-0 w-full sm:w-auto">
+                            <button className="btn btn-outline flex-1 sm:flex-none" onClick={openGlobalModal}>
+                                <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                </svg>
+                                Importar global
+                            </button>
+                            <button className="btn btn-primary flex-1 sm:flex-none" onClick={handleCreate}>
+                                <svg className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                </svg>
+                                Nueva plantilla
+                            </button>
+                        </div>
+                    </div>
 
                     {loading && !templates.length ? (
                         <LoadingIndicator />
