@@ -1,4 +1,15 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import Button from './Button';
+import {
+    Video as IconVideo,
+    VideoOff as IconVideoOff,
+    Check as IconCheck,
+    Trash2 as IconTrash,
+    Download as IconDownload,
+    AlertTriangle,
+    CircleCheck,
+    Zap,
+} from '../Common/Icon';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -16,38 +27,6 @@ interface VideoRecorderProps {
     onAnalyzeVideo?: (video: RecordedVideo) => void;
     isAnalyzing?: boolean;
 }
-
-// ─── Icons ────────────────────────────────────────────────────────────────────
-
-const IconVideo = () => (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.893L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-    </svg>
-);
-
-const IconVideoOff = () => (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.893L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2zM3 3l18 18" />
-    </svg>
-);
-
-const IconCheck = () => (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-    </svg>
-);
-
-const IconTrash = () => (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-    </svg>
-);
-
-const IconDownload = () => (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-    </svg>
-);
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -216,9 +195,7 @@ const VideoRecorder: React.FC<VideoRecorderProps> = ({ onVideoRecorded, onAnalyz
             {/* Error */}
             {errorMsg && (
                 <div className="alert alert-error text-sm py-2 px-3">
-                    <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+                    <AlertTriangle size={16} className="shrink-0" />
                     {errorMsg}
                 </div>
             )}
@@ -227,9 +204,7 @@ const VideoRecorder: React.FC<VideoRecorderProps> = ({ onVideoRecorded, onAnalyz
             {recordingState === 'idle' && !recordedVideo && (
                 <div className="border-2 border-dashed border-base-300 rounded-xl p-8 flex flex-col items-center justify-center gap-4 bg-base-50 text-center">
                     <div className="w-14 h-14 rounded-full bg-base-200 flex items-center justify-center text-base-content/40">
-                        <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.893L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                        </svg>
+                        <IconVideo size={28} strokeWidth={1.5} />
                     </div>
                     <div>
                         <p className="font-medium text-base-content text-sm">Sin grabación</p>
@@ -237,14 +212,14 @@ const VideoRecorder: React.FC<VideoRecorderProps> = ({ onVideoRecorded, onAnalyz
                             Graba un video como comentario adicional a tu evaluación
                         </p>
                     </div>
-                    <button
-                        type="button"
+                    <Button
+                        variant="primary"
+                        size="sm"
                         onClick={handleStartPreview}
-                        className="btn btn-primary btn-sm gap-2"
+                        leftIcon={IconVideo}
                     >
-                        <IconVideo />
                         Iniciar cámara
-                    </button>
+                    </Button>
                 </div>
             )}
 
@@ -288,34 +263,34 @@ const VideoRecorder: React.FC<VideoRecorderProps> = ({ onVideoRecorded, onAnalyz
                     <div className="flex items-center justify-center gap-2">
                         {recordingState === 'previewing' && (
                             <>
-                                <button
-                                    type="button"
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
                                     onClick={handleDiscard}
-                                    className="btn btn-ghost btn-sm gap-2"
+                                    leftIcon={IconVideoOff}
                                 >
-                                    <IconVideoOff />
                                     Cancelar
-                                </button>
-                                <button
-                                    type="button"
+                                </Button>
+                                <Button
+                                    variant="error"
+                                    size="sm"
                                     onClick={handleStartRecording}
-                                    className="btn btn-error btn-sm gap-2"
                                 >
                                     <span className="w-2 h-2 rounded-full bg-white" />
                                     Iniciar grabación
-                                </button>
+                                </Button>
                             </>
                         )}
 
                         {recordingState === 'recording' && (
-                            <button
-                                type="button"
+                            <Button
+                                variant="error"
+                                size="sm"
                                 onClick={handleStopRecording}
-                                className="btn btn-error btn-sm gap-2"
                             >
                                 <span className="w-3 h-3 rounded-sm bg-white" />
                                 Detener grabación
-                            </button>
+                            </Button>
                         )}
                     </div>
                 </div>
@@ -333,16 +308,14 @@ const VideoRecorder: React.FC<VideoRecorderProps> = ({ onVideoRecorded, onAnalyz
                             className="w-full h-full object-cover"
                         />
                         <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-sm text-white text-xs px-2.5 py-1 rounded-full flex items-center gap-1.5">
-                            <IconCheck />
+                            <IconCheck size={14} />
                             Grabado · {formatTime(recordedVideo.duration)}
                         </div>
                     </div>
 
                     {/* Info */}
                     <div className="flex items-center gap-2 p-3 bg-success/10 border border-success/20 rounded-lg">
-                        <svg className="w-4 h-4 text-success shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
+                        <CircleCheck size={16} className="text-success shrink-0" />
                         <p className="text-xs text-success font-medium">
                             Video grabado correctamente — {formatTime(recordedVideo.duration)} de duración
                         </p>
@@ -350,52 +323,43 @@ const VideoRecorder: React.FC<VideoRecorderProps> = ({ onVideoRecorded, onAnalyz
 
                     {/* Action buttons */}
                     <div className="flex items-center gap-2 justify-end">
-                        <button
-                            type="button"
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-error hover:bg-error/10"
                             onClick={handleDiscard}
-                            className="btn btn-ghost btn-sm gap-2 text-error hover:bg-error/10"
+                            leftIcon={IconTrash}
                         >
-                            <IconTrash />
                             Descartar y grabar de nuevo
-                        </button>
-                        <button
-                            type="button"
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
                             onClick={handleDownload}
-                            className="btn btn-outline btn-sm gap-2"
+                            leftIcon={IconDownload}
                         >
-                            <IconDownload />
                             Descargar video
-                        </button>
+                        </Button>
                         {onAnalyzeVideo && (
-                            <button
-                                type="button"
+                            <Button
+                                variant="primary"
+                                size="sm"
                                 onClick={() => onAnalyzeVideo(recordedVideo)}
                                 disabled={isAnalyzing}
-                                className="btn btn-primary btn-sm gap-2"
+                                loading={isAnalyzing}
+                                leftIcon={Zap}
                             >
-                                {isAnalyzing ? (
-                                    <>
-                                        <span className="loading loading-spinner loading-xs" />
-                                        Analizando...
-                                    </>
-                                ) : (
-                                    <>
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                        </svg>
-                                        Analizar con IA
-                                    </>
-                                )}
-                            </button>
+                                Analizar con IA
+                            </Button>
                         )}
-                        <button
-                            type="button"
+                        <Button
+                            variant="outline"
+                            size="sm"
                             onClick={handleDownload}
-                            className="btn btn-outline btn-sm gap-2"
+                            leftIcon={IconDownload}
                         >
-                            <IconDownload />
                             Descargar video
-                        </button>
+                        </Button>
                     </div>
                 </div>
             )}

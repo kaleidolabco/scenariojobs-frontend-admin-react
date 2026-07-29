@@ -4,6 +4,8 @@ import InputField from '../Common/Forms/InputField';
 import TextAreaField from '../Common/Forms/TextAreaField';
 import SelectField from '../Common/Forms/SelectField';
 import FormSection from '../Common/Forms/FormSection';
+import { Info, Eye, Check } from '../Common/Icon';
+import Button from '../Common/Button';
 
 type TemplateFormData = Omit<EmailTemplate, 'id' | 'creado_en' | 'actualizado_en'>;
 
@@ -144,9 +146,7 @@ const EmailTemplateForm: React.FC<EmailTemplateFormProps> = ({ template, onSave,
                             {/* Variables helper */}
                             <div className="bg-base-200/40 p-3 rounded-lg border border-base-200">
                                 <p className="text-xs text-base-content/60 mb-2 font-semibold flex items-center gap-2">
-                                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
+                                    <Info size={12} />
                                     Variables disponibles — clic para insertar
                                 </p>
                                 <div className="flex flex-wrap gap-1.5">
@@ -171,10 +171,7 @@ const EmailTemplateForm: React.FC<EmailTemplateFormProps> = ({ template, onSave,
                 <div className="flex flex-col gap-2 sticky top-4 h-fit">
                     <div className="flex items-center justify-between mb-2">
                         <label className="label-text font-semibold text-sm flex items-center gap-2">
-                            <svg className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
+                            <Eye size={16} className="text-primary" />
                             Vista previa en tiempo real
                         </label>
                     </div>
@@ -205,21 +202,19 @@ const EmailTemplateForm: React.FC<EmailTemplateFormProps> = ({ template, onSave,
 
             {/* Actions */}
             <div className="flex justify-end gap-2 pt-4 border-t border-base-200">
-                <button className="btn btn-ghost btn-sm" onClick={onClose} disabled={saving}>
+                <Button variant="ghost" size="sm" onClick={onClose} disabled={saving}>
                     Cancelar
-                </button>
-                <button
-                    className={`btn btn-primary btn-sm ${saving ? 'loading' : ''}`}
+                </Button>
+                <Button
+                    variant="primary"
+                    size="sm"
                     onClick={() => onSave(form)}
                     disabled={!isValid || saving}
+                    loading={saving}
                 >
-                    {!saving && (
-                        <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                    )}
+                    {!saving && <Check size={16} className="mr-1" />}
                     {template ? 'Guardar cambios' : 'Crear plantilla'}
-                </button>
+                </Button>
             </div>
         </div>
     );

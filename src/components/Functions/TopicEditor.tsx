@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Plus } from '../Common/Icon';
 import {
     Topic,
     Detail,
@@ -109,9 +110,7 @@ const TopicEditor: React.FC<TopicEditorProps> = ({
                         onClick={handleAddDetail}
                         className="flex items-center gap-1.5 text-xs text-base-content/50 hover:text-base-content border border-dashed border-base-300 hover:border-base-content/30 rounded-lg px-3 py-1.5 w-full justify-center transition-colors"
                     >
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 16 16">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 3v10M3 8h10" />
-                        </svg>
+                        <Plus size={12} />
                         Añadir detalle
                     </button>
 
@@ -138,9 +137,7 @@ const TopicEditor: React.FC<TopicEditorProps> = ({
                         onClick={handleAddFile}
                         className="flex items-center gap-1.5 text-xs text-base-content/50 hover:text-base-content border border-dashed border-base-300 hover:border-base-content/30 rounded-lg px-3 py-1.5 w-full justify-center transition-colors"
                     >
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 16 16">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 3v10M3 8h10" />
-                        </svg>
+                        <Plus size={12} />
                         Añadir archivo
                     </button>
                 </div>

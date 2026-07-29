@@ -5,6 +5,7 @@ import SelectField from '../Common/Forms/SelectField';
 import FormSection from '../Common/Forms/FormSection';
 import AutocompleteField from '../Common/Forms/AutocompleteField';
 import { useUserService, SystemUser } from '../../services/userService';
+import Button from '../Common/Button';
 
 interface PersonFormProps {
     initialData?: Person | null;
@@ -200,12 +201,12 @@ const PersonForm: React.FC<PersonFormProps> = ({ initialData, isLoading = false,
             </FormSection>
 
             <div className="modal-action">
-                <button type="button" className="btn btn-ghost" onClick={onCancel} disabled={isLoading}>
+                <Button type="button" variant="ghost" onClick={onCancel} disabled={isLoading}>
                     Cancelar
-                </button>
-                <button type="submit" className="btn btn-primary" disabled={isLoading}>
-                    {isLoading ? <span className="loading loading-spinner"></span> : initialData ? 'Guardar Cambios' : 'Crear Colaborador'}
-                </button>
+                </Button>
+                <Button type="submit" variant="primary" loading={isLoading} disabled={isLoading}>
+                    {initialData ? 'Guardar Cambios' : 'Crear Colaborador'}
+                </Button>
             </div>
         </form>
     );

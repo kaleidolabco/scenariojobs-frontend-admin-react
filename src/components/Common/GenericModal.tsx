@@ -1,6 +1,8 @@
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import Button from './Button';
+import { X } from '../Common/Icon';
 
 interface GenericModalProps {
     isOpen: boolean;
@@ -59,7 +61,9 @@ const GenericModal: React.FC<GenericModalProps> = ({
                         {/* Header */}
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="font-bold text-xl text-base-content">{title}</h3>
-                            <button className="btn btn-sm btn-circle btn-ghost" onClick={onClose}>✕</button>
+                            <Button variant="ghost" size="sm" shape="circle" onClick={onClose} aria-label="Cerrar">
+                                <X />
+                            </Button>
                         </div>
 
                         {/* Body */}

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Search, Menu, Plus, X as XIcon, FileText } from '../../components/Common/Icon';
 import {
     usePerformanceService,
     EmployeeEvaluation,
@@ -14,6 +15,7 @@ import {
 } from '../../services/performanceService';
 import { useJobService } from '../../services/jobService';
 import { useIntegralEvaluationService } from '../../services/integralEvaluationService';
+import Button from '../../components/Common/Button';
 import ObjectiveEditor from '../../components/Performance/ObjectiveEditor';
 import GenericModal from '../../components/Common/GenericModal';
 import LoadingIndicator from '../../components/Common/LoadingIndicator';
@@ -61,9 +63,7 @@ const TemplatePicker: React.FC<{
 }> = ({ templates, loading, search, onSearch, onSelect, onClose }) => (
     <div className="space-y-4">
         <div className="relative">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-base-content/40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-base-content/40" />
             <input
                 className="input input-bordered w-full pl-9 text-sm"
                 placeholder="Buscar plantilla..."
@@ -199,18 +199,12 @@ const ObjectiveList: React.FC<{
         {/* Footer */}
         {!isCompleted && (
             <div className="p-3 border-t border-base-200 space-y-2 shrink-0">
-                <button className="btn btn-primary btn-sm w-full gap-1" onClick={onAdd}>
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
+                <Button variant="primary" size="sm" fullWidth leftIcon={Plus} onClick={onAdd}>
                     Agregar objetivo
-                </button>
-                <button className="btn btn-ghost btn-sm w-full gap-1" onClick={onOpenPicker}>
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
-                    </svg>
+                </Button>
+                <Button variant="ghost" size="sm" fullWidth leftIcon={FileText} onClick={onOpenPicker}>
                     Desde plantilla
-                </button>
+                </Button>
             </div>
         )}
     </div>
@@ -442,16 +436,12 @@ const EvaluationEditorPage: React.FC = () => {
         <div className="flex flex-col h-screen bg-base-100 overflow-hidden">
             {/* Top bar */}
             <header className="flex items-center gap-3 px-4 md:px-6 py-3 border-b border-base-200 shrink-0 z-10">
-                <button className="btn btn-ghost btn-sm btn-square" onClick={() => navigate(DESEMPENO_ROUTE)}>
-                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                </button>
-                <button className="btn btn-ghost btn-sm btn-square md:hidden" onClick={() => setDrawerOpen(true)}>
-                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                    </svg>
-                </button>
+                <Button variant="ghost" size="sm" shape="square" onClick={() => navigate(DESEMPENO_ROUTE)}>
+                    <XIcon size={20} />
+                </Button>
+                <Button variant="ghost" size="sm" shape="square" className="md:hidden" onClick={() => setDrawerOpen(true)}>
+                    <Menu size={20} />
+                </Button>
                 <div className="flex-1 min-w-0">
                     <h1 className="font-bold text-sm md:text-base truncate leading-tight">{evaluation.persona_nombre}</h1>
                     <p className="text-xs text-base-content/50 truncate">{evaluation.ciclo_nombre} · {evaluation.persona_puesto}</p>
@@ -465,18 +455,18 @@ const EvaluationEditorPage: React.FC = () => {
                     )}
                     {!isCompleted && (
                         <>
-                            <button className="btn btn-ghost btn-sm" onClick={handleSave} disabled={isSaving || !isDirty}>
-                                {isSaving && <span className="loading loading-spinner loading-xs mr-1" />}
+                            <Button variant="ghost" size="sm" onClick={handleSave} disabled={isSaving || !isDirty} loading={isSaving}>
                                 Guardar
-                            </button>
-                            <button
-                                className="btn btn-primary btn-sm"
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant="primary"
                                 onClick={() => setShowCompleteModal(true)}
                                 disabled={isSaving || !pesoOk || evaluation.objetivos.length === 0}
                                 title={!pesoOk ? `Peso total: ${pesoTotal}%. Debe ser 100%.` : ''}
                             >
                                 Completar
-                            </button>
+                            </Button>
                         </>
                     )}
                 </div>
@@ -535,17 +525,15 @@ const EvaluationEditorPage: React.FC = () => {
                                     className="h-full flex flex-col items-center justify-center text-center gap-4"
                                     initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                                 >
-                                    <svg className="h-14 w-14 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                                    </svg>
+                                    <FileText size={56} className="opacity-20" />
                                     <div className="opacity-40">
                                         <p className="font-semibold">Sin objetivos aún</p>
                                         <p className="text-sm mt-1">Agrega el primer objetivo desde el panel izquierdo.</p>
                                     </div>
                                     {!isCompleted && (
-                                        <button className="btn btn-primary btn-sm" onClick={addObjective}>
+                                        <Button size="sm" variant="primary" onClick={addObjective}>
                                             Agregar primer objetivo
-                                        </button>
+                                        </Button>
                                     )}
                                 </motion.div>
                             )}

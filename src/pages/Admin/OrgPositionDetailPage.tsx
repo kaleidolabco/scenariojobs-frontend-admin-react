@@ -13,6 +13,8 @@ import { ROUTES } from '../../constants/routes';
 import AutocompleteField from '../../components/Common/Forms/AutocompleteField';
 import InputField from '../../components/Common/Forms/InputField';
 import useUIStore from '../../store/uiStore';
+import Button from '../../components/Common/Button';
+import { Pencil, Trash2, UserPlus, AlertTriangle, Info } from '../../components/Common/Icon';
 
 const OrgPositionDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -162,18 +164,12 @@ const OrgPositionDetailPage: React.FC = () => {
             breadcrumbs={breadcrumbs}
             actions={
                 <div className="flex gap-2">
-                    <button className="btn btn-ghost btn-sm" onClick={() => setEditModalOpen(true)}>
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
+                    <Button variant="ghost" size="sm" leftIcon={Pencil} onClick={() => setEditModalOpen(true)}>
                         Editar
-                    </button>
-                    <button className="btn btn-error btn-sm" onClick={() => setDeleteModalOpen(true)}>
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
+                    </Button>
+                    <Button variant="error" size="sm" leftIcon={Trash2} onClick={() => setDeleteModalOpen(true)}>
                         Eliminar
-                    </button>
+                    </Button>
                 </div>
             }
         >
@@ -215,20 +211,15 @@ const OrgPositionDetailPage: React.FC = () => {
                             <div className="flex justify-between items-center">
                                 <h3 className="card-title">Asignación de Persona</h3>
                                 {isVacant && (
-                                    <button className="btn btn-primary btn-sm" onClick={() => setAssignModalOpen(true)}>
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                                        </svg>
+                                    <Button variant="primary" size="sm" leftIcon={UserPlus} onClick={() => setAssignModalOpen(true)}>
                                         Asignar Persona
-                                    </button>
+                                    </Button>
                                 )}
                             </div>
 
                             {isVacant ? (
                                 <div className="alert alert-warning mt-4">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                    </svg>
+                                    <AlertTriangle className="stroke-current shrink-0 h-6 w-6" />
                                     <span>Este puesto está vacante</span>
                                 </div>
                             ) : (
@@ -246,12 +237,12 @@ const OrgPositionDetailPage: React.FC = () => {
                                         </div>
                                     </div>
                                     <div className="flex gap-2 w-full md:w-auto mt-2 md:mt-0">
-                                        <button className="btn btn-outline btn-sm flex-1 md:flex-initial" onClick={() => setAssignModalOpen(true)}>
+                                        <Button variant="outline" size="sm" onClick={() => setAssignModalOpen(true)} className="flex-1 md:flex-initial">
                                             Cambiar Asignación
-                                        </button>
-                                        <button className="btn btn-outline btn-error btn-sm flex-1 md:flex-initial" onClick={() => setUnassignModalOpen(true)}>
+                                        </Button>
+                                        <Button variant="error" outline size="sm" onClick={() => setUnassignModalOpen(true)} className="flex-1 md:flex-initial">
                                             Vaciar Puesto
-                                        </button>
+                                        </Button>
                                     </div>
                                 </div>
                             )}
@@ -353,9 +344,7 @@ const OrgPositionDetailPage: React.FC = () => {
             >
                 <div className="space-y-4">
                     <div className="alert alert-info text-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="stroke-current shrink-0 w-6 h-6">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
+                        <Info className="stroke-current shrink-0 w-6 h-6" />
                         <span>Busque un colaborador de la empresa para asignarlo a este puesto de trabajo.</span>
                     </div>
 
@@ -389,23 +378,16 @@ const OrgPositionDetailPage: React.FC = () => {
                     />
 
                     <div className="flex justify-end gap-2 mt-6">
-                        <button
-                            className="btn btn-ghost"
-                            onClick={() => {
-                                setAssignModalOpen(false);
-                                setSelectedPerson(null);
-                                setPersonSearchQuery('');
-                            }}
-                        >
+                        <Button variant="ghost" onClick={() => {
+                            setAssignModalOpen(false);
+                            setSelectedPerson(null);
+                            setPersonSearchQuery('');
+                        }}>
                             Cancelar
-                        </button>
-                        <button
-                            className="btn btn-primary"
-                            onClick={handleAssignPerson}
-                            disabled={!selectedPerson || !startDate}
-                        >
+                        </Button>
+                        <Button variant="primary" onClick={handleAssignPerson} disabled={!selectedPerson || !startDate}>
                             Asignar
-                        </button>
+                        </Button>
                     </div>
                 </div>
             </GenericModal>

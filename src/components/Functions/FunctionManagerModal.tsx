@@ -4,6 +4,8 @@ import GenericModal from '../Common/GenericModal';
 import FunctionEditor from './FunctionEditor';
 import { exportFunctionsToExcel, exportFunctionsSummaryToExcel } from '../../utils/excelExportHelper';
 import useUIStore from '../../store/uiStore';
+import Button from '../Common/Button';
+import { Plus, Trash2, Check, FolderOpen, Download } from '../Common/Icon';
 
 interface FunctionManagerModalProps {
     isOpen: boolean;
@@ -92,16 +94,16 @@ const FunctionManagerModal: React.FC<FunctionManagerModalProps> = ({
                 {/* Sidebar - Function List */}
                 <div className="w-64 border-r border-base-300 overflow-y-auto">
                     <div className="space-y-2 p-4">
-                        <button
+                        <Button
+                            variant="primary"
+                            fullWidth
+                            size="sm"
                             onClick={handleAddFunction}
-                            className="btn btn-primary w-full btn-sm"
                             disabled={isSaving || isLoading}
+                            leftIcon={Plus}
                         >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-                            </svg>
                             Nueva Función
-                        </button>
+                        </Button>
 
                         <div className="divider my-2"></div>
 
@@ -137,9 +139,7 @@ const FunctionManagerModal: React.FC<FunctionManagerModalProps> = ({
                                             className="px-2 opacity-0 group-hover:opacity-100 transition text-error hover:bg-error/10 rounded"
                                             title="Eliminar función"
                                         >
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
+                                            <Trash2 size={16} />
                                         </button>
                                     </div>
                                 ))}
@@ -159,9 +159,7 @@ const FunctionManagerModal: React.FC<FunctionManagerModalProps> = ({
                     ) : (
                         <div className="flex items-center justify-center h-full text-base-content/60">
                             <div className="text-center">
-                                <svg className="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
+                                <FolderOpen size={64} className="mx-auto mb-4 opacity-50" />
                                 <p className="text-lg font-semibold">Selecciona o crea una función</p>
                             </div>
                         </div>
@@ -172,60 +170,44 @@ const FunctionManagerModal: React.FC<FunctionManagerModalProps> = ({
             {/* Modal Actions */}
             <div className="flex flex-col-reverse md:flex-row justify-between gap-2 md:gap-3 mt-6 pt-4 border-t border-base-300">
                 <div className="flex gap-2">
-                    <button
-                        type="button"
-                        className="btn btn-outline btn-sm"
+                    <Button
+                        variant="outline"
+                        size="sm"
                         onClick={handleExportSummary}
                         disabled={isSaving || isLoading || functions.length === 0}
                         title="Descargar resumen en Excel"
+                        leftIcon={Download}
                     >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                        </svg>
                         Resumen
-                    </button>
-                    <button
-                        type="button"
-                        className="btn btn-outline btn-sm"
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="sm"
                         onClick={handleExportDetailed}
                         disabled={isSaving || isLoading || functions.length === 0}
                         title="Descargar funciones detalladas en Excel"
+                        leftIcon={Download}
                     >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                        </svg>
                         Detallado
-                    </button>
+                    </Button>
                 </div>
                 <div className="flex gap-2 md:gap-3">
-                    <button
-                        type="button"
-                        className="btn btn-ghost"
+                    <Button
+                        variant="ghost"
                         onClick={onClose}
                         disabled={isSaving || isLoading}
                     >
                         Cancelar
-                    </button>
-                    <button
-                        type="button"
-                        className="btn btn-primary"
+                    </Button>
+                    <Button
+                        variant="primary"
                         onClick={handleSave}
                         disabled={isSaving || isLoading || functions.length === 0}
+                        loading={isSaving}
+                        leftIcon={isSaving ? undefined : Check}
                     >
-                        {isSaving ? (
-                            <>
-                                <span className="loading loading-spinner loading-sm"></span>
-                                <span>Guardando...</span>
-                            </>
-                        ) : (
-                            <>
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
-                                Guardar {functions.length} Función{functions.length !== 1 ? 'es' : ''}
-                            </>
-                        )}
-                    </button>
+                        {isSaving ? 'Guardando...' : `Guardar ${functions.length} Función${functions.length !== 1 ? 'es' : ''}`}
+                    </Button>
                 </div>
             </div>
         </GenericModal>

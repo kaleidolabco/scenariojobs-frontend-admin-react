@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Search, AlertTriangle, Info, X } from '../Common/Icon';
 import { usePerformanceService, EvaluationCycle } from '../../services/performanceService';
 import { usePersonService, Person } from '../../services/personService';
 import { useIntegralEvaluationService } from '../../services/integralEvaluationService';
 import { useCompetencyEvaluationService } from '../../services/competencyEvaluationService';
 import { ROUTES } from '../../constants/routes';
 import SelectField from '../Common/Forms/SelectField';
+import Button from '../Common/Button';
 
 interface Props {
     onSuccess: (integralId: string) => void;
@@ -291,9 +293,7 @@ const CreateIntegralModal: React.FC<Props> = ({ onSuccess, onCancel }) => {
                     Colaborador <span className="text-error">*</span>
                 </label>
                 <div className="relative">
-                    <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-base-content/40 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                    </svg>
+                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-base-content/40 pointer-events-none" />
                     <input
                         className="input input-bordered w-full pl-9 text-sm"
                         placeholder="Buscar colaborador..."
@@ -312,7 +312,7 @@ const CreateIntegralModal: React.FC<Props> = ({ onSuccess, onCancel }) => {
                             <p className="text-sm font-semibold leading-tight">{selPerson.nombres} {selPerson.apellidos}</p>
                             <p className="text-xs text-base-content/50">{selPerson.puesto_nombre} · {selPerson.departamento}</p>
                         </div>
-                        <button className="btn btn-ghost btn-xs text-base-content/40 hover:text-error" onClick={() => { setSelPerson(null); setPSearch(''); }}>✕</button>
+                        <Button variant="ghost" size="xs" className="text-base-content/40 hover:text-error" onClick={() => { setSelPerson(null); setPSearch(''); }}><X size={16} /></Button>
                     </div>
                 )}
 
@@ -412,9 +412,7 @@ const CreateIntegralModal: React.FC<Props> = ({ onSuccess, onCancel }) => {
             {/* Submit error */}
             {errors.submit && (
                 <div className="alert alert-error py-2.5 text-sm">
-                    <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                    </svg>
+                    <AlertTriangle size={16} className="shrink-0" />
                     <span>{errors.submit}</span>
                 </div>
             )}
@@ -422,9 +420,7 @@ const CreateIntegralModal: React.FC<Props> = ({ onSuccess, onCancel }) => {
             {/* Competency evaluation warning */}
             {competitionWarning && (
                 <div className="alert alert-warning py-2.5 text-sm flex items-start gap-3">
-                    <svg className="h-5 w-5 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
+                    <Info size={20} className="shrink-0 mt-0.5" />
                     <div className="flex-1">
                         <p className="font-medium">{competitionWarning}</p>
                         <button
@@ -440,18 +436,17 @@ const CreateIntegralModal: React.FC<Props> = ({ onSuccess, onCancel }) => {
 
             {/* Actions */}
             <div className="flex justify-end gap-3 pt-2 border-t border-base-200">
-                <button type="button" className="btn btn-ghost" onClick={onCancel} disabled={submitting}>
+                <Button variant="ghost" onClick={onCancel} disabled={submitting}>
                     Cancelar
-                </button>
-                <button
-                    type="button"
-                    className="btn btn-primary"
+                </Button>
+                <Button
+                    variant="primary"
                     onClick={handleSubmit}
                     disabled={submitting || !pesoOk || (!includeDesempeno && !includeCompetencias)}
+                    loading={submitting}
                 >
-                    {submitting && <span className="loading loading-spinner loading-sm mr-1"/>}
                     Crear evaluación integral
-                </button>
+                </Button>
             </div>
         </div>
     );

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { AlertTriangle, Plus, FileText, Check } from '../Common/Icon';
 import {
     JobFunction,
     Capability,
@@ -11,6 +12,7 @@ import {
 } from '../../services/functionService';
 import InputField from '../Common/Forms/InputField';
 import TextAreaField from '../Common/Forms/TextAreaField';
+import Button from '../Common/Button';
 import CapabilityEditor from './CapabilityEditor';
 
 interface FunctionEditorProps {
@@ -96,10 +98,7 @@ const FunctionEditor: React.FC<FunctionEditorProps> = ({
             {/* Validation alert */}
             {!isValid && validationError && (
                 <div className="alert alert-warning py-2 text-sm">
-                    <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                              d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-                    </svg>
+                    <AlertTriangle size={16} className="flex-shrink-0" />
                     <span>{validationError}</span>
                 </div>
             )}
@@ -114,35 +113,25 @@ const FunctionEditor: React.FC<FunctionEditorProps> = ({
                     <span className="text-sm font-semibold text-base-content">
                         Capacidades a Desarrollar
                     </span>
-                    <button
-                        type="button"
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        leftIcon={Plus}
                         onClick={handleAddCapability}
-                        className="flex items-center gap-1.5 text-xs font-medium text-primary hover:text-primary-focus transition-colors"
                         disabled={isLoading}
                     >
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 16 16">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 3v10M3 8h10" />
-                        </svg>
                         Nueva capacidad
-                    </button>
+                    </Button>
                 </div>
 
                 <div className="p-2">
                     {localFunction.capacidades.length === 0 ? (
                         <div className="text-center py-10 text-base-content/40">
-                            <svg className="w-10 h-10 mx-auto mb-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"
-                                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
+                            <FileText size={40} className="mx-auto mb-3 opacity-40" />
                             <p className="text-sm font-medium">Sin capacidades aún</p>
-                            <button
-                                type="button"
-                                onClick={handleAddCapability}
-                                className="btn btn-sm btn-primary mt-3"
-                                disabled={isLoading}
-                            >
+                            <Button size="sm" variant="primary" onClick={handleAddCapability} disabled={isLoading}>
                                 Añadir primera capacidad
-                            </button>
+                            </Button>
                         </div>
                     ) : (
                         <div className="space-y-0.5">
@@ -164,25 +153,21 @@ const FunctionEditor: React.FC<FunctionEditorProps> = ({
             {(onSave || onCancel) && (
                 <div className="flex justify-end gap-2 pt-2">
                     {onCancel && (
-                        <button type="button" className="btn btn-ghost btn-sm" onClick={onCancel} disabled={isLoading}>
+                        <Button variant="ghost" size="sm" onClick={onCancel} disabled={isLoading}>
                             Cancelar
-                        </button>
+                        </Button>
                     )}
                     {onSave && (
-                        <button
-                            type="button"
-                            className="btn btn-primary btn-sm"
+                        <Button
+                            size="sm"
+                            variant="primary"
                             onClick={onSave}
                             disabled={isLoading || !isValid}
+                            loading={isLoading}
+                            leftIcon={!isLoading ? Check : undefined}
                         >
-                            {isLoading ? (
-                                <><span className="loading loading-spinner loading-xs" /> Guardando...</>
-                            ) : (
-                                <><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
-                                </svg> Guardar función</>
-                            )}
-                        </button>
+                            {isLoading ? 'Guardando...' : 'Guardar función'}
+                        </Button>
                     )}
                 </div>
             )}

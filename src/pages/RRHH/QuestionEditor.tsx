@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Check, Plus, X, Info } from '../../components/Common/Icon';
 import type { Question, QuestionType, AnswerOption } from '../../services/assessmentService';
+import Button from '../../components/Common/Button';
 import InputField from '../../components/Common/Forms/InputField';
 import TextAreaField from '../../components/Common/Forms/TextAreaField';
 import SelectField from '../../components/Common/Forms/SelectField';
@@ -107,11 +109,7 @@ const ContenidoTab: React.FC<{ question: Question; onChange: (u: Partial<Questio
                                         className={`shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${opt.es_correcta ? 'border-success bg-success text-success-content' : 'border-base-300 hover:border-success/50'}`}
                                         onClick={() => handleToggleCorrect(opt.id)}
                                     >
-                                        {opt.es_correcta && (
-                                            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                            </svg>
-                                        )}
+                                        {opt.es_correcta && <Check size={12} />}
                                     </button>
                                     <span className="text-xs font-bold text-base-content/40 w-4 shrink-0">{String.fromCharCode(65 + idx)}</span>
                                     <input
@@ -120,38 +118,35 @@ const ContenidoTab: React.FC<{ question: Question; onChange: (u: Partial<Questio
                                         value={opt.texto}
                                         onChange={(e) => handleUpdateOption(opt.id, { texto: e.target.value })}
                                     />
-                                    <button
-                                        type="button"
-                                        className="btn btn-ghost btn-xs btn-square text-error opacity-50 hover:opacity-100"
+                                    <Button
+                                        variant="ghost"
+                                        size="xs"
+                                        shape="square"
+                                        className="text-error opacity-50 hover:opacity-100"
                                         onClick={() => handleDeleteOption(opt.id)}
                                         disabled={(question.opciones?.length ?? 0) <= 2}
                                     >
-                                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
-                                    </button>
+                                        <X size={14} />
+                                    </Button>
                                 </motion.div>
                             ))}
                         </AnimatePresence>
-                        <button
-                            type="button"
-                            className="btn btn-ghost btn-sm w-full border border-dashed border-base-300 hover:border-primary/40 gap-1.5"
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="w-full border border-dashed border-base-300 hover:border-primary/40"
                             onClick={handleAddOption}
+                            leftIcon={Plus}
                         >
-                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                            </svg>
                             Agregar opción
-                        </button>
+                        </Button>
                     </div>
                 </div>
             )}
 
             {question.tipo === 'OPEN_TEXT' && (
                 <div className="alert alert-info text-sm py-3">
-                    <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+                    <Info size={16} className="shrink-0" />
                     <span>Las respuestas abiertas se califican manualmente o con asistencia de IA. Configura los criterios en la pestaña <strong>Config. IA</strong>.</span>
                 </div>
             )}
@@ -214,9 +209,7 @@ const CompetenciaTab: React.FC<{ question: Question; competencias: Competencia[]
                 className="rounded-xl bg-primary/5 border border-primary/20 p-4 flex items-center gap-3"
             >
                 <div className="p-2 rounded-lg bg-primary/10">
-                    <svg className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+                    <Check size={20} className="text-primary" />
                 </div>
                 <div>
                     <p className="text-sm font-semibold text-primary">{question.competencia_nombre}</p>
@@ -225,9 +218,7 @@ const CompetenciaTab: React.FC<{ question: Question; competencias: Competencia[]
             </motion.div>
         )}
         <div className="alert text-sm py-3">
-            <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+            <Info size={16} className="shrink-0" />
             <span>¿No encuentras la competencia? Ve a <strong>Configuración → Biblioteca de Competencias</strong>.</span>
         </div>
     </div>
@@ -353,7 +344,7 @@ const IAConfigTab: React.FC<{ question: Question; onChange: (u: Partial<Question
                         onKeyDown={(e) => e.key === 'Enter' && handleAddKeyword()}
                         className="input-sm"
                     />
-                    <button className="btn btn-sm btn-outline" onClick={handleAddKeyword}>Agregar</button>
+                    <Button variant="outline" size="sm" onClick={handleAddKeyword}>Agregar</Button>
                 </div>
                 <div className="flex flex-wrap gap-1.5 mt-2 min-h-[2rem]">
                     <AnimatePresence>
@@ -365,9 +356,7 @@ const IAConfigTab: React.FC<{ question: Question; onChange: (u: Partial<Question
                                 onClick={() => handleRemoveKeyword(kw)}
                             >
                                 {kw}
-                                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
+                                <X size={12} />
                             </motion.span>
                         ))}
                     </AnimatePresence>

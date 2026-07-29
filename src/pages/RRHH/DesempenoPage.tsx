@@ -21,6 +21,10 @@ import LoadingIndicator from '../../components/Common/LoadingIndicator';
 import InputField from '../../components/Common/Forms/InputField';
 import TextAreaField from '../../components/Common/Forms/TextAreaField';
 import SelectField from '../../components/Common/Forms/SelectField';
+import Button from '../../components/Common/Button';
+import {
+    Plus, Pencil, Trash2, Search, Check, X, FileText
+} from '../../components/Common/Icon';
 
 const EDITOR_ROUTE = (id: string) => `/desempeno/${id}`;
 type ActiveTab = 'evaluaciones' | 'plantillas' | 'ciclos';
@@ -97,10 +101,9 @@ const CyclesTab: React.FC = () => {
         <>
             <div className="flex justify-between items-center mb-4">
                 <p className="text-sm text-base-content/60">{cycles.length} ciclos configurados</p>
-                <button className="btn btn-primary btn-sm" onClick={openCreate}>
-                    <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                <Button variant="primary" size="sm" onClick={openCreate} leftIcon={Plus}>
                     Nuevo ciclo
-                </button>
+                </Button>
             </div>
 
             {loading && !cycles.length ? <LoadingIndicator /> : (
@@ -130,12 +133,12 @@ const CyclesTab: React.FC = () => {
                                     ) : <span className="text-xs text-base-content/30">Sin evaluaciones</span>}</td>
                                     <td>{cycleBadge(c.estado)}</td>
                                     <td><div className="flex justify-end gap-2">
-                                        <button className="btn btn-square btn-outline btn-sm btn-primary" onClick={() => openEdit(c)}>
-                                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                                        </button>
-                                        <button className="btn btn-square btn-outline btn-sm btn-error" onClick={() => setDel(c)}>
-                                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                        </button>
+                                        <Button variant="primary" size="sm" shape="square" outline onClick={() => openEdit(c)}>
+                                            <Pencil size={16} />
+                                        </Button>
+                                        <Button variant="error" size="sm" shape="square" outline onClick={() => setDel(c)}>
+                                            <Trash2 size={16} />
+                                        </Button>
                                     </div></td>
                                 </tr>
                             );
@@ -154,8 +157,10 @@ const CyclesTab: React.FC = () => {
                     </div>
                     <SelectField label="Estado" value={form.estado} onChange={e => setForm({ ...form, estado: e.target.value as EvaluationCycleStatus })} options={[{ value: 'BORRADOR', label: 'Borrador' }, { value: 'ACTIVO', label: 'Activo' }, { value: 'CERRADO', label: 'Cerrado' }]} />
                     <div className="flex justify-end gap-3 pt-2">
-                        <button type="button" className="btn btn-ghost" onClick={() => setModal(false)}>Cancelar</button>
-                        <button type="submit" className="btn btn-primary" disabled={loading}>{loading && <span className="loading loading-spinner loading-sm mr-1" />}{editing ? 'Guardar cambios' : 'Crear ciclo'}</button>
+                        <Button variant="ghost" onClick={() => setModal(false)}>Cancelar</Button>
+                        <Button variant="primary" type="submit" disabled={loading} loading={loading}>
+                            {editing ? 'Guardar cambios' : 'Crear ciclo'}
+                        </Button>
                     </div>
                 </form>
             </GenericModal>
@@ -167,18 +172,6 @@ const CyclesTab: React.FC = () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 // TAB 2 — EVALUACIONES
 // ═══════════════════════════════════════════════════════════════════════════════
-
-const IconEdit = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-    </svg>
-);
-
-const IconTrash = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-    </svg>
-);
 
 interface EvaluationsTabProps {
     newOpen: boolean;
@@ -300,7 +293,7 @@ const EvaluationsTab: React.FC<EvaluationsTabProps> = ({ newOpen, setNewOpen }) 
 
             {loading && !evals.length ? <LoadingIndicator /> : evals.length === 0 ? (
                 <div className="text-center py-14 text-base-content/40">
-                    <svg className="h-10 w-10 mx-auto mb-3 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
+                    <FileText size={40} className="mx-auto mb-3 opacity-30" />
                     <p className="font-medium">Sin evaluaciones</p>
                 </div>
             ) : (
@@ -351,14 +344,14 @@ const EvaluationsTab: React.FC<EvaluationsTabProps> = ({ newOpen, setNewOpen }) 
                     actions={[
                         {
                             label: 'Editar',
-                            icon: <IconEdit />,
+                            icon: <Pencil size={16} />,
                             onClick: (ev) => navigate(EDITOR_ROUTE(ev.id)),
                             variant: 'ghost',
                             tooltip: 'Editar evaluación',
                         },
                         {
                             label: 'Eliminar',
-                            icon: <IconTrash />,
+                            icon: <Trash2 size={16} />,
                             onClick: (ev) => setDeleting(ev),
                             variant: 'ghost',
                             tooltip: 'Eliminar',
@@ -381,17 +374,19 @@ const EvaluationsTab: React.FC<EvaluationsTabProps> = ({ newOpen, setNewOpen }) 
                     <div className="space-y-2">
                         <label className="label-text font-medium block">Colaborador <span className="text-error">*</span></label>
                         <div className="relative">
-                            <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-base-content/40" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-base-content/40" />
                             <input className="input input-bordered w-full pl-9 text-sm" placeholder="Buscar colaborador..." value={pSearch} onChange={e => setPSearch(e.target.value)} />
                         </div>
                         {selPerson && (
                             <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-lg px-3 py-2">
-                                <svg className="h-4 w-4 text-primary shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                                <Check className="h-4 w-4 text-primary shrink-0" />
                                 <div className="flex-1 min-w-0">
                                     <p className="text-sm font-medium">{selPerson.nombres} {selPerson.apellidos}</p>
                                     <p className="text-xs text-base-content/50">{selPerson.puesto_nombre}</p>
                                 </div>
-                                <button className="btn btn-ghost btn-xs" onClick={() => setSelPerson(null)}>✕</button>
+                                <Button variant="ghost" size="sm" shape="square" onClick={() => setSelPerson(null)}>
+                                    <X size={14} />
+                                </Button>
                             </div>
                         )}
                         {!selPerson && people.length > 0 && (
@@ -406,11 +401,10 @@ const EvaluationsTab: React.FC<EvaluationsTabProps> = ({ newOpen, setNewOpen }) 
                         )}
                     </div>
                     <div className="flex justify-end gap-3 pt-2">
-                        <button className="btn btn-ghost" onClick={() => setNewOpen(false)}>Cancelar</button>
-                        <button className="btn btn-primary" onClick={createEval} disabled={!selPerson || !selCycle || loading}>
-                            {loading && <span className="loading loading-spinner loading-sm mr-1" />}
+                        <Button variant="ghost" onClick={() => setNewOpen(false)}>Cancelar</Button>
+                        <Button variant="primary" onClick={createEval} disabled={!selPerson || !selCycle || loading} loading={loading}>
                             Crear evaluación
-                        </button>
+                        </Button>
                     </div>
                 </div>
             </GenericModal>
@@ -463,17 +457,16 @@ const TemplatesTab: React.FC = () => {
         <>
             <div className="flex flex-col sm:flex-row gap-3 mb-5">
                 <div className="relative flex-1">
-                    <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-base-content/40" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-base-content/40" />
                     <input className="input input-bordered w-full pl-9 text-sm" placeholder="Buscar plantillas..." value={search} onChange={e => setSearch(e.target.value)} />
                 </div>
                 <select className="select select-bordered text-sm w-full sm:w-52" value={fCat} onChange={e => setFCat(e.target.value)}>
                     <option value="">Todas las categorías</option>
                     {CAT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
-                <button className="btn btn-primary shrink-0" onClick={openCreate}>
-                    <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                <Button variant="primary" onClick={openCreate} leftIcon={Plus}>
                     Nueva plantilla
-                </button>
+                </Button>
             </div>
 
             {loading && !templates.length ? <LoadingIndicator /> : (
@@ -495,12 +488,12 @@ const TemplatesTab: React.FC = () => {
                                         <div><span className="text-base-content/40">Frec.:</span> {OBJECTIVE_FREQUENCY_LABELS[tpl.frecuencia]}</div>
                                     </div>
                                     <div className="flex justify-end gap-2 mt-3">
-                                        <button className="btn btn-square btn-outline btn-sm btn-primary" onClick={() => openEdit(tpl)}>
-                                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                                        </button>
-                                        <button className="btn btn-square btn-outline btn-sm btn-error" onClick={() => setDeleting(tpl)}>
-                                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                        </button>
+                                        <Button variant="primary" size="sm" shape="square" outline onClick={() => openEdit(tpl)}>
+                                            <Pencil size={16} />
+                                        </Button>
+                                        <Button variant="error" size="sm" shape="square" outline onClick={() => setDeleting(tpl)}>
+                                            <Trash2 size={16} />
+                                        </Button>
                                     </div>
                                 </div>
                             </motion.div>
@@ -537,17 +530,21 @@ const TemplatesTab: React.FC = () => {
                         <label className="label-text font-medium block">Tags</label>
                         <div className="flex gap-2">
                             <input className="input input-bordered input-sm flex-1" placeholder="Agregar tag..." value={tagInput} onChange={e => setTagInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addTag())} />
-                            <button type="button" className="btn btn-primary btn-sm" onClick={addTag} disabled={!tagInput.trim()}>Agregar</button>
+                            <Button variant="primary" size="sm" onClick={addTag} disabled={!tagInput.trim()}>Agregar</Button>
                         </div>
                         <div className="flex flex-wrap gap-1">{(form.tags ?? []).map(tag => (
                             <span key={tag} className="badge badge-ghost gap-1">{tag}
-                                <button type="button" className="text-error text-xs" onClick={() => setForm(f => ({ ...f, tags: f.tags?.filter(t => t !== tag) }))}>✕</button>
+                                <button type="button" className="text-error text-xs" onClick={() => setForm(f => ({ ...f, tags: f.tags?.filter(t => t !== tag) }))}>
+                                    <X size={12} />
+                                </button>
                             </span>
                         ))}</div>
                     </div>
                     <div className="flex justify-end gap-3 pt-2">
-                        <button type="button" className="btn btn-ghost" onClick={() => setModal(false)}>Cancelar</button>
-                        <button type="submit" className="btn btn-primary" disabled={loading}>{loading && <span className="loading loading-spinner loading-sm mr-1" />}{editing ? 'Guardar cambios' : 'Crear plantilla'}</button>
+                        <Button variant="ghost" onClick={() => setModal(false)}>Cancelar</Button>
+                        <Button variant="primary" type="submit" disabled={loading} loading={loading}>
+                            {editing ? 'Guardar cambios' : 'Crear plantilla'}
+                        </Button>
                     </div>
                 </form>
             </GenericModal>
@@ -569,10 +566,9 @@ const DesempenoPage: React.FC = () => {
             title="Desempeño"
             subtitle="Gestiona ciclos de evaluación, evaluaciones individuales por objetivos y plantillas reutilizables."
             actions={activeTab === 'evaluaciones' ? (
-                <button className="btn btn-primary" onClick={() => setEvalNewOpen(true)}>
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                <Button variant="primary" onClick={() => setEvalNewOpen(true)} leftIcon={Plus}>
                     Nuevo plan
-                </button>
+                </Button>
             ) : undefined}
         >
             <TabHeader active={activeTab} onChange={setActiveTab} />

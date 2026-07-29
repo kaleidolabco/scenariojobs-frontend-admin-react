@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import LoadingIndicator from './LoadingIndicator';
+import Button from './Button';
+import { Mail, Check, Info, Eye, X } from '../Common/Icon';
 import { useEmailService, EmailTemplate } from '../../services/emailService';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -15,33 +17,6 @@ interface EmailConfigTabProps {
     data: EmailConfigData;
     onChange: (data: EmailConfigData) => void;
 }
-
-// ─── Icons ────────────────────────────────────────────────────────────────────
-
-const IconMail = () => (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-    </svg>
-);
-
-const IconCheck = () => (
-    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
-    </svg>
-);
-
-const IconInfo = () => (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-);
-
-const IconEye = () => (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-    </svg>
-);
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -113,7 +88,7 @@ const EmailConfigTab: React.FC<EmailConfigTabProps> = ({
                 transition={{ duration: 0.2 }}
             >
                 <div className="alert alert-warning max-w-2xl">
-                    <IconInfo />
+                    <Info size={16} />
                     <span>
                         La configuración SMTP no está disponible. Contacta al administrador para configurar el servidor de correos.
                     </span>
@@ -132,7 +107,7 @@ const EmailConfigTab: React.FC<EmailConfigTabProps> = ({
                 transition={{ duration: 0.2 }}
             >
                 <div className="alert alert-info max-w-2xl">
-                    <IconMail />
+                    <Mail size={16} />
                     <span>
                         No hay plantillas de correo disponibles. Contacta al administrador para crear plantillas.
                     </span>
@@ -162,7 +137,7 @@ const EmailConfigTab: React.FC<EmailConfigTabProps> = ({
 
             {/* Info box */}
             <div className="bg-primary/5 border border-primary/20 rounded-lg px-4 py-3 flex items-start gap-3">
-                <IconInfo />
+                <Info size={16} />
                 <div className="text-sm text-primary">
                     <p className="font-medium mb-1">Plantillas disponibles</p>
                     <p className="text-xs opacity-90">
@@ -198,7 +173,7 @@ const EmailConfigTab: React.FC<EmailConfigTabProps> = ({
                                     <div className="flex items-start justify-between gap-2 mb-2">
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2 flex-wrap mb-1">
-                                                <IconMail />
+                                                <Mail size={16} />
                                                 <h4 className="font-semibold text-base-content truncate">
                                                     {template.nombre}
                                                 </h4>
@@ -218,7 +193,7 @@ const EmailConfigTab: React.FC<EmailConfigTabProps> = ({
                                                     : 'border-base-300'
                                             }`}
                                         >
-                                            {isSelected && <IconCheck />}
+                                            {isSelected && <Check size={14} />}
                                         </div>
                                     </div>
 
@@ -243,7 +218,7 @@ const EmailConfigTab: React.FC<EmailConfigTabProps> = ({
                                             className="text-primary hover:text-primary-focus flex items-center gap-1"
                                             title="Ver vista previa"
                                         >
-                                            <IconEye />
+                                            <Eye size={16} />
                                             <span>Vista previa</span>
                                         </button>
                                     </div>
@@ -269,13 +244,15 @@ const EmailConfigTab: React.FC<EmailConfigTabProps> = ({
                                 <h3 className="font-semibold text-base-content">
                                     {selectedTemplate.nombre}
                                 </h3>
-                                <button
-                                    type="button"
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    shape="circle"
                                     onClick={() => setShowPreview(false)}
-                                    className="btn btn-ghost btn-sm btn-circle"
+                                    aria-label="Cerrar"
                                 >
-                                    ✕
-                                </button>
+                                    <X size={16} />
+                                </Button>
                             </div>
 
                             <div className="p-6 space-y-4">
@@ -305,13 +282,13 @@ const EmailConfigTab: React.FC<EmailConfigTabProps> = ({
                             </div>
 
                             <div className="border-t border-base-200 px-6 py-3 flex justify-end gap-2">
-                                <button
-                                    type="button"
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
                                     onClick={() => setShowPreview(false)}
-                                    className="btn btn-ghost btn-sm"
                                 >
                                     Cerrar
-                                </button>
+                                </Button>
                             </div>
                         </motion.div>
                     </div>

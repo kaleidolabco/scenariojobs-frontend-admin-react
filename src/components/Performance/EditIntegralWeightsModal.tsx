@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { AlertTriangle } from '../Common/Icon';
 import { motion } from 'framer-motion';
 import NumberInputField from '../Common/Forms/NumberInputField';
 import FormSection from '../Common/Forms/FormSection';
+import Button from '../Common/Button';
 import { IntegralComponente } from '../../services/integralEvaluationService';
 
 interface EditIntegralWeightsModalProps {
@@ -132,19 +134,7 @@ const EditIntegralWeightsModal: React.FC<EditIntegralWeightsModalProps> = ({
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                         >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="h-6 w-6 shrink-0 stroke-current"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M12 9v2m0 4v2m0 4v2M7.08 6.06A9 9 0 1020.94 19.94A9 9 0 007.08 6.06z"
-                                />
-                            </svg>
+                            <AlertTriangle size={24} className="shrink-0 stroke-current" />
                             <span>{errors.pesos}</span>
                         </motion.div>
                     )}
@@ -153,22 +143,24 @@ const EditIntegralWeightsModal: React.FC<EditIntegralWeightsModalProps> = ({
 
             {/* Actions */}
             <motion.div className="flex gap-3 pt-4" layout>
-                <button
+                <Button
                     type="submit"
-                    className="btn btn-primary flex-1"
+                    variant="primary"
+                    className="flex-1"
                     disabled={isLoading || Object.keys(errors).length > 0}
+                    loading={isLoading}
                 >
-                    {isLoading && <span className="loading loading-spinner loading-xs mr-2" />}
                     {isLoading ? 'Guardando...' : 'Guardar Cambios'}
-                </button>
-                <button
+                </Button>
+                <Button
                     type="button"
-                    className="btn btn-ghost flex-1"
+                    variant="ghost"
+                    className="flex-1"
                     onClick={onCancel}
                     disabled={isLoading}
                 >
                     Cancelar
-                </button>
+                </Button>
             </motion.div>
         </motion.form>
     );

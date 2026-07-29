@@ -21,6 +21,16 @@ import { useUserService } from '../../services/userService';
 import { usePersonService } from '../../services/personService';
 import OrgChartPersonSelector from '../../components/Competencies/OrgChartPersonSelector';
 import EmailConfigTab from '../../components/Common/EmailConfigTab';
+import Button from '../../components/Common/Button';
+import {
+    ChevronDown,
+    Check as IconCheckIcon,
+    Search,
+    X,
+    AlertTriangle,
+    Plus,
+    Tag as IconTagIcon,
+} from '../../components/Common/Icon';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -47,46 +57,13 @@ const getInitials = (p: PersonRow) =>
     `${p.nombres?.[0] ?? ''}${p.apellidos?.[0] ?? ''}`.toUpperCase();
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
+// Todos unificados a lucide. La rotación del chevron se aplica vía className en el sitio de uso.
 
-const IconChevronDown = ({ open }: { open: boolean }) => (
-    <svg className={`w-4 h-4 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-    </svg>
-);
-const IconCheck = () => (
-    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-    </svg>
-);
-const IconSearch = () => (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-    </svg>
-);
-const IconX = () => (
-    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-    </svg>
-);
-/* const IconUser = () => (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-    </svg>
-); */
-const IconWarning = () => (
-    <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-    </svg>
-);
-const IconPlus = () => (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-    </svg>
-);
-const IconTag = () => (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-    </svg>
+const ChevronToggle = ({ open }: { open: boolean }) => (
+    <ChevronDown
+        size={16}
+        className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+    />
 );
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -287,10 +264,10 @@ const CategoryGroup: React.FC<{
                         className="p-1.5 rounded-md text-base-content/30 hover:text-error hover:bg-error/10 transition-colors"
                         title="Quitar categoría"
                     >
-                        <IconX />
+                        <X size={14} />
                     </button>
 
-                    <IconChevronDown open={open} />
+                    <ChevronToggle open={open} />
                 </div>
             </div>
 
@@ -331,7 +308,7 @@ const CategoryGroup: React.FC<{
                                                         : 'border-base-300 hover:border-primary bg-base-100'
                                                 }`}
                                             >
-                                                {isSelected && <IconCheck />}
+                                                {isSelected && <IconCheckIcon size={14} />}
                                             </button>
 
                                             {/* Info */}
@@ -426,9 +403,9 @@ const AddCategoryDropdown: React.FC<{
                 onClick={() => setOpen((o) => !o)}
                 className="btn btn-outline btn-sm gap-2"
             >
-                <IconPlus />
+                <Plus size={16} />
                 Agregar categoría
-                <IconChevronDown open={open} />
+                <ChevronToggle open={open} />
             </button>
 
             <AnimatePresence>
@@ -444,7 +421,7 @@ const AddCategoryDropdown: React.FC<{
                         <div className="p-2 border-b border-base-200">
                             <div className="relative">
                                 <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-base-content/30 pointer-events-none">
-                                    <IconSearch />
+                                    <Search size={16} />
                                 </span>
                                 <input
                                     autoFocus
@@ -552,7 +529,7 @@ const CompetenciesTab: React.FC<{
             <div className="flex flex-col sm:flex-row gap-3">
                 <div className="relative flex-1">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-base-content/30 pointer-events-none">
-                        <IconSearch />
+                        <Search size={16} />
                     </span>
                     <input
                         type="text"
@@ -568,7 +545,7 @@ const CompetenciesTab: React.FC<{
                             onClick={() => setSearch('')}
                             className="absolute right-3 top-1/2 -translate-y-1/2 text-base-content/30 hover:text-base-content"
                         >
-                            <IconX />
+                            <X size={14} />
                         </button>
                     )}
                 </div>
@@ -586,12 +563,12 @@ const CompetenciesTab: React.FC<{
                         <WeightBar total={totalWeight} />
                     </div>
                     <div className="flex gap-2 shrink-0">
-                        <button type="button" onClick={distributeEvenly} className="btn btn-ghost btn-sm">
+                        <Button variant="ghost" size="sm" onClick={distributeEvenly}>
                             Distribuir uniformemente
-                        </button>
-                        <button type="button" onClick={handleClearAll} className="btn btn-ghost btn-sm text-error">
+                        </Button>
+                        <Button variant="ghost" size="sm" className="text-error" onClick={handleClearAll}>
                             Limpiar selección
-                        </button>
+                        </Button>
                     </div>
                 </div>
             )}
@@ -599,7 +576,7 @@ const CompetenciesTab: React.FC<{
             {/* Weight warning */}
             {selectedIds.length > 0 && !weightOk && (
                 <div className={`alert py-2.5 ${totalWeight > 100 ? 'alert-error' : 'alert-warning'}`}>
-                    <IconWarning />
+                    <AlertTriangle size={16} />
                     <span className="text-sm">
                         {totalWeight > 100
                             ? `Los pesos exceden 100% en ${totalWeight - 100}%. Ajusta los valores.`
@@ -616,7 +593,7 @@ const CompetenciesTab: React.FC<{
                     className="border-2 border-dashed border-base-300 rounded-xl py-14 flex flex-col items-center justify-center gap-4 text-center"
                 >
                     <div className="w-12 h-12 rounded-xl bg-base-200 flex items-center justify-center text-base-content/30">
-                        <IconTag />
+                        <IconTagIcon size={16} />
                     </div>
                     <div>
                         <p className="font-semibold text-base-content/60 text-sm">Sin categorías agregadas</p>
@@ -703,7 +680,7 @@ const EvaluatorPicker: React.FC<{
                                     onClick={() => onRemove(uid)}
                                     className="w-3.5 h-3.5 rounded-full hover:bg-secondary/20 flex items-center justify-center"
                                 >
-                                    <IconX />
+                                    <X size={14} />
                                 </button>
                             </span>
                         );
@@ -714,7 +691,7 @@ const EvaluatorPicker: React.FC<{
             {/* Search */}
             <div className="relative">
                 <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-base-content/30 pointer-events-none">
-                    <IconSearch />
+                    <Search size={16} />
                 </span>
                 <input
                     ref={inputRef}
@@ -753,9 +730,9 @@ const EvaluatorPicker: React.FC<{
             )}
 
             <div className="flex justify-end">
-                <button type="button" onClick={onClose} className="btn btn-ghost btn-xs">
+                <Button variant="ghost" size="xs" onClick={onClose}>
                     Cerrar
-                </button>
+                </Button>
             </div>
         </div>
     );
@@ -839,7 +816,7 @@ const ParticipantsTab: React.FC<{
             {/* ── Search bar ── */}
             <div className="relative">
                 <div className="flex items-center gap-2 border border-base-200 rounded-lg bg-white px-3 py-2 focus-within:ring-2 focus-within:ring-primary">
-                    <IconSearch />
+                    <Search size={16} />
                     <input
                         type="text"
                         placeholder="Buscar participante por nombre, email, cargo..."
@@ -853,7 +830,7 @@ const ParticipantsTab: React.FC<{
                             onClick={() => setSearchTerm('')}
                             className="p-1 rounded-md hover:bg-base-100 text-base-content/40"
                         >
-                            <IconX />
+                            <X size={14} />
                         </button>
                     )}
                 </div>
@@ -881,16 +858,13 @@ const ParticipantsTab: React.FC<{
                                         )}
                                     </div>
                                 </div>
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
+                                    <Button variant="primary" size="xs" onClick={(ev) => {
+                                        ev.stopPropagation();
                                         handleAddPersonFromSearch(person.id);
-                                    }}
-                                    className="btn btn-xs btn-primary"
-                                >
-                                    <IconPlus />
-                                    Agregar
-                                </button>
+                                    }}>
+                                        <Plus size={14} />
+                                        Agregar
+                                    </Button>
                             </button>
                         ))}
                     </div>
@@ -994,7 +968,7 @@ const ParticipantsTab: React.FC<{
                                                                         onClick={() => handleRemoveEvaluatorFromPerson(person.id, uid)}
                                                                         className="w-3.5 h-3.5 rounded-full hover:bg-secondary/20 flex items-center justify-center"
                                                                     >
-                                                                        <IconX />
+                                                                        <X size={14} />
                                                                     </button>
                                                                 </span>
                                                             );
@@ -1008,7 +982,7 @@ const ParticipantsTab: React.FC<{
                                                                     : 'border-dashed border-base-300 text-base-content/40 hover:border-primary hover:text-primary'
                                                             }`}
                                                         >
-                                                            <IconPlus />
+                                                            <Plus size={16} />
                                                             Agregar
                                                         </button>
                                                     </div>
@@ -1022,7 +996,7 @@ const ParticipantsTab: React.FC<{
                                                         className="p-1.5 rounded-md text-base-content/25 hover:text-error hover:bg-error/10 transition-colors"
                                                         title="Quitar persona"
                                                     >
-                                                        <IconX />
+                                                        <X size={14} />
                                                     </button>
                                                 </td>
                                             </tr>
@@ -1225,7 +1199,7 @@ const CompetencyEvalDetailPage: React.FC = () => {
         <PageContainer title="No encontrado" breadcrumbs={breadcrumbs}>
             <div className="alert alert-error max-w-md">
                 <span>No se encontró la evaluación</span>
-                <button className="btn btn-sm" onClick={() => navigate(ROUTES.COMPETENCIES_EVAL)}>Volver</button>
+                <Button size="sm" onClick={() => navigate(ROUTES.COMPETENCIES_EVAL)}>Volver</Button>
             </div>
         </PageContainer>
     );
@@ -1246,24 +1220,12 @@ const CompetencyEvalDetailPage: React.FC = () => {
                             Sin guardar
                         </span>
                     )}
-                    <button
-                        type="button"
-                        className="btn btn-ghost btn-sm"
-                        onClick={() => navigate(ROUTES.COMPETENCIES_EVAL)}
-                        disabled={saving}
-                    >
+                    <Button variant="ghost" size="sm" onClick={() => navigate(ROUTES.COMPETENCIES_EVAL)} disabled={saving}>
                         Cancelar
-                    </button>
-                    <button
-                        type="button"
-                        className="btn btn-primary btn-sm"
-                        onClick={handleSave}
-                        disabled={saving || !isDirty}
-                    >
-                        {saving
-                            ? <><span className="loading loading-spinner loading-xs" /> Guardando...</>
-                            : 'Guardar cambios'}
-                    </button>
+                    </Button>
+                    <Button variant="primary" size="sm" onClick={handleSave} disabled={saving || !isDirty} loading={saving}>
+                        Guardar cambios
+                    </Button>
                 </div>
             }
         >

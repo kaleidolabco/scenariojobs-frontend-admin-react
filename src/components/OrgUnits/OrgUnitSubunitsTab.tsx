@@ -7,6 +7,8 @@ import OrgUnitForm from './OrgUnitForm';
 import OrgUnitNode from './OrgUnitNode';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '../../constants/routes';
+import Button from '../Common/Button';
+import { Plus } from '../Common/Icon';
 
 interface OrgUnitSubunitsTabProps {
     unit: OrgUnit;
@@ -100,12 +102,9 @@ const OrgUnitSubunitsTab: React.FC<OrgUnitSubunitsTabProps> = ({ unit, onUnitUpd
     return (
         <div className="space-y-6">
             <div className="flex justify-end mb-4 mt-6">
-                <button className="btn btn-primary shrink-0 w-full sm:w-auto" onClick={handleAddRoot}>
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
+                <Button variant="primary" leftIcon={Plus} onClick={handleAddRoot} className="shrink-0 w-full sm:w-auto">
                     Añadir Sub-unidad
-                </button>
+                </Button>
             </div>
             
             <div className="bg-base-100/50 p-6 rounded-xl border border-base-200 min-h-[150px] overflow-auto">
@@ -116,7 +115,7 @@ const OrgUnitSubunitsTab: React.FC<OrgUnitSubunitsTabProps> = ({ unit, onUnitUpd
                         {unit.subunidades && unit.subunidades.length === 0 ? (
                             <div className="text-center py-6 opacity-60">
                                 <p>No hay sub-unidades definidas.</p>
-                                <button className="btn btn-link" onClick={handleAddRoot}>Añadir primera sub-unidad</button>
+                                <Button variant="link" onClick={handleAddRoot}>Añadir primera sub-unidad</Button>
                             </div>
                         ) : (
                             <div className="space-y-4">

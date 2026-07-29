@@ -13,6 +13,8 @@ import SelfAssessmentPanel, { ObjectiveWithSelf } from '../../components/Perform
 import LoadingIndicator from '../../components/Common/LoadingIndicator';
 import ConfirmationModal from '../../components/Common/ConfirmationModal';
 import GenericModal from '../../components/Common/GenericModal';
+import { ChevronLeft, Menu, Send, FilePlus } from '../../components/Common/Icon';
+import Button from '../../components/Common/Button';
 
 const MY_EVALS_ROUTE = '/mis-evaluaciones';
 
@@ -172,12 +174,12 @@ const GeneralCommentsModal: React.FC<{
                 onChange={e => onChange(e.target.value)}
                 disabled={disabled}
             />
-            <div className="flex justify-end gap-3">
-                <button className="btn btn-ghost" onClick={onClose}>Cerrar</button>
+                                <div className="flex justify-end gap-3">
+                <Button variant="ghost" onClick={onClose}>Cerrar</Button>
                 {!disabled && (
-                    <button className="btn btn-primary" onClick={() => { onSave(); onClose(); }}>
+                    <Button variant="primary" onClick={() => { onSave(); onClose(); }}>
                         Guardar
-                    </button>
+                    </Button>
                 )}
             </div>
         </div>
@@ -296,17 +298,13 @@ const EvaluadoEvaluacionPage: React.FC = () => {
             <header className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3 px-4 md:px-6 py-3 md:py-3 border-b border-base-200 shrink-0 z-10">
                 {/* First row: Back, info, status */}
                 <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
-                    <button className="btn btn-ghost btn-sm btn-square shrink-0" onClick={() => navigate(MY_EVALS_ROUTE)}>
-                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                        </svg>
-                    </button>
+                    <Button variant="ghost" size="sm" shape="square" className="shrink-0" onClick={() => navigate(MY_EVALS_ROUTE)}>
+                        <ChevronLeft size={20} />
+                    </Button>
                     {/* Mobile: abrir drawer */}
-                    <button className="btn btn-ghost btn-sm btn-square md:hidden shrink-0" onClick={() => setDrawerOpen(true)}>
-                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                        </svg>
-                    </button>
+                    <Button variant="ghost" size="sm" shape="square" className="md:hidden shrink-0" onClick={() => setDrawerOpen(true)}>
+                        <Menu size={20} />
+                    </Button>
 
                     <div className="flex-1 min-w-0">
                         <h1 className="font-bold text-sm md:text-base truncate leading-tight">{evaluation.ciclo_nombre}</h1>
@@ -329,37 +327,37 @@ const EvaluadoEvaluacionPage: React.FC = () => {
                 {/* Second row: Action buttons (stacked on mobile) */}
                 <div className="flex items-center gap-2 w-full md:w-auto justify-end">
                     {/* Botón comentarios generales */}
-                    <button
-                        className="btn btn-ghost btn-sm hidden sm:flex gap-1"
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="hidden sm:flex gap-1"
                         onClick={() => setShowComments(true)}
                         title="Comentarios generales"
                     >
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                        </svg>
+                        <Send size={16} />
                         <span className="hidden lg:inline">{evaluation.comentarios_generales_evaluado ? 'Mis comentarios ✓' : 'Mis comentarios'}</span>
-                    </button>
+                    </Button>
 
                     {/* Guardar borrador */}
                     {!submitted && (
-                        <button className="btn btn-ghost btn-sm" onClick={handleSave} disabled={isSaving || !isDirty}>
-                            {isSaving && <span className="loading loading-spinner loading-xs mr-1" />}
+                        <Button variant="ghost" size="sm" onClick={handleSave} disabled={isSaving || !isDirty} loading={isSaving}>
                             <span className="hidden sm:inline">Guardar</span>
                             <span className="sm:hidden">Guardar</span>
-                        </button>
+                        </Button>
                     )}
 
                     {/* Enviar autoevaluación */}
                     {!submitted && (
-                        <button
-                            className="btn btn-primary btn-sm"
+                        <Button
+                            variant="primary"
+                            size="sm"
                             onClick={() => setShowSubmit(true)}
                             disabled={!canSubmit || isSaving}
                             title={!canSubmit ? 'Completa al menos un objetivo antes de enviar' : ''}
                         >
                             <span className="hidden md:inline">Enviar</span>
                             <span className="md:hidden text-xs">Enviar</span>
-                        </button>
+                        </Button>
                     )}
                 </div>
             </header>
@@ -414,9 +412,7 @@ const EvaluadoEvaluacionPage: React.FC = () => {
                                     className="h-full flex flex-col items-center justify-center text-center gap-4"
                                     initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                                 >
-                                    <svg className="h-14 w-14 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                                    </svg>
+                                    <FilePlus size={56} className="opacity-20" />
                                     <div className="opacity-40">
                                         <p className="font-semibold">
                                             {totalObj === 0

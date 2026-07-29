@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { X, Check, Filter, Zap, BarChart3, Clock } from '../Common/Icon';
 import {
     EvaluacionIntegral,
     IntegralEvaluationStatus,
@@ -62,9 +63,7 @@ const IntegralEvaluationSummary: React.FC<IntegralEvaluationSummaryProps> = ({
             <div className="rounded-xl border border-base-200 bg-base-100 p-6 space-y-4">
                 <div className="flex items-center justify-between">
                     <h3 className="font-semibold text-base flex items-center gap-2">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
-                        </svg>
+                        <Filter size={20} />
                         Filtros
                     </h3>
                     <AnimatePresence>
@@ -76,9 +75,7 @@ const IntegralEvaluationSummary: React.FC<IntegralEvaluationSummaryProps> = ({
                                 onClick={handleClearFilters}
                                 className="btn btn-sm btn-ghost gap-1"
                             >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
-                                </svg>
+                                <X size={16} />
                                 Limpiar
                             </motion.button>
                         )}
@@ -144,9 +141,7 @@ const IntegralEvaluationSummary: React.FC<IntegralEvaluationSummaryProps> = ({
                             Total de Evaluaciones
                         </span>
                         <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.856-1.487M15 10h.01M13 16h2M5 20h5V7H5v13zm0 0h5v-2a3 3 0 00-5.856-1.487M5 10h.01M9 16h2"/>
-                            </svg>
+                            <BarChart3 size={20} />
                         </div>
                     </div>
                     <div className="text-3xl font-bold text-base-content">
@@ -164,9 +159,7 @@ const IntegralEvaluationSummary: React.FC<IntegralEvaluationSummaryProps> = ({
                             Promedio de Puntaje
                         </span>
                         <div className="w-10 h-10 rounded-lg bg-info/10 flex items-center justify-center text-info">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                            </svg>
+                            <Zap size={20} />
                         </div>
                     </div>
                     <div className="text-3xl font-bold text-base-content">
@@ -189,9 +182,7 @@ const IntegralEvaluationSummary: React.FC<IntegralEvaluationSummaryProps> = ({
                             Completadas
                         </span>
                         <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center text-success">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/>
-                            </svg>
+                            <Check size={20} />
                         </div>
                     </div>
                     <div className="text-3xl font-bold text-base-content">
@@ -212,9 +203,7 @@ const IntegralEvaluationSummary: React.FC<IntegralEvaluationSummaryProps> = ({
                             En Progreso
                         </span>
                         <div className="w-10 h-10 rounded-lg bg-warning/10 flex items-center justify-center text-warning">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
+                            <Clock size={20} />
                         </div>
                     </div>
                     <div className="text-3xl font-bold text-base-content">

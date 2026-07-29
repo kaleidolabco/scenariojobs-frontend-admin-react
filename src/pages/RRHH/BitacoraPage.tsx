@@ -20,6 +20,8 @@ import {
 } from '../../services/bitacoraService';
 import { UserRole } from '../../constants/roles';
 import { Pagination } from '../../services/responseType';
+import { Pencil, Trash2, User, FileText, Calendar, Check, Plus, AlertTriangle, Search, BookOpen, X, ArrowDown, ArrowUp, ExternalLink } from '../../components/Common/Icon';
+import Button from '../../components/Common/Button';
 
 // ─── Simulación de sesión activa ──────────────────────────────────────────────
 // En producción esto vendría de tu AuthContext / useSession hook.
@@ -151,30 +153,34 @@ const EntryCard: React.FC<EntryCardProps> = ({ entry, currentUser, onEdit, onDel
                     </div>
                     {/* Actions — visible on hover */}
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-                        <button
-                            className="btn btn-ghost btn-xs"
+                        <Button
+                            variant="ghost"
+                            size="xs"
                             onClick={() => onExpand(entry)}
                             title="Ver completo"
                         >
-                            <Icon path="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                        </button>
+                            <ExternalLink size={16} />
+                        </Button>
                         {canEdit && (
-                            <button
-                                className="btn btn-ghost btn-xs"
+                            <Button
+                                variant="ghost"
+                                size="xs"
                                 onClick={() => onEdit(entry)}
                                 title="Editar"
                             >
-                                <Icon path="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </button>
+                                <Pencil size={16} />
+                            </Button>
                         )}
                         {canDelete && (
-                            <button
-                                className="btn btn-ghost btn-xs text-error/60 hover:text-error"
+                            <Button
+                                variant="ghost"
+                                size="xs"
+                                className="text-error/60 hover:text-error"
                                 onClick={() => onDelete(entry)}
                                 title="Eliminar"
                             >
-                                <Icon path="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </button>
+                                <Trash2 size={16} />
+                            </Button>
                         )}
                     </div>
                 </div>
@@ -203,20 +209,20 @@ const EntryCard: React.FC<EntryCardProps> = ({ entry, currentUser, onEdit, onDel
                     <div className="flex flex-wrap gap-1.5">
                         {entry.colaborador_nombre && (
                             <span className="inline-flex items-center gap-1 text-xs bg-base-200 text-base-content/60 px-2 py-0.5 rounded-full">
-                                <Icon path="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" className="w-3 h-3" />
+                                <User size={12} />
                                 {entry.colaborador_nombre}
                                 {entry.colaborador_puesto && ` — ${entry.colaborador_puesto}`}
                             </span>
                         )}
                         {entry.evaluacion_nombre && (
                             <span className="inline-flex items-center gap-1 text-xs bg-base-200 text-base-content/60 px-2 py-0.5 rounded-full">
-                                <Icon path="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" className="w-3 h-3" />
+                                <FileText size={12} />
                                 {entry.evaluacion_nombre}
                             </span>
                         )}
                         {entry.ciclo_nombre && (
                             <span className="inline-flex items-center gap-1 text-xs bg-base-200 text-base-content/60 px-2 py-0.5 rounded-full">
-                                <Icon path="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" className="w-3 h-3" />
+                                <Calendar size={12} />
                                 {entry.ciclo_nombre}
                             </span>
                         )}
@@ -365,12 +371,12 @@ const EntryViewer: React.FC<{ entry: BitacoraEntry; onClose: () => void; current
 
             <div className="flex justify-end gap-2">
                 {canEdit && (
-                    <button className="btn btn-outline btn-sm" onClick={() => { onClose(); onEdit(entry); }}>
-                        <Icon path="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    <Button variant="outline" size="sm" onClick={() => { onClose(); onEdit(entry); }}>
+                        <Pencil size={16} />
                         Editar
-                    </button>
+                    </Button>
                 )}
-                <button className="btn btn-ghost btn-sm" onClick={onClose}>Cerrar</button>
+                <Button variant="ghost" size="sm" onClick={onClose}>Cerrar</Button>
             </div>
         </div>
     );
@@ -570,14 +576,14 @@ const EntryEditor: React.FC<EditorProps> = ({ entry, currentUser, onSave, onClos
                         onChange={(e) => setTagInput(e.target.value)}
                         onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addTag(); } }}
                     />
-                    <button
-                        type="button"
-                        className="btn btn-ghost btn-sm"
+                    <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={addTag}
                         disabled={!tagInput.trim()}
                     >
                         Agregar
-                    </button>
+                    </Button>
                 </div>
                 {form.etiquetas && form.etiquetas.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 mt-2">
@@ -588,7 +594,7 @@ const EntryEditor: React.FC<EditorProps> = ({ entry, currentUser, onSave, onClos
                                     type="button"
                                     className="text-base-content/40 hover:text-error ml-0.5"
                                     onClick={() => removeTag(tag)}
-                                >✕</button>
+                                ><X size={12} /></button>
                             </span>
                         ))}
                     </div>
@@ -597,17 +603,19 @@ const EntryEditor: React.FC<EditorProps> = ({ entry, currentUser, onSave, onClos
 
             {/* Actions */}
             <div className="flex justify-end gap-2 pt-2 border-t border-base-200">
-                <button className="btn btn-ghost btn-sm" onClick={onClose} disabled={saving}>
+                <Button variant="ghost" size="sm" onClick={onClose} disabled={saving}>
                     Cancelar
-                </button>
-                <button
-                    className={`btn btn-primary btn-sm ${saving ? 'loading' : ''}`}
+                </Button>
+                <Button
+                    variant="primary"
+                    size="sm"
                     onClick={() => onSave(form)}
                     disabled={!isValid || saving}
+                    loading={saving}
                 >
-                    {!saving && <Icon path="M5 13l4 4L19 7" />}
+                    {!saving && <Check size={16} />}
                     {entry ? 'Guardar cambios' : 'Crear entrada'}
-                </button>
+                </Button>
             </div>
         </div>
     );
@@ -733,15 +741,15 @@ const BitacoraPage: React.FC = () => {
             title="Bitácora"
             subtitle="Registro de reuniones, observaciones y notas de seguimiento del proceso de evaluación."
             actions={
-                <button className="btn btn-primary w-full sm:w-auto" onClick={handleCreate}>
-                    <Icon path="M12 4v16m8-8H4" className="w-5 h-5 mr-1" />
+                <Button variant="primary" className="w-full sm:w-auto" onClick={handleCreate}>
+                    <Plus size={20} className="mr-1" />
                     Nueva entrada
-                </button>
+                </Button>
             }
         >
             {/* ── DEV: Role switcher — remover en producción ── */}
             <div className="alert alert-warning py-2 mb-4 flex-wrap gap-2 items-center">
-                <Icon path="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" className="w-4 h-4 flex-shrink-0" />
+                <AlertTriangle size={16} className="flex-shrink-0" />
                 <span className="text-xs font-medium">Vista como:</span>
                 <div className="join">
                     {MOCK_USERS.map((u) => (
@@ -761,7 +769,7 @@ const BitacoraPage: React.FC = () => {
             <div className="flex flex-wrap gap-3 mb-5 items-center">
                 {/* Search */}
                 <div className="relative flex-1 min-w-[200px] max-w-sm">
-                    <Icon path="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-base-content/30" />
+                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-base-content/30" />
                     <input
                         type="text"
                         className="input input-bordered input-sm w-full pl-9 pr-8"
@@ -770,7 +778,7 @@ const BitacoraPage: React.FC = () => {
                         onChange={(e) => setSearchInput(e.target.value)}
                     />
                     {searchInput && (
-                        <button className="absolute right-2 top-1/2 -translate-y-1/2 btn btn-ghost btn-xs btn-circle text-xs" onClick={() => setSearchInput('')}>✕</button>
+                        <button className="absolute right-2 top-1/2 -translate-y-1/2 btn btn-ghost btn-xs btn-circle text-xs" onClick={() => setSearchInput('')}><X size={12} /></button>
                     )}
                 </div>
 
@@ -801,23 +809,21 @@ const BitacoraPage: React.FC = () => {
                 </select>
 
                 {/* Orden */}
-                <button
-                    className="btn btn-ghost btn-sm gap-1.5"
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    className="gap-1.5"
                     title={queryParams.orden === 'desc' ? 'Más reciente primero' : 'Más antiguo primero'}
                     onClick={() => updateQueryParams({ orden: queryParams.orden === 'desc' ? 'asc' : 'desc' })}
                 >
-                    <Icon path={queryParams.orden === 'desc'
-                        ? 'M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12'
-                        : 'M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4'}
-                        className="w-4 h-4"
-                    />
+                    {queryParams.orden === 'desc' ? <ArrowDown size={16} /> : <ArrowUp size={16} />}
                     {queryParams.orden === 'desc' ? 'Recientes' : 'Antiguos'}
-                </button>
+                </Button>
 
                 {hasActiveFilters && (
-                    <button className="btn btn-ghost btn-sm text-base-content/50" onClick={clearFilters}>
+                    <Button variant="ghost" size="sm" className="text-base-content/50" onClick={clearFilters}>
                         Limpiar filtros
-                    </button>
+                    </Button>
                 )}
 
                 {/* Count badge */}
@@ -833,7 +839,7 @@ const BitacoraPage: React.FC = () => {
                 <LoadingIndicator />
             ) : entries.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 text-base-content/30">
-                    <Icon path="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" className="w-14 h-14 mb-3" />
+                    <BookOpen size={56} className="mb-3" />
                     <p className="text-sm font-medium">No hay entradas en la bitácora</p>
                     <p className="text-xs mt-1">
                         {hasActiveFilters
@@ -841,9 +847,9 @@ const BitacoraPage: React.FC = () => {
                             : 'Empieza creando tu primera entrada.'}
                     </p>
                     {!hasActiveFilters && (
-                        <button className="btn btn-primary btn-sm mt-4" onClick={handleCreate}>
+                        <Button variant="primary" size="sm" className="mt-4" onClick={handleCreate}>
                             Crear primera entrada
-                        </button>
+                        </Button>
                     )}
                 </div>
             ) : (

@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import Button from '../Common/Button';
+import { Pencil, Trash2, X, Plus, Link, Paperclip, FileText, Calendar, ExternalLink, ChevronDown, FilePlus } from '../Common/Icon';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -35,45 +37,25 @@ const TIPO_CONFIG: Record<EvidenciaTipo, { label: string; icon: React.ReactNode;
         label: 'Enlace',
         color: 'text-info',
         hint: 'URL a un recurso web externo',
-        icon: (
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                    d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
-            </svg>
-        ),
+        icon: <Link size={16} />,
     },
     ARCHIVO: {
         label: 'Archivo',
         color: 'text-warning',
         hint: 'Documento, imagen o cualquier archivo de soporte',
-        icon: (
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                    d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
-            </svg>
-        ),
+        icon: <Paperclip size={16} />,
     },
     REFERENCIA: {
         label: 'Referencia',
         color: 'text-secondary',
         hint: 'Descripción textual de un soporte o contexto',
-        icon: (
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-            </svg>
-        ),
+        icon: <FileText size={16} />,
     },
     HITO: {
         label: 'Hito',
         color: 'text-success',
         hint: 'Evento o logro específico con fecha',
-        icon: (
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-            </svg>
-        ),
+        icon: <Calendar size={16} />,
     },
 };
 
@@ -202,11 +184,15 @@ const EvidenciaForm: React.FC<FormProps> = ({ initial = BLANK_FORM, onSubmit, on
                             }
                         </span>
                         {form.fileName && (
-                            <button
-                                type="button"
-                                className="btn btn-ghost btn-xs text-error"
+                            <Button
+                                variant="ghost"
+                                size="xs"
+                                className="text-error"
+                                shape="square"
                                 onClick={e => { e.preventDefault(); set({ fileName: '', url: '' }); }}
-                            >✕</button>
+                            >
+                                <X size={16} />
+                            </Button>
                         )}
                         <input type="file" className="hidden" onChange={handleFile}/>
                     </label>
@@ -246,15 +232,15 @@ const EvidenciaForm: React.FC<FormProps> = ({ initial = BLANK_FORM, onSubmit, on
 
             {/* Acciones */}
             <div className="flex justify-end gap-2 pt-1">
-                <button type="button" className="btn btn-ghost btn-sm" onClick={onCancel}>Cancelar</button>
-                <button
-                    type="button"
-                    className="btn btn-primary btn-sm"
+                <Button variant="ghost" size="sm" onClick={onCancel}>Cancelar</Button>
+                <Button
+                    variant="primary"
+                    size="sm"
                     disabled={!canSubmit}
                     onClick={() => onSubmit(form)}
                 >
                     {submitLabel}
-                </button>
+                </Button>
             </div>
         </div>
     );
@@ -297,25 +283,19 @@ const EvidenciaCard: React.FC<EvidenciaCardProps> = ({ item, readonly, onEdit, o
                             className="flex items-center gap-1 text-xs text-info hover:underline truncate max-w-xs"
                             onClick={e => e.stopPropagation()}
                         >
-                            <svg className="h-3 w-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-                            </svg>
+                            <ExternalLink size={12} className="shrink-0" />
                             {item.url}
                         </a>
                     )}
                     {item.url && item.tipo === 'ARCHIVO' && (
                         <span className="flex items-center gap-1 text-xs text-base-content/50">
-                            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
-                            </svg>
+                            <Paperclip size={12} />
                             {item.url.replace('uploads/', '')}
                         </span>
                     )}
                     {item.fecha && (
                         <span className="flex items-center gap-1 text-xs text-base-content/40">
-                            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                            </svg>
+                            <Calendar size={12} />
                             {new Date(item.fecha + 'T12:00:00').toLocaleDateString('es-CO', {
                                 day: '2-digit', month: 'short', year: 'numeric',
                             })}
@@ -332,24 +312,25 @@ const EvidenciaCard: React.FC<EvidenciaCardProps> = ({ item, readonly, onEdit, o
             {/* Acciones */}
             {!readonly && (
                 <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                        className="btn btn-ghost btn-xs btn-square"
+                    <Button
+                        variant="ghost"
+                        size="xs"
+                        shape="square"
                         onClick={onEdit}
                         title="Editar"
                     >
-                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
-                        </svg>
-                    </button>
-                    <button
-                        className="btn btn-ghost btn-xs btn-square text-error"
+                        <Pencil size={16} />
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="xs"
+                        shape="square"
+                        className="text-error"
                         onClick={onDelete}
                         title="Eliminar"
                     >
-                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                        </svg>
-                    </button>
+                        <Trash2 size={16} />
+                    </Button>
                 </div>
             )}
         </div>
@@ -389,12 +370,7 @@ const EvidenciaSection: React.FC<EvidenciaSectionProps> = ({
                     </span>
                 </p>
                 {collapsible && (
-                    <svg
-                        className={`h-4 w-4 text-base-content/40 transition-transform ${open ? 'rotate-180' : ''}`}
-                        fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                    >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/>
-                    </svg>
+                    <ChevronDown size={16} className={`text-base-content/40 transition-transform ${open ? 'rotate-180' : ''}`} />
                 )}
             </button>
 
@@ -492,16 +468,15 @@ const EvidenciasTab: React.FC<EvidenciasTabProps> = ({
                         </p>
                     </div>
                     {!readonly && !showForm && !editingItem && (
-                        <button
-                            type="button"
-                            className="btn btn-primary btn-xs gap-1"
+                        <Button
+                            variant="primary"
+                            size="xs"
+                            className="gap-1"
                             onClick={() => setShowForm(true)}
                         >
-                            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/>
-                            </svg>
+                            <Plus size={16} />
                             Agregar
-                        </button>
+                        </Button>
                     )}
                 </div>
 
@@ -521,9 +496,7 @@ const EvidenciasTab: React.FC<EvidenciasTabProps> = ({
                     }`}
                     onClick={() => !readonly && setShowForm(true)}
                     >
-                        <svg className="h-8 w-8 mx-auto mb-2 text-base-content/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                        </svg>
+                        <FilePlus size={32} className="mx-auto mb-2 text-base-content/20" />
                         <p className="text-sm text-base-content/40 font-medium">
                             {readonly ? 'Sin evidencias registradas' : 'Agrega tu primera evidencia'}
                         </p>

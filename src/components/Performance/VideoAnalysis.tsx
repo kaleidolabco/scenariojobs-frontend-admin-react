@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Zap, ChevronDown, FileText, Menu, CircleCheck } from '../../components/Common/Icon';
 import { useVideoAnalysis } from '../../hooks/useVideoAnalysis';
 import type { VideoAnalysisResult } from '../../hooks/useVideoAnalysis';
 
@@ -255,9 +256,7 @@ const VideoAnalysis: React.FC<VideoAnalysisProps> = ({ videoBlob, videoTitle = '
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                    <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
+                    <Zap size={20} className="text-primary" />
                     <h4 className="text-sm font-semibold">{videoTitle}</h4>
                 </div>
                 <div className="flex items-center gap-3">
@@ -277,14 +276,7 @@ const VideoAnalysis: React.FC<VideoAnalysisProps> = ({ videoBlob, videoTitle = '
                         className="text-base-content/40 hover:text-base-content transition-colors"
                         title={isExpanded ? 'Contraer' : 'Expandir'}
                     >
-                        <svg
-                            className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                        </svg>
+                        <ChevronDown size={20} className={`transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
                     </button>
                 </div>
             </div>
@@ -329,9 +321,9 @@ const VideoAnalysis: React.FC<VideoAnalysisProps> = ({ videoBlob, videoTitle = '
                                 {/* Tabs */}
                                 <div className="flex gap-1 p-1 bg-base-200 rounded-lg w-fit">
                                     {[
-                                        { id: 'summary' as const, label: 'Resumen', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
-                                        { id: 'competencies' as const, label: 'Competencias', icon: 'M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z' },
-                                        { id: 'transcription' as const, label: 'Transcripción', icon: 'M4 6h16M4 10h16M4 14h16M4 18h16' },
+                                        { id: 'summary' as const, label: 'Resumen', icon: FileText },
+                                        { id: 'competencies' as const, label: 'Competencias', icon: CircleCheck },
+                                        { id: 'transcription' as const, label: 'Transcripción', icon: Menu },
                                     ].map(tab => (
                                         <button
                                             key={tab.id}
@@ -343,9 +335,7 @@ const VideoAnalysis: React.FC<VideoAnalysisProps> = ({ videoBlob, videoTitle = '
                                                     : 'text-base-content/60 hover:text-base-content'
                                             }`}
                                         >
-                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={tab.icon} />
-                                            </svg>
+                                            <tab.icon size={14} />
                                             {tab.label}
                                         </button>
                                     ))}

@@ -1,4 +1,5 @@
 import React from 'react';
+import { ChevronDown, Plus, Trash2 } from '../Common/Icon';
 
 interface TreeNodeRowProps {
     isOpen: boolean;
@@ -11,28 +12,6 @@ interface TreeNodeRowProps {
     onDelete: () => void;
     disabled?: boolean;
 }
-
-const ChevronIcon = ({ open }: { open: boolean }) => (
-    <svg
-        className={`w-3.5 h-3.5 flex-shrink-0 text-base-content/30 transition-transform duration-150 ${open ? 'rotate-90' : ''}`}
-        fill="none" stroke="currentColor" viewBox="0 0 16 16"
-    >
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 4l4 4-4 4" />
-    </svg>
-);
-
-const PlusIcon = () => (
-    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 16 16">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 3v10M3 8h10" />
-    </svg>
-);
-
-const TrashIcon = () => (
-    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 16 16">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8"
-              d="M3 5h10M6 5V3h4v2M5.5 5l.5 8h5l.5-8" />
-    </svg>
-);
 
 const TreeNodeRow: React.FC<TreeNodeRowProps> = ({
     isOpen,
@@ -52,7 +31,7 @@ const TreeNodeRow: React.FC<TreeNodeRowProps> = ({
             }`}
             onClick={onToggle}
         >
-            <ChevronIcon open={isOpen} />
+            <ChevronDown size={14} className={`flex-shrink-0 text-base-content/30 transition-transform duration-150 ${isOpen ? 'rotate-90' : ''}`} />
 
             <span className={`w-2 h-2 rounded-full flex-shrink-0 ${dotColorClass}`} />
 
@@ -80,7 +59,7 @@ const TreeNodeRow: React.FC<TreeNodeRowProps> = ({
                         title={addLabel}
                         disabled={disabled}
                     >
-                        <PlusIcon />
+                        <Plus size={12} />
                         <span className="hidden sm:inline">{addLabel}</span>
                     </button>
                 )}
@@ -91,7 +70,7 @@ const TreeNodeRow: React.FC<TreeNodeRowProps> = ({
                     title="Eliminar"
                     disabled={disabled}
                 >
-                    <TrashIcon />
+                    <Trash2 size={12} />
                 </button>
             </div>
         </div>

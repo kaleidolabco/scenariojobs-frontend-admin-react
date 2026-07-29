@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
+import { Upload, Check, X, Info } from '../Common/Icon';
 import { FileResource } from '../../services/functionService';
+import Button from '../Common/Button';
 import TreeNodeRow from './TreeNodeRow';
 
 interface FileEditorProps {
@@ -87,22 +89,18 @@ const FileEditor: React.FC<FileEditorProps> = ({
                         </label>
 
                         {!file.archivoNombre ? (
-                            <label className="flex items-center justify-center w-full cursor-pointer">
+                                <label className="flex items-center justify-center w-full cursor-pointer">
                                 <input type="file" className="hidden" onChange={handleFileUpload} accept="*" />
                                 <div className="text-center py-2">
-                                    <svg className="w-5 h-5 mx-auto text-base-content/30 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                                    </svg>
+                                    <Upload size={20} className="mx-auto text-base-content/30 mb-1" />
                                     <p className="text-xs text-base-content/50">Haz clic para seleccionar un archivo</p>
                                 </div>
                             </label>
                         ) : (
                             <div className="space-y-2">
-                                <div className="bg-base-100 rounded p-2 flex items-center justify-between gap-2">
+                                    <div className="bg-base-100 rounded p-2 flex items-center justify-between gap-2">
                                     <div className="flex items-center gap-2 flex-1 min-w-0">
-                                        <svg className="w-4 h-4 text-success flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
+                                        <Check size={16} className="text-success flex-shrink-0" />
                                         <div className="flex-1 min-w-0">
                                             <p className="text-xs font-medium text-base-content truncate">{file.archivoNombre}</p>
                                             {file.archivoTamaño && (
@@ -110,16 +108,9 @@ const FileEditor: React.FC<FileEditorProps> = ({
                                             )}
                                         </div>
                                     </div>
-                                    <button
-                                        type="button"
-                                        onClick={handleClearFile}
-                                        className="btn btn-xs btn-ghost text-error hover:bg-error/10 flex-shrink-0"
-                                        title="Quitar archivo"
-                                    >
-                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
-                                    </button>
+                                    <Button size="xs" variant="ghost" className="text-error hover:bg-error/10" onClick={handleClearFile} title="Quitar archivo">
+                                        <X size={12} />
+                                    </Button>
                                 </div>
                                 <label className="flex justify-center w-full cursor-pointer text-xs text-base-content/50 hover:text-base-content/70 transition-colors">
                                     <input type="file" className="hidden" onChange={handleFileUpload} accept="*" />
@@ -130,9 +121,7 @@ const FileEditor: React.FC<FileEditorProps> = ({
 
                         {fileError && (
                             <div className="alert alert-error mt-2 py-2">
-                                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
+                                <Info size={16} className="flex-shrink-0" />
                                 <span className="text-xs">{fileError}</span>
                             </div>
                         )}

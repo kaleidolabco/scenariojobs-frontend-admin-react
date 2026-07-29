@@ -12,27 +12,7 @@ import {
 } from '../../services/competencyEvaluationService';
 import { usePersonService, Person } from '../../services/personService';
 import { useEvaluationResponseService } from '../../services/evaluationResponseService';
-
-// ─── Icons ────────────────────────────────────────────────────────────────────
-
-const IconEye = () => (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-    </svg>
-);
-
-const IconCheck = () => (
-    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
-    </svg>
-);
-
-const IconClock = () => (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-);
+import { Eye, Check, Clock } from '../../components/Common/Icon';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -230,7 +210,7 @@ const CalificationListPage: React.FC = () => {
                         <>
                             <div className="w-2 h-2 rounded-full bg-success"></div>
                             <span className="badge badge-sm badge-success gap-1">
-                                <IconCheck />
+                                <Check size={16} />
                                 Completado
                             </span>
                         </>
@@ -238,7 +218,7 @@ const CalificationListPage: React.FC = () => {
                         <>
                             <div className="w-2 h-2 rounded-full bg-warning"></div>
                             <span className="badge badge-sm badge-warning gap-1">
-                                <IconClock />
+                                <Clock size={16} />
                                 Pendiente
                             </span>
                         </>
@@ -252,7 +232,7 @@ const CalificationListPage: React.FC = () => {
     const actions: TableAction<EvaluationRow>[] = [
         {
             label: 'Evaluar',
-            icon: <IconEye />,
+            icon: <Eye size={16} />,
             onClick: (row) => {
                 navigate(`${ROUTES.GRADING_DETAIL(row.processId)}?personId=${row.personId}`);
             },

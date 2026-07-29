@@ -15,6 +15,8 @@ import {
     AssessmentStatus,
     AssessmentType,
 } from '../../services/assessmentService';
+import Button from '../../components/Common/Button';
+import { Pencil, Copy, Eye, Trash2, Plus, Clipboard, Check, Users } from '../../components/Common/Icon';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -73,43 +75,6 @@ const StatsCard: React.FC<StatsCardProps> = ({ label, value, icon, colorClass })
 );
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
-
-const IconEdit = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-    </svg>
-);
-
-const IconCopy = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-    </svg>
-);
-
-const IconEye = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-    </svg>
-);
-
-const IconTrash = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-    </svg>
-);
-
-const IconPlus = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-    </svg>
-);
-
-const IconClipboard = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-    </svg>
-);
 
 // ─── Detail Modal Content ─────────────────────────────────────────────────────
 
@@ -394,28 +359,28 @@ const AssessmentsPage: React.FC = () => {
     const actions: TableAction<AssessmentSummary>[] = [
         {
             label: 'Ver detalle',
-            icon: <IconEye />,
+            icon: <Eye size={16} />,
             onClick: (a) => { setSelectedAssessment(a); setDetailModalOpen(true); },
             variant: 'ghost',
             tooltip: 'Ver detalle',
         },
         {
             label: 'Editar / Constructor',
-            icon: <IconEdit />,
+            icon: <Pencil size={16} />,
             onClick: (a) => handleGoToBuilder(a),
             variant: 'ghost',
             tooltip: 'Abrir constructor',
         },
         {
             label: 'Clonar',
-            icon: <IconCopy />,
+            icon: <Copy size={16} />,
             onClick: (a) => { setAssessmentToClone(a); setCloneModalOpen(true); },
             variant: 'ghost',
             tooltip: 'Clonar evaluación',
         },
         {
             label: 'Eliminar',
-            icon: <IconTrash />,
+            icon: <Trash2 size={16} />,
             onClick: (a) => { setAssessmentToDelete(a); setDeleteModalOpen(true); },
             variant: 'ghost',
             tooltip: 'Eliminar',
@@ -435,13 +400,13 @@ const AssessmentsPage: React.FC = () => {
             subtitle="Crea, versiona y administra tus instrumentos de evaluación"
             breadcrumbs={breadcrumbs}
             actions={
-                <button
-                    className="btn btn-primary"
+                <Button
+                    variant="primary"
                     onClick={() => handleGoToBuilder()}
+                    leftIcon={Plus}
                 >
-                    <IconPlus />
                     Nueva Evaluación
-                </button>
+                </Button>
             }
         >
             {/* ── Stats Cards ── */}
@@ -450,37 +415,25 @@ const AssessmentsPage: React.FC = () => {
                     label="Total de evaluaciones"
                     value={stats.total}
                     colorClass="bg-primary/10 text-primary"
-                    icon={<IconClipboard />}
+                    icon={<Clipboard size={24} />}
                 />
                 <StatsCard
                     label="Publicadas"
                     value={stats.publicadas}
                     colorClass="bg-success/10 text-success"
-                    icon={
-                        <svg className="h-6 w-6 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    }
+                    icon={<Check size={24} className="text-success" />}
                 />
                 <StatsCard
                     label="En borrador"
                     value={stats.borradores}
                     colorClass="bg-warning/10 text-warning"
-                    icon={
-                        <svg className="h-6 w-6 text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                    }
+                    icon={<Pencil size={24} className="text-warning" />}
                 />
                 <StatsCard
                     label="Total aplicaciones"
                     value={stats.total_aplicaciones}
                     colorClass="bg-info/10 text-info"
-                    icon={
-                        <svg className="h-6 w-6 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                    }
+                    icon={<Users size={24} className="text-info" />}
                 />
             </div>
 
@@ -519,22 +472,24 @@ const AssessmentsPage: React.FC = () => {
                 size="lg"
                 actions={
                     <div className="flex gap-2 w-full justify-end">
-                        <button
-                            className="btn btn-ghost btn-sm"
+                        <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => setDetailModalOpen(false)}
                         >
                             Cerrar
-                        </button>
-                        <button
-                            className="btn btn-primary btn-sm"
+                        </Button>
+                        <Button
+                            variant="primary"
+                            size="sm"
                             onClick={() => {
                                 setDetailModalOpen(false);
                                 handleGoToBuilder(selectedAssessment!);
                             }}
+                            leftIcon={Pencil}
                         >
-                            <IconEdit />
                             Abrir Constructor
-                        </button>
+                        </Button>
                     </div>
                 }
             >

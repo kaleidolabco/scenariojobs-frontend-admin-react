@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { User as UserIcon } from '../Common/Icon';
 
 interface AvatarProps {
     src?: string | null;
@@ -9,7 +10,14 @@ interface AvatarProps {
     placeholderClass?: string;
 }
 
-const avatarSVG = (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></g></svg>);
+// Tamaño del ícono de placeholder según el `size` del Avatar.
+const PLACEHOLDER_ICON_SIZE: Record<NonNullable<AvatarProps['size']>, number> = {
+    xs: 12,
+    sm: 16,
+    md: 20,
+    lg: 32,
+    xl: 48,
+};
 
 const Avatar: React.FC<AvatarProps> = ({
     src,
@@ -21,10 +29,10 @@ const Avatar: React.FC<AvatarProps> = ({
 }) => {
     const [imgError, setImgError] = useState(false);
 
-    const getInitials = (fullName?: string | null) => {
-        if (!fullName) return avatarSVG;
+    const getInitials = (fullName?: string | null): string | React.ReactNode => {
+        if (!fullName) return <UserIcon size={PLACEHOLDER_ICON_SIZE[size]} strokeWidth={2} />;
         const updatedName = fullName.trim();
-        if (updatedName.length === 0) return avatarSVG;
+        if (updatedName.length === 0) return <UserIcon size={PLACEHOLDER_ICON_SIZE[size]} strokeWidth={2} />;
 
         const parts = updatedName.split(' ').filter(part => part.length > 0);
         if (parts.length === 1) {

@@ -6,6 +6,10 @@ import useUIStore from '../../store/uiStore';
 import QuestionEditor from './QuestionEditor';
 import InputField from '../../components/Common/Forms/InputField';
 import TextAreaField from '../../components/Common/Forms/TextAreaField';
+import Button from '../../components/Common/Button';
+import {
+    ArrowLeft, X, Menu, Save, Check, Plus, ChevronDown, FileText
+} from '../../components/Common/Icon';
 import {
     useAssessmentService,
     type AssessmentDraft,
@@ -92,28 +96,14 @@ const BuilderTopBar: React.FC<{
         <div className="flex items-center justify-between px-3 md:px-4 py-3 bg-base-100 border-b border-base-200 shadow-sm z-20 gap-2 md:gap-4">
             {/* Left: back + name */}
             <div className="flex items-center gap-1.5 md:gap-3 min-w-0">
-                <button
-                    className="btn btn-ghost btn-sm btn-square shrink-0"
-                    onClick={onBack}
-                    title="Volver al listado"
-                >
-                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                    </svg>
-                </button>
+                <Button variant="ghost" size="sm" shape="square" onClick={onBack} title="Volver al listado">
+                    <ArrowLeft size={20} />
+                </Button>
 
                 {/* Mobile panel toggle */}
-                <button
-                    className="btn btn-ghost btn-sm btn-square shrink-0 md:hidden"
-                    onClick={onTogglePanel}
-                    title={isPanelOpen ? 'Cerrar estructura' : 'Ver estructura'}
-                >
-                    {isPanelOpen ? (
-                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                    ) : (
-                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
-                    )}
-                </button>
+                <Button variant="ghost" size="sm" shape="square" className="shrink-0 md:hidden" onClick={onTogglePanel} title={isPanelOpen ? 'Cerrar estructura' : 'Ver estructura'}>
+                    {isPanelOpen ? <X size={20} /> : <Menu size={20} />}
+                </Button>
 
                 <div className="flex items-center gap-1.5 min-w-0">
                     {editingName ? (
@@ -147,19 +137,13 @@ const BuilderTopBar: React.FC<{
                         Guardando...
                     </span>
                 )}
-                <button className="btn btn-ghost btn-sm" onClick={onSave} disabled={isSaving} title="Guardar">
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-                    </svg>
+                <Button variant="ghost" size="sm" onClick={onSave} disabled={isSaving} title="Guardar" leftIcon={Save}>
                     <span className="hidden sm:inline">Guardar</span>
-                </button>
+                </Button>
                 {draft.estado === 'BORRADOR' && (
-                    <button className="btn btn-primary btn-sm" onClick={onPublish} disabled={isSaving}>
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
+                    <Button variant="primary" size="sm" onClick={onPublish} disabled={isSaving} leftIcon={Check}>
                         <span className="hidden sm:inline">Publicar</span>
-                    </button>
+                    </Button>
                 )}
             </div>
         </div>
@@ -215,15 +199,14 @@ const QuestionCard: React.FC<{
             </div>
 
             {/* Delete */}
-            <button
-                className="btn btn-ghost btn-xs btn-square opacity-0 group-hover:opacity-100 shrink-0"
+            <Button
+                variant="ghost" size="xs" shape="square"
+                className="opacity-0 group-hover:opacity-100 shrink-0"
                 onClick={(e) => { e.stopPropagation(); onDelete(); }}
                 title="Eliminar pregunta"
             >
-                <svg className="h-3.5 w-3.5 text-error" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
+                <X size={14} className="text-error" />
+            </Button>
         </motion.div>
     );
 };
@@ -279,16 +262,9 @@ const LeftPanel: React.FC<{
                         {draft.secciones.length} secc. · {totalPreguntas} preg.
                     </p>
                 </div>
-                <button
-                    className="btn btn-ghost btn-xs gap-1"
-                    onClick={onAddSection}
-                    title="Agregar sección"
-                >
-                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
+                <Button variant="ghost" size="xs" className="gap-1" onClick={onAddSection} title="Agregar sección" leftIcon={Plus}>
                     Sección
-                </button>
+                </Button>
             </div>
 
             {/* Sections list */}
@@ -314,17 +290,9 @@ const LeftPanel: React.FC<{
                                     }`}
                                     onClick={() => { onSelectSection(section.id); onItemSelected?.(); }}
                                 >
-                                    <button
-                                        className="btn btn-ghost btn-xs btn-square shrink-0"
-                                        onClick={(e) => { e.stopPropagation(); toggleCollapse(section.id); }}
-                                    >
-                                        <svg
-                                            className={`h-3 w-3 transition-transform ${isCollapsed ? '-rotate-90' : ''}`}
-                                            fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                                        >
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
-                                        </svg>
-                                    </button>
+                                    <Button variant="ghost" size="xs" shape="square" className="shrink-0" onClick={(e) => { e.stopPropagation(); toggleCollapse(section.id); }}>
+                                        <ChevronDown size={12} className={`transition-transform ${isCollapsed ? '-rotate-90' : ''}`} />
+                                    </Button>
 
                                     {editingSectionId === section.id ? (
                                         <input
@@ -361,15 +329,9 @@ const LeftPanel: React.FC<{
                                         {section.preguntas.length}
                                     </span>
 
-                                    <button
-                                        className="btn btn-ghost btn-xs btn-square opacity-0 group-hover:opacity-100 shrink-0"
-                                        onClick={(e) => { e.stopPropagation(); onDeleteSection(section.id); }}
-                                        title="Eliminar sección"
-                                    >
-                                        <svg className="h-3 w-3 text-error" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
-                                    </button>
+                                    <Button variant="ghost" size="xs" shape="square" className="opacity-0 group-hover:opacity-100 shrink-0" onClick={(e) => { e.stopPropagation(); onDeleteSection(section.id); }} title="Eliminar sección">
+                                        <X size={12} className="text-error" />
+                                    </Button>
                                 </div>
 
                                 {/* Questions */}
@@ -426,9 +388,7 @@ const LeftPanel: React.FC<{
                                                 className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg border border-dashed border-base-300 hover:border-primary/50 hover:bg-primary/5 text-xs text-base-content/50 hover:text-primary transition-all"
                                                 onClick={() => setAddingQuestionTo(section.id)}
                                             >
-                                                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                                </svg>
+                                                <Plus size={14} />
                                                 Agregar pregunta
                                             </button>
                                         )}
@@ -454,18 +414,15 @@ const LeftPanel: React.FC<{
 const EmptyEditorState: React.FC<{ onOpenPanel: () => void }> = ({ onOpenPanel }) => (
     <div className="flex-1 flex flex-col items-center justify-center text-center p-8 text-base-content/40">
         <div className="p-4 rounded-2xl bg-base-200 mb-4">
-            <svg className="h-10 w-10 mx-auto opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
+            <FileText size={40} className="mx-auto opacity-40" />
         </div>
         <p className="font-semibold text-base-content/60">Selecciona una pregunta</p>
         <p className="text-sm mt-1 max-w-xs">
             Elige una pregunta del panel izquierdo para editar su contenido, o agrega una nueva.
         </p>
-        <button className="btn btn-outline btn-sm mt-5 md:hidden gap-2" onClick={onOpenPanel}>
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+        <Button variant="outline" size="sm" className="mt-5 md:hidden gap-2" onClick={onOpenPanel} leftIcon={Menu}>
             Ver estructura
-        </button>
+        </Button>
     </div>
 );
 

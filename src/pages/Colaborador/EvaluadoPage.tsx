@@ -11,6 +11,9 @@ import {
 } from '../../services/performanceService';
 import LoadingIndicator from '../../components/Common/LoadingIndicator';
 import PageContainer from '../../components/Common/PageContainer';
+import {
+    BarChart3, Flame, Zap, CheckCircle, Circle, Clock, ChevronRight, FileText
+} from '../../components/Common/Icon';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -35,29 +38,13 @@ const StatsCard: React.FC<StatsCardProps> = ({ label, value, icon, colorClass })
     </div>
 );
 
-const IconChart = () => (
-    <svg className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-    </svg>
-);
+const IconChart = () => <BarChart3 size={24} className="text-primary" />;
 
-const IconFire = () => (
-    <svg className="h-6 w-6 text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 18.657L13.414 22.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z" />
-    </svg>
-);
+const IconFire = () => <Flame size={24} className="text-warning" />;
 
-const IconTarget = () => (
-    <svg className="h-6 w-6 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-    </svg>
-);
+const IconTarget = () => <Zap size={24} className="text-info" />;
 
-const IconCheck = () => (
-    <svg className="h-6 w-6 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-);
+const IconCheck = () => <CheckCircle size={24} className="text-success" />;
 
 // Ruta al editor del evaluado
 const EDITOR_ROUTE = (id: string) => `/mi-desempeno/${id}`;
@@ -77,29 +64,17 @@ const selfEvalStatusMap: Record<SelfEvalStatus, { color: string; label: string; 
     PENDIENTE: {
         color: 'ghost',
         label: 'Sin autoevaluar',
-        icon: (
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <circle cx="12" cy="12" r="9" strokeWidth={1.5} />
-            </svg>
-        ),
+        icon: <Circle size={16} />,
     },
     EN_PROGRESO: {
         color: 'warning',
         label: 'Autoevaluación en progreso',
-        icon: (
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-        ),
+        icon: <Clock size={16} />,
     },
     ENVIADA: {
         color: 'success',
         label: 'Autoevaluación enviada',
-        icon: (
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-        ),
+        icon: <CheckCircle size={16} />,
     },
 };
 
@@ -187,9 +162,7 @@ const EvalCard: React.FC<EvalCardProps> = ({ evaluation, onOpen }) => {
                     ) : (
                         <div className="flex items-center gap-1 text-xs text-primary font-medium">
                             {totalObj > 0 ? 'Ir a evaluar' : 'Ver detalle'}
-                            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
+                            <ChevronRight size={14} />
                         </div>
                     )}
                 </div>
@@ -202,9 +175,7 @@ const EvalCard: React.FC<EvalCardProps> = ({ evaluation, onOpen }) => {
 
 const EmptyState: React.FC = () => (
     <div className="text-center py-20 text-base-content/40">
-        <svg className="h-12 w-12 mx-auto mb-4 opacity-25" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-        </svg>
+        <FileText size={48} className="mx-auto mb-4 opacity-25" />
         <p className="font-semibold text-base">Sin evaluaciones asignadas</p>
         <p className="text-sm mt-1">Cuando tu líder cree una evaluación para ti, aparecerá aquí.</p>
     </div>

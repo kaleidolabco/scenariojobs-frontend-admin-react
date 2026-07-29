@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import { Mail, Copy, Plus, Folder, Check, Settings, XCircle } from '../../components/Common/Icon';
+import Button from '../../components/Common/Button';
 import { motion, AnimatePresence } from 'framer-motion';
 import PageContainer from '../../components/Common/PageContainer';
 import GenericModal from '../../components/Common/GenericModal';
@@ -279,21 +281,12 @@ const EmailConfigPage: React.FC = () => {
                     {
                         id: 'plantillas',
                         label: 'Plantillas',
-                        icon: (
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                        ),
+                        icon: <Mail size={16} />,
                     },
                     {
                         id: 'smtp',
                         label: 'Servidor SMTP',
-                        icon: (
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                        ),
+                        icon: <Settings size={16} />,
                     },
                 ]}
                 activeTab={activeTab}
@@ -312,31 +305,19 @@ const EmailConfigPage: React.FC = () => {
                                 label: 'Total',
                                 value: templates.length,
                                 variant: 'primary',
-                                icon: (
-                                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                    </svg>
-                                ),
+                                icon: <Mail size={24} />,
                             },
                             {
                                 label: 'Activas',
                                 value: activeCount,
                                 variant: 'success',
-                                icon: (
-                                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                ),
+                                icon: <Check size={24} />,
                             },
                             {
                                 label: 'Inactivas',
                                 value: inactiveCount,
                                 variant: 'neutral',
-                                icon: (
-                                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                                    </svg>
-                                ),
+                                icon: <XCircle size={24} />,
                             },
                         ]}
                     />
@@ -354,18 +335,14 @@ const EmailConfigPage: React.FC = () => {
                             />
                         </div>
                         <div className="flex gap-2 shrink-0 w-full sm:w-auto">
-                            <button className="btn btn-outline flex-1 sm:flex-none" onClick={openGlobalModal}>
-                                <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                                </svg>
+                            <Button variant="outline" className="flex-1 sm:flex-none" onClick={openGlobalModal}>
+                                <Copy size={16} />
                                 Importar global
-                            </button>
-                            <button className="btn btn-primary flex-1 sm:flex-none" onClick={handleCreate}>
-                                <svg className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                </svg>
+                            </Button>
+                            <Button variant="primary" className="flex-1 sm:flex-none" onClick={handleCreate}>
+                                <Plus size={16} />
                                 Nueva plantilla
-                            </button>
+                            </Button>
                         </div>
                     </div>
 
@@ -373,9 +350,7 @@ const EmailConfigPage: React.FC = () => {
                         <LoadingIndicator />
                     ) : templates.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-16 text-base-content/40">
-                            <svg className="w-12 h-12 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                            </svg>
+                            <Folder size={48} className="mb-3" />
                             <p className="text-sm font-medium">No se encontraron plantillas</p>
                             <p className="text-xs mt-1">Crea tu primera plantilla o importa una desde el catálogo global.</p>
                         </div>
@@ -526,9 +501,7 @@ const EmailConfigPage: React.FC = () => {
                     <LoadingIndicator />
                 ) : globalTemplates.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-12 text-base-content/40">
-                        <svg className="w-12 h-12 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                        </svg>
+                        <Folder size={48} className="mb-3" />
                         <p className="text-sm font-medium">No hay plantillas globales disponibles</p>
                     </div>
                 ) : (
@@ -561,18 +534,16 @@ const EmailConfigPage: React.FC = () => {
                                             </div>
                                         )}
                                     </div>
-                                    <button
-                                        className={`btn btn-primary btn-sm ${importingId === gt.id ? 'loading' : ''}`}
+                                    <Button
+                                        variant="primary"
+                                        size="sm"
+                                        loading={importingId === gt.id}
                                         onClick={() => handleImport(gt)}
                                         disabled={importingId !== null}
                                     >
-                                        {importingId !== gt.id && (
-                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                                            </svg>
-                                        )}
+                                        {importingId !== gt.id && <Copy size={16} />}
                                         Importar
-                                    </button>
+                                    </Button>
                                 </div>
                             );
                         })}

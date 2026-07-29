@@ -1,5 +1,7 @@
 import React from 'react';
 import { EmailTemplate, EMAIL_TEMPLATE_TYPE_META, TEMPLATE_PREVIEW_VARS } from '../../services/emailService';
+import { Mail } from '../Common/Icon';
+import Button from '../Common/Button';
 
 const interpolate = (text: string, vars: Record<string, string>): string =>
     text.replace(/\{\{(\w+)\}\}/g, (_, key) => vars[key] ?? `{{${key}}}`);
@@ -38,9 +40,7 @@ const TemplatePreviewModal: React.FC<TemplatePreviewModalProps> = ({ template, o
                     {/* Mock email client header */}
                     <div className="bg-base-200 px-4 py-3 border-b border-base-200 flex items-start gap-3">
                         <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center mt-0.5">
-                            <svg className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                            </svg>
+                            <Mail size={16} className="text-primary" />
                         </div>
                         <div className="flex-1">
                             <div className="flex items-center justify-between">
@@ -77,7 +77,7 @@ const TemplatePreviewModal: React.FC<TemplatePreviewModalProps> = ({ template, o
             </div>
 
             <div className="flex justify-end">
-                <button className="btn btn-ghost btn-sm" onClick={onClose}>Cerrar</button>
+                <Button variant="ghost" size="sm" onClick={onClose}>Cerrar</Button>
             </div>
         </div>
     );

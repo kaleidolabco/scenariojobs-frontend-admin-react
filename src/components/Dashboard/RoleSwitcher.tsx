@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import useAuthStore from '../../store/authStore';
 import useFetch from '../../hooks/useFetch';
 import { UserRole, ROLE_LABELS } from '../../constants/roles';
+import { ChevronDown } from '../../components/Common/Icon';
 
 // Mock response for roles
 const MOCK_USER_ROLES = [
@@ -67,7 +68,7 @@ const RoleSwitcher: React.FC = () => {
                 onClick={handleButtonClick}
             >
                 {activeRole ? ROLE_LABELS[activeRole as UserRole] : 'Seleccionar Rol'}
-                <svg width="12px" height="12px" className="hidden h-2 w-2 fill-current opacity-60 sm:inline-block" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2048 2048"><path d="M1799 349l242 241-1017 1017L7 590l242-241 775 775 775-775z"></path></svg>
+                <ChevronDown size={16} className="hidden sm:inline-block opacity-60" />
             </div>
             {isOpen && createPortal(
                 <div 

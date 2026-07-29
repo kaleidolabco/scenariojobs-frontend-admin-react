@@ -15,44 +15,8 @@ import { useCompetencyService, Competency } from '../../services/competencyServi
 import { usePersonService, Person } from '../../services/personService';
 import { useEvaluationResponseService, EvaluationComments } from '../../services/evaluationResponseService';
 import { useIntegralEvaluationService } from '../../services/integralEvaluationService';
-
-// ─── Icons ────────────────────────────────────────────────────────────────────
-
-const IconCheck = () => (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-    </svg>
-);
-
-const IconInfo = () => (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-);
-
-const IconArrowLeft = () => (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-    </svg>
-);
-
-const IconListCheck = () => (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-    </svg>
-);
-
-const IconMessageSquare = () => (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
-    </svg>
-);
-
-const IconVideo = () => (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.893L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-    </svg>
-);
+import Button from '../../components/Common/Button';
+import { Check, Info, ArrowLeft, ListChecks, ClipboardList, Video } from '../../components/Common/Icon';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -86,7 +50,7 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({ textComment, onTextCh
             <div className="p-4 bg-base-100 border border-base-200 rounded-lg">
                 <div className="flex items-start gap-3">
                     <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                        <IconMessageSquare />
+                        <ClipboardList size={16} />
                     </div>
                     <div>
                         <h4 className="text-sm font-semibold text-base-content">Comentarios del evaluador</h4>
@@ -109,7 +73,7 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({ textComment, onTextCh
                             : 'text-base-content/60 hover:text-base-content'
                     }`}
                 >
-                    <IconMessageSquare />
+                    <ClipboardList size={16} />
                     Comentario escrito
                 </button>
                 <button
@@ -121,7 +85,7 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({ textComment, onTextCh
                             : 'text-base-content/60 hover:text-base-content'
                     }`}
                 >
-                    <IconVideo />
+                    <Video size={16} />
                     Comentario en video
                 </button>
             </div>
@@ -200,8 +164,8 @@ const CompetencyEvaluationDetailPage: React.FC = () => {
     const [textComment, setTextComment] = useState('');
 
     const tabs: Tab[] = [
-        { id: 'competencias', label: 'Competencias', icon: <IconListCheck /> },
-        { id: 'comentarios', label: 'Comentarios', icon: <IconMessageSquare /> },
+        { id: 'competencias', label: 'Competencias', icon: <ListChecks size={16} /> },
+        { id: 'comentarios', label: 'Comentarios', icon: <ClipboardList size={16} /> },
     ];
 
     // Load data
@@ -374,13 +338,13 @@ const CompetencyEvaluationDetailPage: React.FC = () => {
                         <p className="text-sm text-base-content/60 mb-4">
                             La evaluación solicitada no existe.
                         </p>
-                        <button
-                            type="button"
+                        <Button
+                            variant="primary"
+                            size="sm"
                             onClick={() => navigate(ROUTES.GRADING_PENDING)}
-                            className="btn btn-primary btn-sm"
                         >
                             Volver a evaluaciones
-                        </button>
+                        </Button>
                     </div>
                 </div>
             </PageContainer>
@@ -406,14 +370,14 @@ const CompetencyEvaluationDetailPage: React.FC = () => {
             <div className="space-y-6">
                 {/* Header Actions */}
                 <div className="flex items-center gap-2">
-                    <button
-                        type="button"
+                    <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => navigate(ROUTES.GRADING_PENDING)}
-                        className="btn btn-ghost btn-sm gap-2"
+                        leftIcon={ArrowLeft}
                     >
-                        <IconArrowLeft />
                         Volver
-                    </button>
+                    </Button>
                 </div>
 
                 {/* Progress */}
@@ -465,7 +429,7 @@ const CompetencyEvaluationDetailPage: React.FC = () => {
                                     )}
                                     {tab.id === 'competencias' && allEvaluated && (
                                         <span className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-success text-success-content text-[10px]">
-                                            <IconCheck />
+                                            <Check size={16} />
                                         </span>
                                     )}
 
@@ -526,7 +490,7 @@ const CompetencyEvaluationDetailPage: React.FC = () => {
                                                                     : 'border-base-300'
                                                             }`}
                                                         >
-                                                            {selectedLevel === level.nivel && <IconCheck />}
+                                                            {selectedLevel === level.nivel && <Check size={16} />}
                                                         </div>
                                                         <div className="flex-1">
                                                             <p className="font-medium text-sm">{level.nombre}</p>
@@ -541,7 +505,7 @@ const CompetencyEvaluationDetailPage: React.FC = () => {
 
                                         {selectedLevelObj && (
                                             <div className="mt-3 p-2 bg-primary/5 rounded border border-primary/20 flex gap-2">
-                                                <IconInfo />
+                                                <Info size={16} />
                                                 <p className="text-xs text-primary">
                                                     Nivel seleccionado:{' '}
                                                     <strong>{selectedLevelObj.nombre}</strong>
@@ -572,29 +536,23 @@ const CompetencyEvaluationDetailPage: React.FC = () => {
 
                 {/* Actions */}
                 <div className="flex gap-2 justify-end pt-4 border-t border-base-200">
-                    <button
-                        type="button"
+                    <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => navigate(ROUTES.GRADING_PENDING)}
-                        className="btn btn-ghost btn-sm"
                         disabled={isSaving}
                     >
                         Cancelar
-                    </button>
-                    <button
-                        type="button"
+                    </Button>
+                    <Button
+                        variant="primary"
+                        size="sm"
                         onClick={handleSave}
                         disabled={!allEvaluated || isSaving}
-                        className="btn btn-primary btn-sm"
+                        loading={isSaving}
                     >
-                        {isSaving ? (
-                            <>
-                                <span className="loading loading-spinner loading-xs" />
-                                Guardando...
-                            </>
-                        ) : (
-                            'Guardar Evaluación'
-                        )}
-                    </button>
+                        {isSaving ? 'Guardando...' : 'Guardar Evaluación'}
+                    </Button>
                 </div>
             </div>
         </PageContainer>

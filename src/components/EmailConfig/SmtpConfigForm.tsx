@@ -4,6 +4,8 @@ import { SmtpConfig } from '../../services/emailService';
 import InputField from '../Common/Forms/InputField';
 import NumberInputField from '../Common/Forms/NumberInputField';
 import FormSection from '../Common/Forms/FormSection';
+import { Eye, EyeOff, Info, Check } from '../Common/Icon';
+import Button from '../Common/Button';
 
 interface SmtpConfigFormProps {
     config: SmtpConfig;
@@ -92,23 +94,15 @@ const SmtpConfigForm: React.FC<SmtpConfigFormProps> = ({
                                         value={form.password ?? ''}
                                         onChange={(e) => setFormKey('password', e.target.value)}
                                     />
-                                    <button
-                                        type="button"
-                                        className="btn btn-square btn-ghost border border-base-300"
+                                    <Button
+                                        variant="ghost"
+                                        shape="square"
+                                        className="border border-base-300"
                                         onClick={() => setShowPass(!showPass)}
                                         title={showPass ? 'Ocultar' : 'Mostrar'}
                                     >
-                                        {showPass ? (
-                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                                            </svg>
-                                        ) : (
-                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                            </svg>
-                                        )}
-                                    </button>
+                                        {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                                    </Button>
                                 </div>
                                 <span className="text-xs text-base-content/60">Dejar en blanco para conservar la contraseña actual</span>
                             </div>
@@ -141,14 +135,15 @@ const SmtpConfigForm: React.FC<SmtpConfigFormProps> = ({
                             <p className="text-xs text-base-content/50 leading-relaxed">
                                 Verifica que la configuración SMTP sea correcta enviando un correo de prueba a la dirección del usuario.
                             </p>
-                            <button
-                                className={`btn btn-outline w-full`}
+                            <Button
+                                variant="outline"
+                                className="w-full"
                                 onClick={onTestConnection}
+                                loading={testing}
                                 disabled={testing}
                             >
-                                {testing && <span className="loading loading-spinner"></span>}
                                 {testing ? 'Probando...' : 'Probar conexión SMTP'}
-                            </button>
+                            </Button>
 
                             <AnimatePresence>
                                 {testResult !== 'idle' && (
@@ -193,9 +188,7 @@ const SmtpConfigForm: React.FC<SmtpConfigFormProps> = ({
                     <div className="card bg-info/5 border border-info/20">
                         <div className="card-body p-4 gap-2">
                             <div className="flex items-center gap-2">
-                                <svg className="w-4 h-4 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
+                                <Info size={16} className="text-info" />
                                 <span className="text-xs font-semibold text-info">Configuraciones comunes</span>
                             </div>
                             <ul className="text-xs text-base-content/60 space-y-1 list-none ml-0">
@@ -210,25 +203,16 @@ const SmtpConfigForm: React.FC<SmtpConfigFormProps> = ({
             </div>
 
             <div className="flex justify-end border-t border-base-200 pt-6">
-                <button
-                    className={`btn btn-primary ${saving ? 'loading' : ''}`}
+                <Button
+                    variant="primary"
                     onClick={() => onSave(form)}
+                    loading={saving}
                     disabled={saving}
                 >
-                    {saving ? (
-                        <>
-                            <span className="loading loading-spinner loading-sm"></span>
-                            <span className="ml-2">Guardando...</span>
-                        </>
-                    ) : (
-                        <>
-                            <svg className="w-4 h-4 mr-2 hidden md:inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                            <span>Guardar configuración</span>
-                        </>
+                    {saving ? 'Guardando...' : (
+                        <><Check size={16} className="mr-2 hidden md:inline" /> Guardar configuración</>
                     )}
-                </button>
+                </Button>
             </div>
         </div>
     );

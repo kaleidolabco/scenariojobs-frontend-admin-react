@@ -2,36 +2,13 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useOrgUnitService, OrgUnit } from '../../services/orgUnitService';
 import { usePersonService, Person } from '../../services/personService';
+import { ChevronDown, Check, User, Building2 } from '../../components/Common/Icon';
+import Button from '../../components/Common/Button';
 
 interface OrgChartPersonSelectorProps {
     selectedPersonIds: string[];
     onPersonsChange: (ids: string[]) => void;
 }
-
-// Icons
-const IconChevronDown = ({ open }: { open: boolean }) => (
-    <svg className={`w-4 h-4 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-    </svg>
-);
-
-const IconCheck = () => (
-    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-    </svg>
-);
-
-const IconUser = () => (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-    </svg>
-);
-
-const IconBuilding = () => (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-    </svg>
-);
 
 interface TreeNodeProps {
     unit: OrgUnit;
@@ -78,23 +55,25 @@ const TreeNode: React.FC<TreeNodeProps> = ({ unit, level, selectedUnitId, onSele
             >
                 {/* Expander */}
                 {hasChildren ? (
-                    <button
-                        type="button"
+                    <Button
+                        variant="outline"
+                        size="xs"
+                        shape="circle"
+                        className="bg-base-100 border-base-300 hover:bg-base-200 shrink-0"
                         onClick={(e) => {
                             e.stopPropagation();
                             setIsExpanded(!isExpanded);
                         }}
-                        className="btn btn-circle btn-xs btn-outline bg-base-100 border-base-300 hover:bg-base-200 shrink-0"
                     >
-                        <IconChevronDown open={isExpanded} />
-                    </button>
+                        <ChevronDown size={16} className={`transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+                    </Button>
                 ) : (
                     <div className="w-6 h-6" />
                 )}
 
                 {/* Icon */}
                 <div className="text-base-content/60 shrink-0">
-                    <IconBuilding />
+                    <Building2 size={16} />
                 </div>
 
                 {/* Content */}
@@ -112,7 +91,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({ unit, level, selectedUnitId, onSele
                 {/* Selection indicator */}
                 {isSelected && (
                     <div className="box-content w-4 h-4 rounded bg-primary text-primary-content flex items-center justify-center shrink-0">
-                        <IconCheck />
+                        <Check size={14} />
                     </div>
                 )}
             </button>
@@ -309,9 +288,9 @@ export const OrgChartPersonSelector: React.FC<OrgChartPersonSelectorProps> = ({
                                                         : 'border-base-300 hover:border-primary bg-base-100'
                                                 }`}
                                             >
-                                                {isSelected && <IconCheck />}
+                                                {isSelected && <Check size={14} />}
                                             </div>
-                                            <IconUser />
+                                            <User size={16} />
                                             <span className="text-sm truncate">
                                                 {person.nombres} {person.apellidos}
                                             </span>

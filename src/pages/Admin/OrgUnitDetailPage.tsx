@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import OrgUnitInfoTab from '../../components/OrgUnits/OrgUnitInfoTab';
 import OrgUnitSubunitsTab from '../../components/OrgUnits/OrgUnitSubunitsTab';
 import OrgUnitPositionsTab from '../../components/OrgUnits/OrgUnitPositionsTab';
+import { Info, Menu, ExternalLink } from '../../components/Common/Icon';
 
 const OrgUnitDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -56,25 +57,17 @@ const OrgUnitDetailPage: React.FC = () => {
                     {
                         id: 'info',
                         label: 'Información General',
-                        icon: (
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                        ),
+                        icon: <Info size={16} />,
                     },
                     {
                         id: 'subunits',
                         label: 'Sub-unidades',
-                        icon: (
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
-                        ),
+                        icon: <Menu size={16} />,
                     },
                     {
                         id: 'positions',
                         label: `Puestos de Trabajo`,
-                        icon: (
-                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                            </svg>
-                        ),
+                        icon: <ExternalLink size={16} />,
                     },
                 ]}
                 activeTab={activeTab}

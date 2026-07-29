@@ -9,6 +9,8 @@ import FormSection from '../Common/Forms/FormSection';
 import JobCompetencySelector from './JobCompetencySelector';
 import { FunctionManagerModal } from '../Functions';
 import CurrencySelectField from '../Common/Forms/CurrencySelectField';
+import Button from '../Common/Button';
+import { Check, FileText, Pencil } from '../Common/Icon';
 
 interface JobFormProps {
     initialData?: Job | null;
@@ -170,26 +172,23 @@ const JobForm: React.FC<JobFormProps> = ({ initialData, isLoading, onSubmit, onC
                                 </div>
                             ) : (
                                 <div className="text-center py-6 text-base-content/60">
-                                    <svg className="w-12 h-12 mx-auto mb-2 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                    </svg>
+                                    <FileText size={48} className="mx-auto mb-2 opacity-40" />
                                     <p className="text-sm">No hay funciones configuradas</p>
                                     <p className="text-xs opacity-70">Haz clic en el botón de abajo para añadir</p>
                                 </div>
                             )}
                         </div>
 
-                        <button
+                        <Button
                             type="button"
+                            variant="outline"
+                            leftIcon={Pencil}
                             onClick={() => setFuncionesModalOpen(true)}
-                            className="btn btn-outline w-full"
+                            fullWidth
                             disabled={isLoading}
                         >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
                             Gestionar Funciones
-                        </button>
+                        </Button>
                     </div>
                 </FormSection>
             )}
@@ -247,33 +246,25 @@ const JobForm: React.FC<JobFormProps> = ({ initialData, isLoading, onSubmit, onC
             {/* Actions */}
             <div className="sticky bottom-0 bg-base-100 border-t border-base-300 p-4 md:relative md:border-t-0 md:p-0 md:pt-4">
                 <div className="flex flex-col-reverse md:flex-row justify-end gap-2 md:gap-3">
-                    <button
+                    <Button
                         type="button"
-                        className="btn btn-ghost hover:bg-base-200 mt-2 md:mt-0 order-2 md:order-1"
+                        variant="ghost"
                         onClick={onCancel}
                         disabled={isLoading}
+                        className="mt-2 md:mt-0 order-2 md:order-1"
                     >
                         Cancelar
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                         type="submit"
-                        className="btn btn-primary w-full md:w-auto order-1 md:order-2"
+                        variant="primary"
+                        loading={isLoading}
+                        leftIcon={isLoading ? undefined : Check}
+                        className="w-full md:w-auto order-1 md:order-2"
                         disabled={isLoading}
                     >
-                        {isLoading ? (
-                            <>
-                                <span className="loading loading-spinner loading-sm"></span>
-                                <span className="ml-2">Procesando...</span>
-                            </>
-                        ) : (
-                            <>
-                                <svg className="w-4 h-4 mr-2 hidden md:inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
-                                <span>{initialData ? 'Guardar Cambios' : 'Crear Cargo'}</span>
-                            </>
-                        )}
-                    </button>
+                        {isLoading ? 'Procesando...' : (initialData ? 'Guardar Cambios' : 'Crear Cargo')}
+                    </Button>
                 </div>
             </div>
 

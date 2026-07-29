@@ -6,6 +6,8 @@ import SelectField from '../Common/Forms/SelectField';
 import CheckboxGroup from '../Common/Forms/CheckboxGroup';
 import AutocompleteField from '../Common/Forms/AutocompleteField';
 import { usePersonService, Person } from '../../services/personService';
+import Button from '../Common/Button';
+import { Info } from '../Common/Icon';
 
 interface UserFormProps {
     initialData?: any; // Will be updated to proper type
@@ -168,7 +170,7 @@ const UserForm: React.FC<UserFormProps> = ({ initialData, isLoading = false, onS
             </div>
 
             <div className="alert alert-info text-sm shadow-sm">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="stroke-current shrink-0 w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <Info className="stroke-current shrink-0 w-6 h-6" />
                 <div>
                     <h3 className="font-bold">Nota de Seguridad</h3>
                     <div className="text-xs">Se enviará un correo de invitación para configurar la contraseña.</div>
@@ -176,17 +178,17 @@ const UserForm: React.FC<UserFormProps> = ({ initialData, isLoading = false, onS
             </div>
 
             <div className="modal-action">
-                <button type="button" className="btn btn-ghost" onClick={onCancel} disabled={isLoading}>
+                <Button type="button" variant="ghost" onClick={onCancel} disabled={isLoading}>
                     Cancelar
-                </button>
-                <button
+                </Button>
+                <Button
                     type="submit"
-                    className="btn btn-primary"
+                    variant="primary"
+                    loading={isLoading}
                     disabled={isLoading || selectedRoles.length === 0}
                 >
-                    {isLoading && <span className="loading loading-spinner"></span>}
                     {initialData ? 'Guardar Cambios' : 'Crear Usuario'}
-                </button>
+                </Button>
             </div>
         </form>
     );

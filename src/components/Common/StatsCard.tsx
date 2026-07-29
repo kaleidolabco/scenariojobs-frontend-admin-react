@@ -1,4 +1,5 @@
 import React from 'react';
+import { ArrowUp, ArrowDown, ArrowRight } from '../Common/Icon';
 
 export type StatsCardVariant =
     | 'primary'
@@ -65,25 +66,8 @@ const SIZE_ICON_BOX: Record<StatsCardSize, string> = {
 };
 
 const TrendIcon: React.FC<{ direction: 'up' | 'down' | 'flat' }> = ({ direction }) => {
-    if (direction === 'up') {
-        return (
-            <svg className="inline h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-            </svg>
-        );
-    }
-    if (direction === 'down') {
-        return (
-            <svg className="inline h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-            </svg>
-        );
-    }
-    return (
-        <svg className="inline h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14" />
-        </svg>
-    );
+    const Icon = direction === 'up' ? ArrowUp : direction === 'down' ? ArrowDown : ArrowRight;
+    return <Icon size={12} className="inline" />;
 };
 
 const StatsCard: React.FC<StatsCardProps> = ({

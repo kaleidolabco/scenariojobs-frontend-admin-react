@@ -1,5 +1,15 @@
 import React from 'react';
 import LoadingIndicator from './LoadingIndicator';
+import Button from './Button';
+import { ChevronRight, ChevronLeft } from './Icon';
+
+// Mapea el `variant` de la API pública de `TableAction` a la variante del componente `<Button/>`.
+type ActionVariant = 'ghost' | 'primary' | 'error';
+const ACTION_BUTTON_VARIANT: Record<ActionVariant, 'ghost' | 'primary' | 'error'> = {
+    ghost: 'ghost',
+    primary: 'primary',
+    error: 'error',
+};
 
 export interface TableColumn<T> {
     key: keyof T | string;
@@ -111,14 +121,16 @@ function GenericTable<T>({
                                 {actions && actions.length > 0 && (
                                     <td className="hover">
                                         {actions.map((action, idx) => (
-                                            <button
+                                            <Button
                                                 key={idx}
-                                                className={`btn btn-${action.variant || 'ghost'} btn-xs tooltip tooltip-left-up`}
+                                                variant={ACTION_BUTTON_VARIANT[(action.variant as ActionVariant) || 'ghost']}
+                                                size="xs"
+                                                className="tooltip tooltip-left-up"
                                                 data-tip={action.tooltip || action.label}
                                                 onClick={() => action.onClick(item)}
                                             >
                                                 {action.icon}
-                                            </button>
+                                            </Button>
                                         ))}
                                     </td>
                                 )}
@@ -154,23 +166,35 @@ function GenericTable<T>({
                 </div>
 
                 <div className="join">
-                    <button
-                        className="join-item btn btn-xs md:btn-sm"
+                    <Button
+                        variant="primary"
+                        size="xs"
+                        className="join-item md:btn-sm"
                         disabled={currentPage === 1}
                         onClick={() => onPageChange(currentPage - 1)}
+                        aria-label="Página anterior"
                     >
-                        «
-                    </button>
-                    <button className="join-item btn btn-xs md:btn-sm no-animation">
+                        <ChevronLeft size={16} />
+                    </Button>
+                    <Button
+                        variant="primary"
+                        size="xs"
+                        className="join-item md:btn-sm no-animation"
+                        disabled
+                        aria-hidden="true"
+                    >
                         Página {currentPage} de {totalPages}
-                    </button>
-                    <button
-                        className="join-item btn btn-xs md:btn-sm"
+                    </Button>
+                    <Button
+                        variant="primary"
+                        size="xs"
+                        className="join-item md:btn-sm"
                         disabled={currentPage === totalPages}
                         onClick={() => onPageChange(currentPage + 1)}
+                        aria-label="Página siguiente"
                     >
-                        »
-                    </button>
+                        <ChevronRight size={16} />
+                    </Button>
                 </div>
             </div>
         </div>
