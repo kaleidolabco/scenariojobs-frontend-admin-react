@@ -4,7 +4,7 @@ import { ROUTES } from '../../constants/routes';
 import { UserRole } from '../../constants/roles';
 import SidebarItem from './SidebarItem';
 import LogoImg from '../../assets/logos/scenario-logo-color.png';
-import { Home, Building2, Users, Mail, Network, Briefcase, CircleCheck, ClipboardList, Target, BarChart3, Pencil, FileText, Zap, BookOpen } from '../../components/Common/Icon';
+import { Home, Building2, Users, Mail, Network, Briefcase, CircleCheck, ClipboardList, Target, BarChart3, Pencil, FileText, Zap, BookOpen, CircleDot } from '../../components/Common/Icon';
 import Button from '../../components/Common/Button';
 
 interface MenuItem {
@@ -84,7 +84,7 @@ const SIDEBAR_CONFIG: MenuItem[] = [
     },
     {
         label: 'Evaluación Integral',
-        to: ROUTES.RRHH_EVALUACIONES_INTEGRAL,
+        to: ROUTES.HR_EVALUACIONES_INTEGRAL,
         allowedRoles: [UserRole.HR_MANAGER],
         icon: <ClipboardList size={20} />
     },
@@ -147,6 +147,12 @@ const SIDEBAR_CONFIG: MenuItem[] = [
         to: ROUTES.MY_OBJECTIVES,
         allowedRoles: [UserRole.EMPLOYEE],
         icon: <Zap size={20} />
+    },
+    {
+        label: 'Autoevaluación Competencias',
+        to: ROUTES.MI_COMPETENCIAS_EVAL,
+        allowedRoles: [UserRole.EMPLOYEE],
+        icon: <CircleDot size={20} />
     },
 ];
 

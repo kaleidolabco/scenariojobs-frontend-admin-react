@@ -105,6 +105,11 @@ export interface EvaluationResponse {
     puntaje_normalizado?: number; // Normalized score (0-100) for display as percentage
     puntaje_numerico?: number; // Average score (e.g., 3.5 for 1-4 scale) for integral calculations
     escala_maxima?: number; // Maximum scale used (e.g., 4 for 1-4 scale, 5 for 1-5 scale)
+    /**
+     * ID de la asignación (EvaluatorAssignment) a la que pertenece esta respuesta.
+     * Vincula la respuesta con el flujo de estados (PENDIENTE/EN_PROGRESO/COMPLETADO/...).
+     */
+    asignacion_id?: string;
 }
 
 export interface EvaluationResponseQueryParams {
@@ -378,6 +383,12 @@ export const useEvaluationResponseService = () => {
         );
     };
 
+    // ── Get evaluation by assignment id ─────────────────────────────────────
+
+    const getEvaluationByAsignacion = (asignacionId: string): EvaluationResponse | undefined => {
+        return getDB().find((r) => r.asignacion_id === asignacionId);
+    };
+
     return {
         getEvaluationResponses,
         getEvaluationResponse,
@@ -386,5 +397,6 @@ export const useEvaluationResponseService = () => {
         deleteEvaluationResponse,
         isPersonEvaluated,
         getEvaluationByProcessAndPerson,
+        getEvaluationByAsignacion,
     };
 };

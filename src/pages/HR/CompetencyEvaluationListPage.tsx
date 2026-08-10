@@ -164,7 +164,7 @@ const CompetencyEvaluationForm: React.FC<CompetencyEvaluationFormProps> = ({
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
-const EvaluationCompetencyPage: React.FC = () => {
+const CompetencyEvaluationListPage: React.FC = () => {
     const navigate = useNavigate();
     const { openAlert } = useUIStore();
     const {
@@ -570,4 +570,4 @@ const EvaluationCompetencyPage: React.FC = () => {
     );
 };
 
-export default EvaluationCompetencyPage;
+export default CompetencyEvaluationListPage;

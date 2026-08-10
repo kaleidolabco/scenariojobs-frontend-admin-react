@@ -557,7 +557,7 @@ const TemplatesTab: React.FC = () => {
 // MAIN PAGE
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const DesempenoPage: React.FC = () => {
+const PerformancePage: React.FC = () => {
     const [activeTab, setActiveTab] = useState<ActiveTab>('evaluaciones');
     const [evalNewOpen, setEvalNewOpen] = useState(false);
 
@@ -593,4 +593,4 @@ const DesempenoPage: React.FC = () => {
     );
 };
 
-export default DesempenoPage;
+export default PerformancePage;

@@ -7,6 +7,7 @@ import LoadingIndicator from '../../components/Common/LoadingIndicator';
 import VideoRecorder from '../../components/Common/VideoRecorder';
 import { ROUTES } from '../../constants/routes';
 import useUIStore from '../../store/uiStore';
+import useAuthStore from '../../store/authStore';
 import {
     useCompetencyEvaluationService,
     CompetencyEvaluationDetail,
@@ -15,6 +16,7 @@ import { useCompetencyService, Competency } from '../../services/competencyServi
 import { usePersonService, Person } from '../../services/personService';
 import { useEvaluationResponseService, EvaluationComments } from '../../services/evaluationResponseService';
 import { useIntegralEvaluationService } from '../../services/integralEvaluationService';
+import { useEvaluationAssignmentService } from '../../services/evaluationAssignmentService';
 import Button from '../../components/Common/Button';
 import { Check, Info, ArrowLeft, ListChecks, ClipboardList, Video } from '../../components/Common/Icon';
 
@@ -136,20 +138,25 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({ textComment, onTextCh
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-const CompetencyEvaluationDetailPage: React.FC = () => {
+const CompetencyEvaluationEvaluatorDetailPage: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { processId } = useParams<{ processId: string }>();
     const [searchParams] = useSearchParams();
     const personId = searchParams.get('personId');
+    const asignacionId = searchParams.get('asignacionId');
+    const tipo = searchParams.get('tipo');
     const integralId = (location.state as any)?.integralId;
     const { openAlert } = useUIStore();
+    const { user } = useAuthStore();
+    const currentUserId = user?.id || 'usr_9';
 
     const { getCompetencyEvaluationDetail } = useCompetencyEvaluationService();
     const { getCompetencies } = useCompetencyService();
     const { getPersonById } = usePersonService();
     const { saveEvaluationResponse, getEvaluationResponseByKey } = useEvaluationResponseService();
     const { syncComponente } = useIntegralEvaluationService();
+    const { iniciarEdicion, completarAsignacion } = useEvaluationAssignmentService();
 
     // State
     const [loading, setLoading] = useState(true);
@@ -173,7 +180,8 @@ const CompetencyEvaluationDetailPage: React.FC = () => {
         const load = async () => {
             if (!processId || !personId) {
                 openAlert('Faltan parámetros requeridos', 'error');
-                navigate(ROUTES.GRADING_PENDING);
+                const fallback = tipo === 'AUTOEVALUACION' ? ROUTES.MI_COMPETENCIAS_EVAL : ROUTES.GRADING_PENDING;
+                navigate(fallback);
                 return;
             }
 
@@ -199,27 +207,24 @@ const CompetencyEvaluationDetailPage: React.FC = () => {
                     setCompetencies(assignedComps);
                 }
 
+                // Iniciar edición de la asignación (PENDIENTE → EN_PROGRESO)
+                if (asignacionId) {
+                    await iniciarEdicion(asignacionId);
+                }
+
                 // Load existing responses if available
                 if (personId) {
-                    const MOCK_EVALUATOR_ID = 'usr_9';
-                    const existingRes = await getEvaluationResponseByKey(MOCK_EVALUATOR_ID, processId, personId);
-                    
-                    //console.log('Loaded evaluation response:', existingRes);
+                    const existingRes = await getEvaluationResponseByKey(currentUserId, processId, personId);
                     
                     if (existingRes?.success && existingRes.data?.respuesta) {
-                        // Load saved responses
                         const savedResponse = existingRes.data.respuesta;
-                        //console.log('Restoring saved responses:', savedResponse.competencias_evaluadas);
                         setResponses({
                             [personId]: savedResponse.competencias_evaluadas || {},
                         });
-                        // Load saved comments if any
                         if (savedResponse.comentarios?.text) {
                             setTextComment(savedResponse.comentarios.text);
                         }
                     } else {
-                        // No saved responses, start fresh
-                        //console.log('No saved responses found, starting fresh');
                         setResponses({ [personId]: {} });
                     }
                 }
@@ -232,7 +237,7 @@ const CompetencyEvaluationDetailPage: React.FC = () => {
         };
         load();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [processId, personId]);
+    }, [processId, personId, asignacionId]);
 
     // Handlers
     const handleSelectLevel = (competencyId: string, level: number) => {
@@ -257,53 +262,48 @@ const CompetencyEvaluationDetailPage: React.FC = () => {
 
         setIsSaving(true);
         try {
-            // Mock evaluator ID for development - TODO: Replace with actual currentUser
-            const MOCK_EVALUATOR_ID = 'usr_9';
-
-            // Prepare comments object
             const comentarios: EvaluationComments = {};
             if (textComment.trim().length > 0) {
                 comentarios.text = textComment;
             }
 
             const saveData = {
-                evaluador_id: MOCK_EVALUATOR_ID,
+                evaluador_id: currentUserId,
                 proceso_id: processId!,
                 persona_id: personId!,
                 competencias_evaluadas: responses[personId!],
                 comentarios,
                 estado: 'COMPLETADO' as const,
+                asignacion_id: asignacionId || undefined,
             };
-            
-            //console.log('Saving evaluation data:', saveData);
 
-            // Save evaluation response
             const result = await saveEvaluationResponse(saveData);
 
-            //console.log('Save result:', result);
-
             if (result?.success) {
+                // Completar asignación (EN_PROGRESO → COMPLETADO / EN_REVISION)
+                if (asignacionId) {
+                    await completarAsignacion(asignacionId);
+                }
+
                 // If part of an integral evaluation, sync the component
                 if (integralId && result.data?.respuesta) {
                     const evalResponse = result.data.respuesta;
                     
-                    // Use the scores already calculated in the service
                     if (evalResponse.puntaje_normalizado !== undefined && evalResponse.puntaje_numerico !== undefined) {
-                        // Sync competencias component with integral evaluation
                         await syncComponente(integralId, 'competencias', {
-                            puntaje: evalResponse.puntaje_normalizado,       // For display (0-100%)
-                            puntaje_numerico: evalResponse.puntaje_numerico, // For integral (e.g., 3.5)
-                            escala_maxima: evalResponse.escala_maxima,       // Maximum scale (e.g., 4 or 5)
+                            puntaje: evalResponse.puntaje_normalizado,
+                            puntaje_numerico: evalResponse.puntaje_numerico,
+                            escala_maxima: evalResponse.escala_maxima,
                             estado: 'COMPLETADA',
                         });
                         
-                        // Notify integral evaluation page to refresh
                         window.dispatchEvent(new Event('integralEvaluationUpdated'));
                     }
                 }
                 
                 openAlert('Evaluación guardada correctamente', 'success');
-                navigate(ROUTES.GRADING_PENDING);
+                const fallback = tipo === 'AUTOEVALUACION' ? ROUTES.MI_COMPETENCIAS_EVAL : ROUTES.GRADING_PENDING;
+                navigate(fallback);
             } else {
                 openAlert('Error al guardar la evaluación', 'error');
             }
@@ -354,16 +354,27 @@ const CompetencyEvaluationDetailPage: React.FC = () => {
     const evaluatedCount = Object.keys(responses[personId!] || {}).length;
     const allEvaluated = evaluatedCount === competencies.length;
 
-    const breadcrumbs = [
-        { label: 'Inicio', to: ROUTES.HOME },
-        { label: 'Evaluador', to: undefined },
-        { label: 'Mis Evaluaciones', to: ROUTES.GRADING_PENDING },
-        { label: `${person.nombres} ${person.apellidos}`, to: undefined },
-    ];
+    const isAutoevaluacion = tipo === 'AUTOEVALUACION';
+
+    const breadcrumbs = isAutoevaluacion
+        ? [
+            { label: 'Inicio', to: ROUTES.HOME },
+            { label: 'Empleado', to: undefined },
+            { label: 'Autoevaluación Competencias', to: ROUTES.MI_COMPETENCIAS_EVAL },
+            { label: `${person.nombres} ${person.apellidos}`, to: undefined },
+        ]
+        : [
+            { label: 'Inicio', to: ROUTES.HOME },
+            { label: 'Evaluador', to: undefined },
+            { label: 'Mis Evaluaciones', to: ROUTES.GRADING_PENDING },
+            { label: `${person.nombres} ${person.apellidos}`, to: undefined },
+        ];
+
+    const returnRoute = isAutoevaluacion ? ROUTES.MI_COMPETENCIAS_EVAL : ROUTES.GRADING_PENDING;
 
     return (
         <PageContainer
-            title={`Evaluar: ${person.nombres} ${person.apellidos}`}
+            title={`${isAutoevaluacion ? 'Autoevaluación' : 'Evaluar'}: ${person.nombres} ${person.apellidos}`}
             subtitle={process.nombre}
             breadcrumbs={breadcrumbs}
         >
@@ -373,7 +384,7 @@ const CompetencyEvaluationDetailPage: React.FC = () => {
                     <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => navigate(ROUTES.GRADING_PENDING)}
+                        onClick={() => navigate(returnRoute)}
                         leftIcon={ArrowLeft}
                     >
                         Volver
@@ -539,7 +550,7 @@ const CompetencyEvaluationDetailPage: React.FC = () => {
                     <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => navigate(ROUTES.GRADING_PENDING)}
+                        onClick={() => navigate(returnRoute)}
                         disabled={isSaving}
                     >
                         Cancelar
@@ -559,4 +570,4 @@ const CompetencyEvaluationDetailPage: React.FC = () => {
     );
 };
 
-export default CompetencyEvaluationDetailPage;
+export default CompetencyEvaluationEvaluatorDetailPage;

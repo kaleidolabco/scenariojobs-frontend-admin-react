@@ -29,7 +29,7 @@ export interface TableAction<T> {
 interface GenericTableProps<T> {
     data: T[];
     columns: TableColumn<T>[];
-    actions?: TableAction<T>[];
+    actions?: TableAction<T>[] | ((item: T) => TableAction<T>[]);
     keyExtractor: (item: T) => string | number;
 
     // Pagination
@@ -102,7 +102,7 @@ function GenericTable<T>({
                                 {column.sortable && renderSortIcon(String(column.key))}
                             </th>
                         ))}
-                        {actions && actions.length > 0 && (
+                        {actions && (
                             <th className="text-center">Acciones</th>
                         )}
                     </tr>
@@ -118,9 +118,9 @@ function GenericTable<T>({
                                             : String((item as any)[column.key] ?? '')}
                                     </td>
                                 ))}
-                                {actions && actions.length > 0 && (
+                                {actions && (
                                     <td className="hover">
-                                        {actions.map((action, idx) => (
+                                        {(typeof actions === 'function' ? actions(item) : actions).map((action, idx) => (
                                             <Button
                                                 key={idx}
                                                 variant={ACTION_BUTTON_VARIANT[(action.variant as ActionVariant) || 'ghost']}
@@ -138,7 +138,7 @@ function GenericTable<T>({
                         ))
                     ) : (
                         <tr>
-                            <td colSpan={columns.length + (actions ? 1 : 0)} className="text-center py-4">
+                            <td colSpan={columns.length + (actions ? 1 : 0)} className="text-center py-5">
                                 {emptyMessage}
                             </td>
                         </tr>

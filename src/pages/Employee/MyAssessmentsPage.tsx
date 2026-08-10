@@ -193,7 +193,7 @@ const SectionLabel: React.FC<{ label: string; count: number }> = ({ label, count
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
-const EvaluadoPage: React.FC = () => {
+const MyAssessmentsPage: React.FC = () => {
     const navigate = useNavigate();
     const { getEvaluations, loading } = usePerformanceService();
     const [evals, setEvals] = useState<EmployeeEvaluation[]>([]);
@@ -291,4 +291,4 @@ const EvaluadoPage: React.FC = () => {
     );
 };
 
-export default EvaluadoPage;
+export default MyAssessmentsPage;

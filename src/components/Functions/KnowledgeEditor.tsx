@@ -12,7 +12,7 @@ import {
 } from '../../services/functionService';
 import TreeNodeRow from './TreeNodeRow';
 import ModuleEditor from './ModuleEditor';
-import OrgChartPersonSelector from '../Competencies/OrgChartPersonSelector';
+import OrgChartPersonSelector from '../CompetencyEvaluation/OrgChartPersonSelector';
 
 interface KnowledgeEditorProps {
     knowledge: Knowledge;

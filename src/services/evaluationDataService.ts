@@ -5,7 +5,77 @@
 
 //import { p } from 'framer-motion/client';
 import { CompetencyEvaluationDetail } from './competencyEvaluationService';
+import { CompetencyEvaluationConfig } from './evaluationAssignmentService';
 
+// ─── Configuraciones de ejemplo (compartidas) ────────────────────────────────
+
+const CONFIG_AUTO_JEFE: CompetencyEvaluationConfig = {
+    tipos_evaluacion: [
+        { tipo: 'AUTOEVALUACION', activo: true, peso: 30 },
+        { tipo: 'JEFE_DIRECTO', activo: true, peso: 70 },
+        { tipo: 'OTRO', activo: false, peso: 0 },
+    ],
+    calibracion_rrhh: { activo: true, modo: 'SOLO_REVISAR' },
+    correccion: {
+        permitir: true,
+        maximo_por_asignacion: 1,
+        requiere_revision: false,
+        permitir_cuando_devuelto: true,
+        permitir_voluntaria: false,
+    },
+    revision_obligatoria: true,
+};
+
+const CONFIG_360: CompetencyEvaluationConfig = {
+    tipos_evaluacion: [
+        { tipo: 'AUTOEVALUACION', activo: true, peso: 33 },
+        { tipo: 'JEFE_DIRECTO', activo: true, peso: 34 },
+        { tipo: 'OTRO', activo: true, peso: 33 },
+    ],
+    calibracion_rrhh: { activo: true, modo: 'EDITAR' },
+    correccion: {
+        permitir: true,
+        maximo_por_asignacion: 2,
+        requiere_revision: true,
+        permitir_cuando_devuelto: true,
+        permitir_voluntaria: true,
+    },
+    revision_obligatoria: true,
+};
+
+const CONFIG_JEFE_SOLO: CompetencyEvaluationConfig = {
+    tipos_evaluacion: [
+        { tipo: 'AUTOEVALUACION', activo: false, peso: 0 },
+        { tipo: 'JEFE_DIRECTO', activo: true, peso: 100 },
+        { tipo: 'OTRO', activo: false, peso: 0 },
+    ],
+    calibracion_rrhh: { activo: false, modo: 'SOLO_REVISAR' },
+    correccion: {
+        permitir: false,
+        maximo_por_asignacion: 0,
+        requiere_revision: false,
+        permitir_cuando_devuelto: false,
+        permitir_voluntaria: false,
+    },
+    revision_obligatoria: false,
+};
+
+const CONFIG_AUTO_VOLUNTARIA: CompetencyEvaluationConfig = {
+    tipos_evaluacion: [
+        { tipo: 'AUTOEVALUACION', activo: true, peso: 100 },
+        { tipo: 'JEFE_DIRECTO', activo: false, peso: 0 },
+        { tipo: 'OTRO', activo: false, peso: 0 },
+    ],
+    calibracion_rrhh: { activo: false, modo: 'SOLO_REVISAR' },
+    correccion: {
+        permitir: true,
+        maximo_por_asignacion: null,
+        requiere_revision: false,
+        permitir_cuando_devuelto: false,
+        permitir_voluntaria: true,
+    },
+    revision_obligatoria: false,
+};
 
 // ─── Evaluation Processes ──────────────────────────────────────────────────────
 
@@ -15,6 +85,8 @@ export const MOCK_EVALUATION_PROCESSES: (CompetencyEvaluationDetail & { weights?
         nombre: 'Evaluación de Competencias - Líderes Q1 2026',
         descripcion: 'Evaluación integral de competencias técnicas y blandas para líderes y supervisores de la organización.',
         estado: 'PUBLICADO',
+        estado_flujo: 'EN_REVISION',
+        config: CONFIG_360,
         total_competencias: 8,
         creado_por: 'Ana García López',
         fecha_creacion: '2026-01-15T09:00:00Z',
@@ -38,6 +110,8 @@ export const MOCK_EVALUATION_PROCESSES: (CompetencyEvaluationDetail & { weights?
         nombre: 'Competencias Digitales - Equipo Tecnología',
         descripcion: 'Evaluación de habilidades digitales, transformación digital y competencias técnicas para el equipo de tecnología.',
         estado: 'PUBLICADO',
+        estado_flujo: 'EN_CALIFICACION',
+        config: CONFIG_AUTO_JEFE,
         total_competencias: 7,
         creado_por: 'Carlos Medina',
         fecha_creacion: '2026-02-05T10:30:00Z',
@@ -60,6 +134,8 @@ export const MOCK_EVALUATION_PROCESSES: (CompetencyEvaluationDetail & { weights?
         nombre: 'Evaluación de Servicio al Cliente',
         descripcion: 'Evaluación de competencias de atención al cliente, comunicación asertiva y resolución de conflictos.',
         estado: 'PUBLICADO',
+        estado_flujo: 'EN_CALIFICACION',
+        config: CONFIG_JEFE_SOLO,
         total_competencias: 5,
         creado_por: 'Laura Torres',
         fecha_creacion: '2026-02-20T08:00:00Z',
@@ -82,6 +158,8 @@ export const MOCK_EVALUATION_PROCESSES: (CompetencyEvaluationDetail & { weights?
         nombre: 'Análisis de Brechas - Equipo Administrativo',
         descripcion: 'Identificación de brechas de competencias para preparar planes de desarrollo individual y organizacional.',
         estado: 'PUBLICADO',
+        estado_flujo: 'CERRADO',
+        config: CONFIG_AUTO_VOLUNTARIA,
         total_competencias: 10,
         creado_por: 'Pedro Ruiz Gómez',
         fecha_creacion: '2026-01-30T11:00:00Z',
@@ -98,6 +176,29 @@ export const MOCK_EVALUATION_PROCESSES: (CompetencyEvaluationDetail & { weights?
             'per_24': ['usr_50', 'usr_51'],
             'per_33': ['usr_51', 'usr_9'],
             'per_42': ['usr_50', 'usr_9'],
+        },
+    },
+    {
+        id: 'eval_proc_005',
+        nombre: 'Autoevaluación Anual - Colaboradores',
+        descripcion: 'Proceso de autoevaluación voluntaria de competencias para todos los colaboradores activos.',
+        estado: 'BORRADOR',
+        estado_flujo: 'BORRADOR',
+        config: CONFIG_AUTO_VOLUNTARIA,
+        total_competencias: 6,
+        creado_por: 'Laura Torres',
+        fecha_creacion: '2026-04-02T09:30:00Z',
+        fecha_actualizacion: '2026-04-02T09:30:00Z',
+        total_evaluaciones: 0,
+        competencias_asignadas: ['1', '2', '3', '4', '5', '7'],
+        personas_a_evaluar: ['per_2', 'per_4', 'per_6', 'per_15'],
+        evaluadores_asignados: ['usr_38'],
+        weights: { '1': 20, '2': 20, '3': 15, '4': 15, '5': 15, '7': 15 },
+        evaluadores_por_persona: {
+            'per_2': ['usr_38'],
+            'per_4': ['usr_38'],
+            'per_6': ['usr_38'],
+            'per_15': ['usr_38'],
         },
     },
 ];

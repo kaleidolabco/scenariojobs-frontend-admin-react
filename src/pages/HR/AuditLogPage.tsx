@@ -625,7 +625,7 @@ const EntryEditor: React.FC<EditorProps> = ({ entry, currentUser, onSave, onClos
 
 const ITEMS_PER_PAGE = 20;
 
-const BitacoraPage: React.FC = () => {
+const AuditLogPage: React.FC = () => {
     const { getEntries, createEntry, updateEntry, deleteEntry, loading } = useBitacoraService();
 
     // Sesión simulada — en producción viene del auth context
@@ -934,4 +934,4 @@ const BitacoraPage: React.FC = () => {
     );
 };
 
-export default BitacoraPage;
+export default AuditLogPage;

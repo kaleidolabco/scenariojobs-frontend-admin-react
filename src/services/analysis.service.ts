@@ -4,8 +4,8 @@
 // Cada función hace exactamente 1 llamada → 1 turno de alternancia.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { routerCall } from './ai-router.service';
-import type { RouterCallResult } from './ai-router.service';
+import { routerCall } from './aiRouterService';
+import type { RouterCallResult } from './aiRouterService';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

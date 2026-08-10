@@ -6,13 +6,13 @@
 //          └─▶ [AI Router turno 1] ──▶ Sentimiento   (Groq o Cerebras)
 //                └─▶ [AI Router turno 2] ──▶ Análisis (Cerebras o Groq)
 //
-// Cada llamada LLM alterna proveedor via ai-router.service.ts
+// Cada llamada LLM alterna proveedor via aiRouterService.ts
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useState, useCallback } from 'react';
-import { transcribeVideo } from '../services/groq.service';
+import { transcribeVideo } from '../services/groqService';
 import { analyzeSentiment, analyzeTranscription } from '../services/analysis.service';
-import type { TranscriptionResult } from '../services/groq.service';
+import type { TranscriptionResult } from '../services/groqService';
 import type { SentimentResult, DeepAnalysisResult } from '../services/analysis.service';
 
 // ─── Types ────────────────────────────────────────────────────────────────────

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import LoadingIndicator from './LoadingIndicator';
-import Button from './Button';
+import LoadingIndicator from '../Common/LoadingIndicator';
+import Button from '../Common/Button';
 import { Mail, Check, Info, Eye, X } from '../Common/Icon';
 import { useEmailService, EmailTemplate } from '../../services/emailService';
 

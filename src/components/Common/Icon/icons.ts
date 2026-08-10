@@ -32,6 +32,7 @@ export {
     Copy,           // duplicar / clonar
     Clipboard,      // copiar al portapapeles / listado
     RefreshCw,      // refrescar / regenerar
+    RotateCcw,      // rotar / girar (era "rotate" custom)
 
     // ─── Navegación ───────────────────────────────────────────────────────
     ChevronDown,    // desplegar (unifica Heroicons 24x24 + RoleSwitcher 2048x2048)
@@ -72,7 +73,7 @@ export {
     Target,         // objetivo / OKR
     BarChart3,      // gráfico / reporte
     TrendingUp,     // desempeño / evolución positiva
-    Flame,          // hito / urgencia (EvaluadoPage)
+    Flame,          // hito / urgencia (MyAssessmentsPage)
     Tag,            // etiqueta / categoría
     BookOpen,       // bitácora / diario / conocimiento
     Layers,        // módulos / niveles
@@ -119,8 +120,8 @@ export {
     Minus,          // colapsar / contraer nodo (OrgUnitNode)
     Filter,         // filtros / faceted search (IntegralEvaluationSummary)
     MessageCircle,  // comentarios / feedback (ObjectiveEditor, SelfAssessmentPanel)
-    Edit3,          // edición inline (EvaluationCompetencyPage)
-    Activity,       // actividad / línea vital (EvaluationCompetencyPage)
-    CheckCircle,    // check dentro de círculo (EvaluationCompetencyPage, difiere de CircleCheck)
+    Edit3,          // edición inline (CompetencyEvaluationListPage)
+    Activity,       // actividad / línea vital (CompetencyEvaluationListPage)
+    CheckCircle,    // check dentro de círculo (CompetencyEvaluationListPage, difiere de CircleCheck)
 } from 'lucide-react';
 export type { LucideIcon } from 'lucide-react';

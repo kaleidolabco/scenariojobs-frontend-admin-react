@@ -188,7 +188,7 @@ const GeneralCommentsModal: React.FC<{
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
-const EvaluadoEvaluacionPage: React.FC = () => {
+const MyPerformanceEvaluationPage: React.FC = () => {
     const { evaluacionId } = useParams<{ evaluacionId: string }>();
     const navigate = useNavigate();
     const { getEvaluationById, saveEvaluation } = usePerformanceService();
@@ -461,4 +461,4 @@ const EvaluadoEvaluacionPage: React.FC = () => {
     );
 };
 
-export default EvaluadoEvaluacionPage;
+export default MyPerformanceEvaluationPage;

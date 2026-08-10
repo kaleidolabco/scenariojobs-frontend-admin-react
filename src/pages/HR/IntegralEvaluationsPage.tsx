@@ -26,7 +26,7 @@ import Button from '../../components/Common/Button';
 const ITEMS_PER_PAGE = 10;
 type TabId = 'lista' | 'resumen';
 
-const EvaluacionesIntegralPage: React.FC = () => {
+const IntegralEvaluationsPage: React.FC = () => {
     const navigate = useNavigate();
     const { getIntegrales, deleteIntegral, loading } = useIntegralEvaluationService();
     const { getEvaluationByProcessAndPerson } = useEvaluationResponseService();
@@ -160,7 +160,7 @@ const EvaluacionesIntegralPage: React.FC = () => {
     };
 
     const handleViewDetail = (evaluacion: EvaluacionIntegral) => {
-        navigate(`${ROUTES.RRHH_EVALUACIONES_INTEGRAL}/${evaluacion.id}`);
+        navigate(`${ROUTES.HR_EVALUACIONES_INTEGRAL}/${evaluacion.id}`);
     };
 
     const handleFilterChange = (key: string, value: string | number) => {
@@ -422,4 +422,4 @@ const EvaluacionesIntegralPage: React.FC = () => {
     );
 };
 
-export default EvaluacionesIntegralPage;
+export default IntegralEvaluationsPage;

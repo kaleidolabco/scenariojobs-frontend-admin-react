@@ -40,6 +40,7 @@ export const ROUTES = {
 
     // Execution (Employee/Candidate)
     MY_ASSESSMENTS: '/mis-evaluaciones',
+    MI_COMPETENCIAS_EVAL: '/mis-evaluaciones-competencias',
     TAKE_ASSESSMENT: (id: string) => `/mis-evaluaciones/${id}/realizar`,
     MY_OBJECTIVES: '/mis-objetivos',
     MY_OBJECTIVE_DETAIL: (id: string) => `/mis-objetivos/${id}`,
@@ -62,8 +63,8 @@ export const ROUTES = {
     COMPETENCY_EVAL_DETAIL: (id: string) => `/evaluaciones-competencias/${id}`,
 
     // Integral Evaluations
-    RRHH_EVALUACIONES_INTEGRAL: '/evaluaciones-integrales',
-    RRHH_EVALUACIONES_INTEGRAL_DETAIL: (id: string) => `/evaluaciones-integrales/${id}`,
+    HR_EVALUACIONES_INTEGRAL: '/evaluaciones-integrales',
+    HR_EVALUACIONES_INTEGRAL_DETAIL: (id: string) => `/evaluaciones-integrales/${id}`,
 };
 
 export const ROUTE_LABELS: Record<string, string> = {
@@ -91,5 +92,5 @@ export const ROUTE_LABELS: Record<string, string> = {
     [ROUTES.OBJECTIVES_REPORT]: 'Reporte Objetivos',
     [ROUTES.PERFORMANCE]: 'Desempeño',
     [ROUTES.COMPETENCIES_EVAL]: 'Evaluación de Competencias',
-    [ROUTES.RRHH_EVALUACIONES_INTEGRAL]: 'Evaluaciones Integrales',
+    [ROUTES.HR_EVALUACIONES_INTEGRAL]: 'Evaluaciones Integrales',
 };

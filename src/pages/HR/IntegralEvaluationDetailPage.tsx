@@ -112,14 +112,15 @@ const WeightEditor: React.FC<WeightEditorProps> = ({
             <div className={`flex items-center justify-between text-xs rounded-lg px-3 py-1.5 ${ok ? 'bg-success/10 text-success' : 'bg-error/10 text-error'}`}>
                 <span>{ok ? '✓ Los pesos suman 100%' : `Deben sumar 100% — actualmente ${total}%`}</span>
                 {dirty && ok && (
-                    <button
-                        className="btn btn-success btn-xs"
+                    <Button
+                        variant="success"
+                        size="xs"
                         onClick={() => onSave(d, c)}
                         disabled={saving}
+                        loading={saving}
                     >
-                        {saving && <span className="loading loading-spinner loading-xs mr-1"/>}
                         Guardar pesos
-                    </button>
+                    </Button>
                 )}
             </div>
         </div>
@@ -246,7 +247,7 @@ const ComponentCard: React.FC<ComponentCardProps> = ({
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
-const EvaluacionesIntegralDetailPage: React.FC = () => {
+const IntegralEvaluationDetailPage: React.FC = () => {
     const { id }    = useParams<{ id: string }>();
     const navigate  = useNavigate();
     const { getIntegralById, updatePesos, loading } = useIntegralEvaluationService();
@@ -303,12 +304,12 @@ const EvaluacionesIntegralDetailPage: React.FC = () => {
             
             setEvaluacion(integral);
         }
-        else { openAlert('Evaluación no encontrada', 'error'); navigate(ROUTES.RRHH_EVALUACIONES_INTEGRAL); }
+        else { openAlert('Evaluación no encontrada', 'error'); navigate(ROUTES.HR_EVALUACIONES_INTEGRAL); }
     };
 
     // Carga inicial
     useEffect(() => {
-        if (!id) { navigate(ROUTES.RRHH_EVALUACIONES_INTEGRAL); return; }
+        if (!id) { navigate(ROUTES.HR_EVALUACIONES_INTEGRAL); return; }
         loadEvaluation(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
@@ -385,7 +386,7 @@ const EvaluacionesIntegralDetailPage: React.FC = () => {
 
     const breadcrumbs = [
         { label: 'Inicio',                    to: ROUTES.HOME                   },
-        { label: 'Evaluaciones Integrales',   to: ROUTES.RRHH_EVALUACIONES_INTEGRAL },
+        { label: 'Evaluaciones Integrales',   to: ROUTES.HR_EVALUACIONES_INTEGRAL },
         { label: evaluacion.persona_nombre,   to: undefined                      },
     ];
 
@@ -400,9 +401,9 @@ const EvaluacionesIntegralDetailPage: React.FC = () => {
                 <div className="flex items-center gap-2 flex-wrap">
                     <span className={`badge badge-${statusColor} badge-outline font-medium`}>{statusLabel}</span>
                     {!isCompleted && allDone && (
-                        <button className="btn btn-primary btn-sm" onClick={() => setShowComplete(true)}>
+                        <Button variant="primary" size="sm" onClick={() => setShowComplete(true)}>
                             Marcar como completada
-                        </button>
+                        </Button>
                     )}
                 </div>
             }
@@ -608,4 +609,4 @@ const EvaluacionesIntegralDetailPage: React.FC = () => {
     );
 };
 
-export default EvaluacionesIntegralDetailPage;
+export default IntegralEvaluationDetailPage;

@@ -2,10 +2,25 @@ import useFetch from '../hooks/useFetch';
 import { FetchResponse, successMock } from './responseType';
 import useUIStore from '../store/uiStore';
 import { MOCK_EVALUATION_PROCESSES } from './evaluationDataService';
+import { CompetencyEvaluationConfig } from './evaluationAssignmentService';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+/**
+ * Estados legacy del proceso de competencia (compatibilidad hacia atrás).
+ * Los nuevos estados extendidos viven en `EstadoProcesoCompetencia`.
+ */
 export type CompetencyEvaluationStatus = 'BORRADOR' | 'PUBLICADO' | 'ARCHIVADO';
+
+/**
+ * Estados extendidos del proceso de evaluación de competencias (nuevo flujo).
+ * Mantiene los legacy y agrega EN_CALIFICACION / EN_REVISION / CERRADO.
+ */
+export type EstadoProcesoCompetencia =
+    | CompetencyEvaluationStatus
+    | 'EN_CALIFICACION'
+    | 'EN_REVISION'
+    | 'CERRADO';
 
 export interface CompetencyEvaluationQueryParams {
     pagina?: number;
@@ -33,6 +48,12 @@ export interface CompetencyEvaluationDetail extends CompetencyEvaluationSummary 
     competencias_asignadas: string[]; // Competency IDs
     personas_a_evaluar: string[]; // Person IDs
     evaluadores_asignados: string[]; // User IDs
+    /** Estado extendido del flujo de competencias (nuevo flujo). */
+    estado_flujo?: EstadoProcesoCompetencia;
+    /** Configuración del proceso (tipos de evaluación, calibración, corrección). */
+    config?: CompetencyEvaluationConfig;
+    /** Origen de las competencias asignadas: 'manual' | 'desde_cargos'. */
+    origen_competencias?: 'manual' | 'desde_cargos';
 }
 
 // ─── Mock data ────────────────────────────────────────────────────────────────
@@ -316,6 +337,40 @@ export const useCompetencyEvaluationService = () => {
         }
     };
 
+    // ── UPDATE ESTADO DEL FLUJO ────────────────────────────────────────────────
+
+    /**
+     * Actualiza sólo el estado extendido del flujo (estado_flujo).
+     * No toca los campos legacy (estado) salvo que se solicite.
+     */
+    const updateEstadoProceso = async (
+        id: string,
+        estadoFlujo: EstadoProcesoCompetencia,
+    ): Promise<FetchResponse | null> => {
+        try {
+            _db = _db.map((e) =>
+                e.id === id
+                    ? { ...e, estado_flujo: estadoFlujo, fecha_actualizacion: new Date().toISOString() }
+                    : e
+            );
+
+            const response = (await fetchData({
+                url: `/api/competency-evaluations/${id}/estado`,
+                method: 'PATCH',
+                body: { estado_flujo: estadoFlujo },
+                mockData: successMock({ evaluacion: { id, estado_flujo: estadoFlujo } }),
+            })) as FetchResponse | null;
+
+            if (response?.success === false) {
+                throw new Error(response.message || 'Error al actualizar estado del proceso');
+            }
+            return response;
+        } catch (err) {
+            openAlert(err instanceof Error ? err.message : String(err), 'error');
+            return null;
+        }
+    };
+
     return {
         getCompetencyEvaluations,
         getCompetencyEvaluationDetail,
@@ -325,5 +380,6 @@ export const useCompetencyEvaluationService = () => {
         updateCompetencyEvaluation,
         deleteCompetencyEvaluation,
         cloneCompetencyEvaluation,
+        updateEstadoProceso,
     };
 };
