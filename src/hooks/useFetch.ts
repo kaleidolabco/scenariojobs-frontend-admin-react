@@ -72,15 +72,19 @@ function useFetch<T>(): FetchResult<T> {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const abortControllerRef = useRef<AbortController | null>(null);
+  const abortControllerRef = useRef<{ pathname: string; controller: AbortController } | null>(null);
 
   const fetchData = useCallback(async (userOptions: FetchOptions) => {
-    // Cancelar petición anterior si existe
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
+    // Cancelar una petición anterior SOLO si es al mismo endpoint (pathname).
+    // Evita que respuestas obsoletas pisoteen búsquedas/filtros recientes sin
+    // cancelar peticiones concurrentes a otros endpoints (p.ej. stats + listado,
+    // o Promise.all en pantallas de detalle).
+    const endpointPath = new URL(userOptions.url, 'http://localhost').pathname;
+    if (abortControllerRef.current?.pathname === endpointPath) {
+      abortControllerRef.current.controller.abort();
     }
     const controller = new AbortController();
-    abortControllerRef.current = controller;
+    abortControllerRef.current = { pathname: endpointPath, controller };
     
     setLoading(true);
     setError(null);

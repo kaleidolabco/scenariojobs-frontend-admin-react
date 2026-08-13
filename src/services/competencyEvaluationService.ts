@@ -1,7 +1,7 @@
 import useFetch from '../hooks/useFetch';
-import { FetchResponse, successMock } from './responseType';
+import { FetchResponse } from './responseType';
 import useUIStore from '../store/uiStore';
-import { MOCK_EVALUATION_PROCESSES } from './evaluationDataService';
+import useAuthStore from '../store/authStore';
 import { CompetencyEvaluationConfig } from './evaluationAssignmentService';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -36,6 +36,8 @@ export interface CompetencyEvaluationSummary {
     nombre: string;
     descripcion?: string;
     estado: CompetencyEvaluationStatus;
+    /** Estado extendido del flujo (BORRADOR, PUBLICADO, EN_CALIFICACION, EN_REVISION, CERRADO, ARCHIVADO). */
+    estado_flujo?: EstadoProcesoCompetencia;
     total_competencias: number;
     creado_por: string;
     fecha_creacion: string;
@@ -54,240 +56,259 @@ export interface CompetencyEvaluationDetail extends CompetencyEvaluationSummary 
     config?: CompetencyEvaluationConfig;
     /** Origen de las competencias asignadas: 'manual' | 'desde_cargos'. */
     origen_competencias?: 'manual' | 'desde_cargos';
+    /** Pesos por competencia (mapa competencia_id → peso). */
+    weights?: Record<string, number>;
+    /** Plantillas de correo asociadas. */
+    templates_asociadas?: string[];
+    /** Mapa persona/colaborador_id → evaluadores tipo OTRO. */
+    evaluadores_por_persona?: Record<string, string[]>;
+    /** Detalle de las competencias asignadas (orden, sección, peso). */
+    competencias?: {
+        id: string;
+        competencia_id: string;
+        nombre: string;
+        escala: number;
+        orden: number;
+        seccion?: string;
+        peso: number;
+    }[];
 }
 
-// ─── Mock data ────────────────────────────────────────────────────────────────
+// ─── Payload helpers ──────────────────────────────────────────────────────────
 
-interface CompetencyEvaluationDB extends CompetencyEvaluationDetail {}
+export interface CompetenciaItemPayload {
+    competencia_id: string;
+    orden: number;
+    seccion?: string;
+    peso: number;
+}
 
-let _db: CompetencyEvaluationDB[] = MOCK_EVALUATION_PROCESSES;
+export interface SaveCompetenciesPayload {
+    origen: 'manual' | 'desde_cargos';
+    competencias: CompetenciaItemPayload[];
+    weights?: Record<string, number>;
+}
+
+export interface SaveParticipantsPayload {
+    colaborador_ids: string[];
+    evaluadores_por_colaborador?: Record<string, string[]>;
+}
 
 // ─── Service hook ─────────────────────────────────────────────────────────────
 
 export const useCompetencyEvaluationService = () => {
     const { fetchData } = useFetch<FetchResponse>();
     const { openAlert } = useUIStore();
+    const { token } = useAuthStore();
+
+    const BASE_URL = `${import.meta.env.VITE_API_URL}/competency-evaluations`;
+    const EVAL_URL = `${import.meta.env.VITE_API_URL}/evaluations`;
+
+    const run = async (promise: Promise<FetchResponse | null>): Promise<FetchResponse | null> => {
+        try {
+            return await promise;
+        } catch (err) {
+            openAlert(err instanceof Error ? err.message : String(err), 'error');
+            return null;
+        }
+    };
 
     // ── GET list ──────────────────────────────────────────────────────────────
 
     const getCompetencyEvaluations = async (
         params?: CompetencyEvaluationQueryParams
     ): Promise<FetchResponse | null> => {
-        try {
-            let filtered = [..._db];
+        return run(
+            (async () => {
+                const backendParams: Record<string, string | number | undefined> = {};
+                if (params?.search) backendParams.busqueda = params.search;
+                if (params?.estado) backendParams.estado = params.estado;
+                if (params?.pagina) backendParams.pagina = params.pagina;
+                if (params?.items_por_pagina) backendParams.limite = params.items_por_pagina;
+                if (params?.orden_por) backendParams.ordenar_por = params.orden_por;
+                if (params?.orden) backendParams.orden = params.orden;
 
-            // Filters
-            if (params?.search) {
-                const q = params.search.toLowerCase();
-                filtered = filtered.filter(
-                    (e) =>
-                        e.nombre.toLowerCase().includes(q) ||
-                        e.descripcion?.toLowerCase().includes(q)
-                );
-            }
-            if (params?.estado) filtered = filtered.filter((e) => e.estado === params.estado);
+                const response = (await fetchData({
+                    url: BASE_URL,
+                    params: backendParams,
+                    token: token || null,
+                })) as FetchResponse | null;
 
-            // Sorting
-            if (params?.orden_por) {
-                filtered.sort((a, b) => {
-                    const aVal = (a as any)[params.orden_por!] ?? '';
-                    const bVal = (b as any)[params.orden_por!] ?? '';
-                    const cmp = aVal > bVal ? 1 : aVal < bVal ? -1 : 0;
-                    return params.orden === 'desc' ? -cmp : cmp;
-                });
-            }
+                if (response?.success === false) {
+                    throw new Error(response.message || 'Error al obtener las evaluaciones de competencias');
+                }
 
-            // Pagination
-            const page = params?.pagina ?? 1;
-            const pageSize = params?.items_por_pagina ?? 10;
-            const totalItems = filtered.length;
-            const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
-            const start = (page - 1) * pageSize;
-            const paginated = filtered.slice(start, start + pageSize);
+                if (response?.success && response.data) {
+                    return {
+                        ...response,
+                        data: {
+                            evaluaciones: response.data.datos ?? [],
+                            paginacion: response.data.paginacion ?? null,
+                        },
+                    };
+                }
 
-            const response = (await fetchData({
-                url: '/api/competency-evaluations',
-                params: params as any,
-                mockData: successMock({
-                    evaluaciones: paginated,
-                    paginacion: {
-                        pagina_actual: page,
-                        items_por_pagina: pageSize,
-                        total_items: totalItems,
-                        total_paginas: totalPages,
-                    },
-                }),
-            })) as FetchResponse | null;
-
-            if (response?.success === false) {
-                throw new Error(response.message || 'Error al obtener las evaluaciones de competencias');
-            }
-
-            return response;
-        } catch (err) {
-            openAlert(err instanceof Error ? err.message : String(err), 'error');
-            return null;
-        }
+                return response;
+            })()
+        );
     };
 
     // ── GET detail ────────────────────────────────────────────────────────────
 
+    type RawDetail = CompetencyEvaluationDetail & {
+        colaboradores_evaluados?: string[];
+        evaluadores_por_colaborador?: Record<string, string[]>;
+        competencias?: { competencia_id: string }[];
+    };
+
+    const mapDetail = (raw: RawDetail): CompetencyEvaluationDetail => {
+        const competencias = raw.competencias ?? [];
+        return {
+            ...raw,
+            personas_a_evaluar: raw.colaboradores_evaluados ?? raw.personas_a_evaluar ?? [],
+            evaluadores_por_persona: raw.evaluadores_por_colaborador ?? raw.evaluadores_por_persona ?? {},
+            competencias_asignadas:
+                raw.competencias_asignadas ??
+                competencias.map((c) => c.competencia_id) ??
+                [],
+        };
+    };
+
     const getCompetencyEvaluationDetail = async (id: string): Promise<FetchResponse | null> => {
-        try {
-            const evaluation = _db.find((e) => e.id === id);
-            if (!evaluation) throw new Error('Evaluación no encontrada');
+        return run(
+            (async () => {
+                const response = (await fetchData({
+                    url: `${BASE_URL}/${id}`,
+                    token: token || null,
+                })) as FetchResponse | null;
 
-            const response = (await fetchData({
-                url: `/api/competency-evaluations/${id}`,
-                mockData: successMock({ evaluacion: evaluation }),
-            })) as FetchResponse | null;
+                if (response?.success === false) {
+                    throw new Error(response.message || 'Error al obtener la evaluación');
+                }
 
-            if (response?.success === false) {
-                throw new Error(response.message || 'Error al obtener la evaluación');
-            }
+                if (response?.success && response.data) {
+                    return { ...response, data: { evaluacion: mapDetail(response.data) } };
+                }
 
-            return response;
-        } catch (err) {
-            openAlert(err instanceof Error ? err.message : String(err), 'error');
-            return null;
-        }
+                return response;
+            })()
+        );
     };
 
     // ── GET evaluation for person ─────────────────────────────────────────────
 
     /**
-     * Search for a competency evaluation that has the given person assigned
-     * Returns the first evaluation where persona_id is in personas_a_evaluar
+     * Busca un proceso activo (PUBLICADO, EN_CALIFICACION, EN_REVISION) en el
+     * que el colaborador participe. Retorna el primero encontrado o null.
      */
     const getCompetencyEvaluationForPerson = async (personaId: string): Promise<FetchResponse | null> => {
-        try {
-            const evaluation = _db.find((e) => 
-                e.personas_a_evaluar && e.personas_a_evaluar.includes(personaId)
-            );
+        return run(
+            (async () => {
+                const response = (await fetchData({
+                    url: `${BASE_URL}/colaborador/${personaId}`,
+                    token: token || null,
+                })) as FetchResponse | null;
 
-            const response = (await fetchData({
-                url: `/api/competency-evaluations/person/${personaId}`,
-                mockData: evaluation
-                    ? successMock({ evaluacion: evaluation })
-                    : successMock({ evaluacion: null }),
-            })) as FetchResponse | null;
+                if (response?.success === false) {
+                    throw new Error(response.message || 'Error al buscar evaluación de competencias');
+                }
 
-            if (response?.success === false) {
-                throw new Error(response.message || 'Error al buscar evaluación de competencias');
-            }
+                if (response?.success) {
+                    const raw = response.data;
+                    return { ...response, data: { evaluacion: raw ? mapDetail(raw) : null } };
+                }
 
-            return response;
-        } catch (err) {
-            openAlert(err instanceof Error ? err.message : String(err), 'error');
-            return null;
-        }
+                return response;
+            })()
+        );
     };
 
     // ── GET stats ─────────────────────────────────────────────────────────────
 
     const getCompetencyEvaluationStats = async (): Promise<FetchResponse | null> => {
-        try {
-            const stats = {
-                total: _db.length,
-                publicadas: _db.filter((e) => e.estado === 'PUBLICADO').length,
-                borradores: _db.filter((e) => e.estado === 'BORRADOR').length,
-                total_evaluaciones: _db.reduce((s, e) => s + e.total_evaluaciones, 0),
-            };
+        return run(
+            (async () => {
+                const response = (await fetchData({
+                    url: `${BASE_URL}/stats`,
+                    token: token || null,
+                })) as FetchResponse | null;
 
-            const response = (await fetchData({
-                url: '/api/competency-evaluations/stats',
-                mockData: successMock({ stats }),
-            })) as FetchResponse | null;
+                if (response?.success === false) {
+                    throw new Error(response.message || 'Error al obtener las estadísticas');
+                }
 
-            if (response?.success === false) {
-                throw new Error(response.message || 'Error al obtener las estadísticas');
-            }
+                if (response?.success && response.data) {
+                    // El backend puede retornar las estadísticas planas ({total, ...})
+                    // o ya envueltas en una clave `stats`. Normalizamos a {stats}.
+                    const raw = response.data;
+                    const stats = raw.stats && typeof raw.stats === 'object' ? raw.stats : raw;
+                    return { ...response, data: { stats } };
+                }
 
-            return response;
-        } catch (err) {
-            openAlert(err instanceof Error ? err.message : String(err), 'error');
-            return null;
-        }
+                return response;
+            })()
+        );
     };
 
     // ── CREATE ────────────────────────────────────────────────────────────────
 
     const createCompetencyEvaluation = async (
-        data: Omit<CompetencyEvaluationSummary, 'id' | 'fecha_creacion' | 'fecha_actualizacion' | 'total_evaluaciones'>
+        data: Pick<CompetencyEvaluationSummary, 'nombre' | 'descripcion' | 'estado'>
     ): Promise<FetchResponse | null> => {
-        try {
-            const newEvaluation: CompetencyEvaluationDB = {
-                ...data,
-                id: `ceval-${Math.random().toString(36).slice(2, 9)}`,
-                total_evaluaciones: 0,
-                fecha_creacion: new Date().toISOString(),
-                fecha_actualizacion: new Date().toISOString(),
-                competencias_asignadas: [],
-                personas_a_evaluar: [],
-                evaluadores_asignados: [],
-            };
+        return run(
+            (async () => {
+                const response = (await fetchData({
+                    url: BASE_URL,
+                    method: 'POST',
+                    body: {
+                        nombre: data.nombre,
+                        descripcion: data.descripcion,
+                        estado: data.estado,
+                    },
+                    token: token || null,
+                })) as FetchResponse | null;
 
-            _db = [..._db, newEvaluation];
+                if (response?.success === false) {
+                    throw new Error(response.message || 'Error al crear la evaluación');
+                }
 
-            const response = (await fetchData({
-                url: '/api/competency-evaluations',
-                method: 'POST',
-                body: data,
-                mockData: successMock({ evaluacion: newEvaluation }),
-            })) as FetchResponse | null;
-
-            if (response?.success === false) {
-                throw new Error(response.message || 'Error al crear la evaluación');
-            }
-
-            return response;
-        } catch (err) {
-            openAlert(err instanceof Error ? err.message : String(err), 'error');
-            return null;
-        }
+                return response;
+            })()
+        );
     };
 
     // ── UPDATE ────────────────────────────────────────────────────────────────
 
     const updateCompetencyEvaluation = async (
         id: string,
-        data: Partial<CompetencyEvaluationDetail>
+        data: Partial<Pick<CompetencyEvaluationSummary, 'nombre' | 'descripcion' | 'estado'>>
     ): Promise<FetchResponse | null> => {
-        try {
-            _db = _db.map((e) =>
-                e.id === id ? { ...e, ...data, fecha_actualizacion: new Date().toISOString() } : e
-            );
+        return run(
+            (async () => {
+                const response = (await fetchData({
+                    url: `${BASE_URL}/${id}`,
+                    method: 'PUT',
+                    body: data,
+                    token: token || null,
+                })) as FetchResponse | null;
 
-            const response = (await fetchData({
-                url: `/api/competency-evaluations/${id}`,
-                method: 'PUT',
-                body: data,
-                mockData: successMock({
-                    evaluacion: { ...data, id, fecha_actualizacion: new Date().toISOString() },
-                }),
-            })) as FetchResponse | null;
+                if (response?.success === false) {
+                    throw new Error(response.message || 'Error al actualizar la evaluación');
+                }
 
-            if (response?.success === false) {
-                throw new Error(response.message || 'Error al actualizar la evaluación');
-            }
-
-            return response;
-        } catch (err) {
-            openAlert(err instanceof Error ? err.message : String(err), 'error');
-            return null;
-        }
+                return response;
+            })()
+        );
     };
 
     // ── DELETE ────────────────────────────────────────────────────────────────
 
     const deleteCompetencyEvaluation = async (id: string): Promise<boolean> => {
         try {
-            _db = _db.filter((e) => e.id !== id);
-
             const response = (await fetchData({
-                url: `/api/competency-evaluations/${id}`,
+                url: `${BASE_URL}/${id}`,
                 method: 'DELETE',
-                mockData: successMock({ message: 'Evaluación eliminada' }),
+                token: token || null,
             })) as FetchResponse | null;
 
             if (response?.success === false) {
@@ -304,37 +325,21 @@ export const useCompetencyEvaluationService = () => {
     // ── CLONE ─────────────────────────────────────────────────────────────────
 
     const cloneCompetencyEvaluation = async (id: string): Promise<FetchResponse | null> => {
-        try {
-            const sourceEval = _db.find((e) => e.id === id);
-            if (!sourceEval) throw new Error('Evaluación no encontrada');
+        return run(
+            (async () => {
+                const response = (await fetchData({
+                    url: `${BASE_URL}/${id}/clone`,
+                    method: 'POST',
+                    token: token || null,
+                })) as FetchResponse | null;
 
-            const clonedEval: CompetencyEvaluationDB = {
-                ...sourceEval,
-                id: `ceval-${Math.random().toString(36).slice(2, 9)}`,
-                nombre: `${sourceEval.nombre} (Copia)`,
-                estado: 'BORRADOR',
-                total_evaluaciones: 0,
-                fecha_creacion: new Date().toISOString(),
-                fecha_actualizacion: new Date().toISOString(),
-            };
+                if (response?.success === false) {
+                    throw new Error(response.message || 'Error al clonar la evaluación');
+                }
 
-            _db = [..._db, clonedEval];
-
-            const response = (await fetchData({
-                url: `/api/competency-evaluations/${id}/clone`,
-                method: 'POST',
-                mockData: successMock({ evaluacion: clonedEval }),
-            })) as FetchResponse | null;
-
-            if (response?.success === false) {
-                throw new Error(response.message || 'Error al clonar la evaluación');
-            }
-
-            return response;
-        } catch (err) {
-            openAlert(err instanceof Error ? err.message : String(err), 'error');
-            return null;
-        }
+                return response;
+            })()
+        );
     };
 
     // ── UPDATE ESTADO DEL FLUJO ────────────────────────────────────────────────
@@ -347,28 +352,118 @@ export const useCompetencyEvaluationService = () => {
         id: string,
         estadoFlujo: EstadoProcesoCompetencia,
     ): Promise<FetchResponse | null> => {
-        try {
-            _db = _db.map((e) =>
-                e.id === id
-                    ? { ...e, estado_flujo: estadoFlujo, fecha_actualizacion: new Date().toISOString() }
-                    : e
-            );
+        return run(
+            (async () => {
+                const response = (await fetchData({
+                    url: `${BASE_URL}/${id}/estado`,
+                    method: 'PATCH',
+                    body: { estado_flujo: estadoFlujo },
+                    token: token || null,
+                })) as FetchResponse | null;
 
-            const response = (await fetchData({
-                url: `/api/competency-evaluations/${id}/estado`,
-                method: 'PATCH',
-                body: { estado_flujo: estadoFlujo },
-                mockData: successMock({ evaluacion: { id, estado_flujo: estadoFlujo } }),
-            })) as FetchResponse | null;
+                if (response?.success === false) {
+                    throw new Error(response.message || 'Error al actualizar estado del proceso');
+                }
+                return response;
+            })()
+        );
+    };
 
-            if (response?.success === false) {
-                throw new Error(response.message || 'Error al actualizar estado del proceso');
-            }
-            return response;
-        } catch (err) {
-            openAlert(err instanceof Error ? err.message : String(err), 'error');
-            return null;
-        }
+    // ── Guardado por secciones del proceso ─────────────────────────────────────
+
+    /**
+     * Reemplaza la configuración General del proceso (tipos de evaluación,
+     * calibración RRHH, revisión obligatoria y política de corrección).
+     */
+    const saveConfig = async (
+        procesoId: string,
+        config: CompetencyEvaluationConfig,
+    ): Promise<FetchResponse | null> => {
+        return run(
+            (async () => {
+                const response = (await fetchData({
+                    url: `${EVAL_URL}/${procesoId}/config`,
+                    method: 'PUT',
+                    body: config,
+                    token: token || null,
+                })) as FetchResponse | null;
+
+                if (response?.success === false) {
+                    throw new Error(response.message || 'Error al guardar la configuración');
+                }
+                return response;
+            })()
+        );
+    };
+
+    /**
+     * Reemplaza completamente las competencias del proceso, sus pesos y el origen.
+     */
+    const saveCompetencies = async (
+        procesoId: string,
+        payload: SaveCompetenciesPayload,
+    ): Promise<FetchResponse | null> => {
+        return run(
+            (async () => {
+                const response = (await fetchData({
+                    url: `${EVAL_URL}/${procesoId}/competencies`,
+                    method: 'PUT',
+                    body: payload,
+                    token: token || null,
+                })) as FetchResponse | null;
+
+                if (response?.success === false) {
+                    throw new Error(response.message || 'Error al guardar las competencias');
+                }
+                return response;
+            })()
+        );
+    };
+
+    /**
+     * Reemplaza completamente los participantes y evaluadores adicionales (OTRO).
+     * Requiere al menos un colaborador.
+     */
+    const saveParticipants = async (
+        procesoId: string,
+        payload: SaveParticipantsPayload,
+    ): Promise<FetchResponse | null> => {
+        return run(
+            (async () => {
+                const response = (await fetchData({
+                    url: `${EVAL_URL}/${procesoId}/participants`,
+                    method: 'PUT',
+                    body: payload,
+                    token: token || null,
+                })) as FetchResponse | null;
+
+                if (response?.success === false) {
+                    throw new Error(response.message || 'Error al guardar los participantes');
+                }
+                return response;
+            })()
+        );
+    };
+
+    /**
+     * Genera (o regenera) las asignaciones de evaluadores para cada participante.
+     * Destructiva: el backend resuelve AUTOEVALUACION y JEFE_DIRECTO.
+     */
+    const generateAsignaciones = async (procesoId: string): Promise<FetchResponse | null> => {
+        return run(
+            (async () => {
+                const response = (await fetchData({
+                    url: `${EVAL_URL}/${procesoId}/generar-asignaciones`,
+                    method: 'POST',
+                    token: token || null,
+                })) as FetchResponse | null;
+
+                if (response?.success === false) {
+                    throw new Error(response.message || 'Error al generar las asignaciones');
+                }
+                return response;
+            })()
+        );
     };
 
     return {
@@ -381,5 +476,9 @@ export const useCompetencyEvaluationService = () => {
         deleteCompetencyEvaluation,
         cloneCompetencyEvaluation,
         updateEstadoProceso,
+        saveConfig,
+        saveCompetencies,
+        saveParticipants,
+        generateAsignaciones,
     };
 };

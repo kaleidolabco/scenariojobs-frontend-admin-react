@@ -1,23 +1,19 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, Edit3, Copy, Trash2, Plus, Activity, CheckCircle, Pencil, BarChart3 } from '../../components/Common/Icon';
+import { Edit3, Copy, Trash2, Plus, Activity, CheckCircle, Pencil, BarChart3 } from '../../components/Common/Icon';
 import { UserRole, ROLE_LABELS } from '../../constants/roles';
 import Button from '../../components/Common/Button';
 import PageContainer from '../../components/Common/PageContainer';
 import GenericTable, { TableColumn, TableAction } from '../../components/Common/GenericTable';
-import GenericModal from '../../components/Common/GenericModal';
 import ConfirmationModal from '../../components/Common/ConfirmationModal';
 import FilterBar from '../../components/Common/FilterBar';
 import LoadingIndicator from '../../components/Common/LoadingIndicator';
-import FormSection from '../../components/Common/Forms/FormSection';
-import InputField from '../../components/Common/Forms/InputField';
-import TextAreaField from '../../components/Common/Forms/TextAreaField';
-import SelectField from '../../components/Common/Forms/SelectField';
-import NumberInputField from '../../components/Common/Forms/NumberInputField';
 import StatsCard from '../../components/Common/StatsCard';
+import CompetencyEvaluationFormModal from '../../components/CompetencyEvaluation/CompetencyEvaluationFormModal';
 import { ROUTES } from '../../constants/routes';
 import useUIStore from '../../store/uiStore';
 import { Pagination } from '../../services/responseType';
+import { ESTADO_PROCESO_LABELS, ESTADO_PROCESO_BADGE } from '../../services/evaluationAssignmentService';
 import {
     useCompetencyEvaluationService,
     CompetencyEvaluationSummary,
@@ -28,137 +24,15 @@ const ITEMS_PER_PAGE = 10;
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-const StatusBadge: React.FC<{ estado: CompetencyEvaluationStatus }> = ({ estado }) => {
-    const map: Record<CompetencyEvaluationStatus, { cls: string; label: string; dot: string }> = {
-        BORRADOR: { cls: 'badge-warning', label: 'Borrador', dot: 'bg-warning' },
-        PUBLICADO: { cls: 'badge-success', label: 'Publicado', dot: 'bg-success' },
-        ARCHIVADO: { cls: 'badge-ghost', label: 'Archivado', dot: 'bg-base-content/30' },
-    };
-    const { cls, label, dot } = map[estado];
-    return (
-        <div className={`badge ${cls} badge-sm gap-1.5 font-medium`}>
-            <span className={`inline-block w-1.5 h-1.5 rounded-full ${dot}`} />
-            {label}
-        </div>
-    );
-};
-
-
-
-// ─── Form Modal Content ───────────────────────────────────────────────────────
-
-interface CompetencyEvaluationFormProps {
-    evaluation?: CompetencyEvaluationSummary;
-    onSubmit: (data: any) => Promise<void>;
-    isLoading?: boolean;
-}
-
-const CompetencyEvaluationForm: React.FC<CompetencyEvaluationFormProps> = ({
-    evaluation,
-    onSubmit,
-    isLoading = false,
+const StatusBadge: React.FC<{ estado: CompetencyEvaluationStatus; estadoFlujo?: string }> = ({
+    estado,
+    estadoFlujo,
 }) => {
-    const [formData, setFormData] = useState({
-        nombre: evaluation?.nombre ?? '',
-        descripcion: evaluation?.descripcion ?? '',
-        estado: evaluation?.estado ?? 'BORRADOR' as CompetencyEvaluationStatus,
-        total_competencias: evaluation?.total_competencias ?? 0,
-        creado_por: evaluation?.creado_por ?? 'Usuario Actual',
-    });
-
-    const [errors, setErrors] = useState<Record<string, string>>({});
-
-    const handleInputChange = (field: string, value: any) => {
-        setFormData((prev) => ({ ...prev, [field]: value }));
-        if (errors[field]) {
-            setErrors((prev) => {
-                const newErrors = { ...prev };
-                delete newErrors[field];
-                return newErrors;
-            });
-        }
-    };
-
-    const validateForm = (): boolean => {
-        const newErrors: Record<string, string> = {};
-        if (!formData.nombre.trim()) newErrors.nombre = 'El nombre es requerido';
-        if (formData.nombre.length > 255) newErrors.nombre = 'El nombre no puede exceder 255 caracteres';
-        if (formData.descripcion.length > 1000) newErrors.descripcion = 'La descripción no puede exceder 1000 caracteres';
-        if (formData.total_competencias < 0) newErrors.total_competencias = 'El número de competencias debe ser mayor a 0';
-        
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!validateForm()) return;
-        await onSubmit(formData);
-    };
-
+    const statusKey = (estadoFlujo || estado) as keyof typeof ESTADO_PROCESO_BADGE;
     return (
-        <form onSubmit={handleSubmit} className="space-y-6">
-            <FormSection title="Información General" description="Datos básicos del proceso de evaluación">
-                <div className="space-y-4">
-                    <InputField
-                        label="Nombre del Proceso"
-                        name="nombre"
-                        value={formData.nombre}
-                        onChange={(e) => handleInputChange('nombre', e.target.value)}
-                        placeholder="Ej: Evaluación de Competencias – Líderes 2025"
-                        required
-                        error={errors.nombre}
-                        maxLength={255}
-                    />
-
-                    <TextAreaField
-                        label="Descripción"
-                        name="descripcion"
-                        value={formData.descripcion}
-                        onChange={(e) => handleInputChange('descripcion', e.target.value)}
-                        placeholder="Descripción detallada del proceso evaluativo..."
-                        rows={3}
-                        maxLength={1000}
-                        error={errors.descripcion}
-                        helpText={`${formData.descripcion.length}/1000`}
-                    />
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <SelectField
-                            label="Estado"
-                            name="estado"
-                            value={formData.estado}
-                            onChange={(e) =>
-                                handleInputChange('estado', e.target.value as CompetencyEvaluationStatus)
-                            }
-                            options={[
-                                { value: 'BORRADOR', label: 'Borrador' },
-                                { value: 'PUBLICADO', label: 'Publicado' },
-                                { value: 'ARCHIVADO', label: 'Archivado' },
-                            ]}
-                        />
-
-                        <NumberInputField
-                            label="Total de Competencias"
-                            name="total_competencias"
-                            value={formData.total_competencias}
-                            onChange={(value) => handleInputChange('total_competencias', value)}
-                            min={0}
-                            error={errors.total_competencias}
-                        />
-                    </div>
-                </div>
-            </FormSection>
-
-            <div className="flex gap-3 justify-end pt-4 border-t">
-                <Button variant="ghost" size="sm" disabled={isLoading}>
-                    Cancelar
-                </Button>
-                <Button variant="primary" size="sm" type="submit" disabled={isLoading} loading={isLoading}>
-                    {isLoading ? 'Guardando...' : evaluation ? 'Actualizar' : 'Crear Proceso'}
-                </Button>
-            </div>
-        </form>
+        <div className={`badge ${ESTADO_PROCESO_BADGE[statusKey] || 'badge-ghost'}`}>
+            {ESTADO_PROCESO_LABELS[statusKey] || statusKey.replace('_', ' ')}
+        </div>
     );
 };
 
@@ -170,8 +44,6 @@ const CompetencyEvaluationListPage: React.FC = () => {
     const {
         getCompetencyEvaluations,
         getCompetencyEvaluationStats,
-        createCompetencyEvaluation,
-        updateCompetencyEvaluation,
         deleteCompetencyEvaluation,
         cloneCompetencyEvaluation,
     } = useCompetencyEvaluationService();
@@ -180,7 +52,6 @@ const CompetencyEvaluationListPage: React.FC = () => {
     const [evaluations, setEvaluations] = useState<CompetencyEvaluationSummary[]>([]);
     const [pagination, setPagination] = useState<Pagination | null>(null);
     const [loading, setLoading] = useState(false);
-    const [formLoading, setFormLoading] = useState(false);
 
     // Query params
     const [queryParams, setQueryParams] = useState<any>({
@@ -191,6 +62,18 @@ const CompetencyEvaluationListPage: React.FC = () => {
         orden: 'asc',
         orden_por: 'nombre',
     });
+
+    // Local search term to enable debouncing
+    const [localSearchTerm, setLocalSearchTerm] = useState('');
+
+    // UI sort state (backend sort field may differ from column key)
+    const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
+
+    // Map column keys to backend supported sort fields
+    // Backend ordenar_por soporta: nombre, fecha_registro, estado
+    const SORT_FIELD_MAP: Record<string, string> = {
+        fecha_actualizacion: 'fecha_registro',
+    };
 
     // Modals
     const [formModalOpen, setFormModalOpen] = useState(false);
@@ -210,13 +93,27 @@ const CompetencyEvaluationListPage: React.FC = () => {
 
     const loadStats = useCallback(async () => {
         const response = await getCompetencyEvaluationStats();
-        if (response?.success) setStats(response.data.stats);
+        if (response?.success) {
+            setStats((prev) => ({ ...prev, ...(response.data?.stats ?? {}) }));
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {
         loadStats();
     }, []);
+
+    // Debounce the search input to avoid making too many API calls
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setQueryParams((prev: any) => {
+                if (prev.search === localSearchTerm) return prev;
+                return { ...prev, search: localSearchTerm, pagina: 1 };
+            });
+        }, 400);
+
+        return () => clearTimeout(handler);
+    }, [localSearchTerm]);
 
     // Load data
     const loadEvaluations = useCallback(async () => {
@@ -250,43 +147,6 @@ const CompetencyEvaluationListPage: React.FC = () => {
     const handleOpenForm = (evaluation?: CompetencyEvaluationSummary) => {
         setEvaluationToEdit(evaluation ?? null);
         setFormModalOpen(true);
-    };
-
-    const handleFormSubmit = async (formData: any) => {
-        setFormLoading(true);
-        try {
-            let response;
-            if (evaluationToEdit) {
-                response = await updateCompetencyEvaluation(evaluationToEdit.id, {
-                    nombre: formData.nombre,
-                    descripcion: formData.descripcion,
-                    estado: formData.estado,
-                    total_competencias: formData.total_competencias,
-                });
-            } else {
-                response = await createCompetencyEvaluation({
-                    nombre: formData.nombre,
-                    descripcion: formData.descripcion,
-                    estado: formData.estado,
-                    total_competencias: formData.total_competencias,
-                    creado_por: formData.creado_por,
-                });
-            }
-
-            if (response?.success) {
-                openAlert(
-                    evaluationToEdit
-                        ? `"${formData.nombre}" actualizado correctamente.`
-                        : `Proceso "${formData.nombre}" creado correctamente.`,
-                    'success'
-                );
-                setFormModalOpen(false);
-                setEvaluationToEdit(null);
-                reloadAll();
-            }
-        } finally {
-            setFormLoading(false);
-        }
     };
 
     const handleDelete = async () => {
@@ -332,9 +192,11 @@ const CompetencyEvaluationListPage: React.FC = () => {
         setQueryParams((p: any) => ({ ...p, [key]: value, pagina: 1 }));
 
     const handleSearch = (term: string) =>
-        setQueryParams((p: any) => ({ ...p, search: term, pagina: 1 }));
+        setLocalSearchTerm(term);
 
-    const clearFilters = () =>
+    const clearFilters = () => {
+        setLocalSearchTerm('');
+        setSortConfig({ key: 'nombre', direction: 'asc' });
         setQueryParams({
             search: '',
             estado: undefined,
@@ -343,16 +205,19 @@ const CompetencyEvaluationListPage: React.FC = () => {
             orden: 'asc',
             orden_por: 'nombre',
         });
+    };
 
     // Sorting
     const handleSort = (key: string) => {
-        const newDirection = queryParams.orden_por === key && queryParams.orden === 'asc' ? 'desc' : 'asc';
-        setQueryParams((p: any) => ({ ...p, orden_por: key, orden: newDirection, pagina: 1 }));
+        const newDirection = sortConfig?.key === key && sortConfig.direction === 'asc' ? 'desc' : 'asc';
+        setSortConfig({ key, direction: newDirection });
+        setQueryParams((p: any) => ({
+            ...p,
+            orden_por: SORT_FIELD_MAP[key] || key,
+            orden: newDirection,
+            pagina: 1,
+        }));
     };
-
-    const sortConfig = queryParams.orden_por
-        ? { key: queryParams.orden_por, direction: queryParams.orden as 'asc' | 'desc' }
-        : null;
 
     // Table config
     const columns: TableColumn<CompetencyEvaluationSummary>[] = [
@@ -373,7 +238,7 @@ const CompetencyEvaluationListPage: React.FC = () => {
             key: 'estado',
             label: 'Estado',
             sortable: true,
-            render: (e) => <StatusBadge estado={e.estado} />,
+            render: (e) => <StatusBadge estado={e.estado} estadoFlujo={e.estado_flujo} />,
         },
         {
             key: 'total_competencias',
@@ -409,22 +274,13 @@ const CompetencyEvaluationListPage: React.FC = () => {
 
     const actions: TableAction<CompetencyEvaluationSummary>[] = [
         {
-            label: 'Ver detalle',
-            icon: <Eye size={16} />,
-            onClick: (e) => {
-                navigate(ROUTES.COMPETENCY_EVAL_DETAIL(e.id));
-            },
-            variant: 'ghost',
-            tooltip: 'Ver detalle',
-        },
-        {
             label: 'Editar',
             icon: <Edit3 size={16} />,
             onClick: (e) => {
                 navigate(ROUTES.COMPETENCY_EVAL_DETAIL(e.id));
             },
             variant: 'ghost',
-            tooltip: 'Editar',
+            tooltip: 'Editar proceso',
         },
         {
             label: 'Clonar',
@@ -497,7 +353,7 @@ const CompetencyEvaluationListPage: React.FC = () => {
             {/* Filter Bar */}
             <FilterBar
                 onSearch={handleSearch}
-                searchTerm={queryParams.search || ''}
+                searchTerm={localSearchTerm}
                 searchPlaceholder="Buscar proceso por nombre o descripción..."
                 filters={filterDefinitions}
                 activeFilters={activeFilters}
@@ -525,21 +381,15 @@ const CompetencyEvaluationListPage: React.FC = () => {
             )}
 
             {/* Form Modal */}
-            <GenericModal
+            <CompetencyEvaluationFormModal
                 isOpen={formModalOpen}
+                evaluation={evaluationToEdit}
                 onClose={() => {
                     setFormModalOpen(false);
                     setEvaluationToEdit(null);
                 }}
-                title={evaluationToEdit ? 'Editar Proceso' : 'Crear Nuevo Proceso'}
-                size="lg"
-            >
-                <CompetencyEvaluationForm
-                    evaluation={evaluationToEdit ?? undefined}
-                    onSubmit={handleFormSubmit}
-                    isLoading={formLoading}
-                />
-            </GenericModal>
+                onSaved={reloadAll}
+            />
 
             {/* Clone Confirmation */}
             <ConfirmationModal
