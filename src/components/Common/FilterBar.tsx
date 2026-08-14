@@ -44,7 +44,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
                             <input
                                 type="text"
                                 placeholder={searchPlaceholder}
-                                className="input input-bordered w-full pr-10"
+                                className="input input-bordered w-full pr-10 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                                 value={searchTerm}
                                 onChange={(e) => onSearch(e.target.value)}
                             />
