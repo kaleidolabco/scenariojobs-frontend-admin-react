@@ -13,7 +13,7 @@ import { Info, Menu, ExternalLink } from '../../components/Common/Icon';
 
 const OrgUnitDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
-    const { getUnitById, loading: unitLoading } = useOrgUnitService();
+    const { getUnitById } = useOrgUnitService();
 
     const [unit, setUnit] = useState<OrgUnit | null>(null);
     const [activeTab, setActiveTab] = useState<'info' | 'subunits' | 'positions'>('positions');

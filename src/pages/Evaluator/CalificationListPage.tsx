@@ -4,7 +4,6 @@ import { UserRole, ROLE_LABELS } from '../../constants/roles';
 import PageContainer from '../../components/Common/PageContainer';
 import GenericTable, { TableColumn, TableAction } from '../../components/Common/GenericTable';
 import LoadingIndicator from '../../components/Common/LoadingIndicator';
-import Button from '../../components/Common/Button';
 import { ROUTES } from '../../constants/routes';
 import useUIStore from '../../store/uiStore';
 import useAuthStore from '../../store/authStore';
@@ -23,7 +22,7 @@ import {
     TipoEvaluacion,
 } from '../../services/evaluationAssignmentService';
 import StatusBadge from '../../components/Common/StatusBadge';
-import { Eye, Check, Clock, RotateCcw, CheckCircle } from '../../components/Common/Icon';
+import { Eye, RotateCcw, CheckCircle } from '../../components/Common/Icon';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -49,11 +48,11 @@ const ESTADO_BADGE_MAP = Object.fromEntries(
     ])
 ) as Record<EstadoAsignacion, { color: string; label: string }>;
 
-const TIPO_LABELS: Record<TipoEvaluacion, string> = {
-    AUTOEVALUACION: 'Autoevaluación',
-    JEFE_DIRECTO: 'Jefe directo',
-    OTRO: 'Otro',
-};
+// const TIPO_LABELS: Record<TipoEvaluacion, string> = {
+//     AUTOEVALUACION: 'Autoevaluación',
+//     JEFE_DIRECTO: 'Jefe directo',
+//     OTRO: 'Otro',
+// };
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
@@ -102,8 +101,8 @@ const CalificationListPage: React.FC = () => {
                     // Para autoevaluación, la persona es el propio evaluador (person_id = evaluador_id mapeado)
                 }
 
-                const resp = respByAsignacion.get(a.id);
-                const estado: EstadoAsignacion = resp?.estado === 'COMPLETADO' ? a.estado : a.estado;
+                // const resp = respByAsignacion.get(a.id);
+                // const estado: EstadoAsignacion = resp?.estado === 'COMPLETADO' ? a.estado : a.estado;
                 const competenciesCount = proces.competencias_asignadas?.length ?? 0;
 
                 const configProceso = getConfig(a.proceso_id);
@@ -331,10 +330,10 @@ const CalificationListPage: React.FC = () => {
         (currentPage - 1) * pageSize,
         (currentPage - 1) * pageSize + pageSize
     );
-    const paginadasAuto = sortRows(autoevalRows).slice(
-        (currentPage - 1) * pageSize,
-        (currentPage - 1) * pageSize + pageSize
-    );
+    // const paginadasAuto = sortRows(autoevalRows).slice(
+    //     (currentPage - 1) * pageSize,
+    //     (currentPage - 1) * pageSize + pageSize
+    // );
 
     const EmptyState = ({ emoji, title, msg }: { emoji: string; title: string; msg: string }) => (
         <div className="flex items-center justify-center min-h-[300px]">
