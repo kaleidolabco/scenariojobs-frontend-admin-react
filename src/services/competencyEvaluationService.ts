@@ -1,8 +1,9 @@
 import useFetch from '../hooks/useFetch';
-import { FetchResponse } from './responseType';
+import { FetchResponse, Pagination } from './responseType';
 import useUIStore from '../store/uiStore';
 import useAuthStore from '../store/authStore';
 import { CompetencyEvaluationConfig } from './evaluationAssignmentService';
+import { ProcessParticipantRow, ProcessParticipantsQueryParams } from '../components/CompetencyEvaluation/types';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -25,10 +26,10 @@ export type EstadoProcesoCompetencia =
 export interface CompetencyEvaluationQueryParams {
     pagina?: number;
     items_por_pagina?: number;
-    orden?: string;
+    orden?: 'asc' | 'desc';
     orden_por?: string;
     search?: string;
-    estado?: CompetencyEvaluationStatus;
+    estado?: CompetencyEvaluationStatus | EstadoProcesoCompetencia;
 }
 
 export interface CompetencyEvaluationSummary {
@@ -50,27 +51,37 @@ export interface CompetencyEvaluationDetail extends CompetencyEvaluationSummary 
     competencias_asignadas: string[]; // Competency IDs
     personas_a_evaluar: string[]; // Person IDs
     evaluadores_asignados: string[]; // User IDs
+    total_participantes?: number;
+    total_evaluadores?: number;
+    total_evaluaciones_completadas?: number;
     /** Estado extendido del flujo de competencias (nuevo flujo). */
     estado_flujo?: EstadoProcesoCompetencia;
     /** Configuración del proceso (tipos de evaluación, calibración, corrección). */
     config?: CompetencyEvaluationConfig;
+    configuracion?: CompetencyEvaluationConfig;
     /** Origen de las competencias asignadas: 'manual' | 'desde_cargos'. */
     origen_competencias?: 'manual' | 'desde_cargos';
     /** Pesos por competencia (mapa competencia_id → peso). */
     weights?: Record<string, number>;
+    pesos?: Record<string, number>;
     /** Plantillas de correo asociadas. */
     templates_asociadas?: string[];
+    plantillas_correo_ids?: string[];
     /** Mapa persona/colaborador_id → evaluadores tipo OTRO. */
     evaluadores_por_persona?: Record<string, string[]>;
+    evaluadores_por_colaborador?: Record<string, string[]>;
     /** Detalle de las competencias asignadas (orden, sección, peso). */
     competencias?: {
         id: string;
         competencia_id: string;
         nombre: string;
+        descripcion?: string;
         escala: number;
+        categoria?: { id: string; nombre: string } | string;
         orden: number;
         seccion?: string;
-        peso: number;
+        peso?: number;
+        peso_ponderacion?: number;
     }[];
 }
 
@@ -80,18 +91,38 @@ export interface CompetenciaItemPayload {
     competencia_id: string;
     orden: number;
     seccion?: string;
-    peso: number;
+    peso_ponderacion?: number;
+}
+
+export interface SaveCompetenciesIncrementalPayload {
+    origen: 'manual' | 'desde_cargos';
+    agregar?: CompetenciaItemPayload[];
+    eliminar?: string[];
+    actualizar?: CompetenciaItemPayload[];
+    pesos?: Record<string, number>;
+    participante_ids?: string[];
 }
 
 export interface SaveCompetenciesPayload {
     origen: 'manual' | 'desde_cargos';
     competencias: CompetenciaItemPayload[];
     weights?: Record<string, number>;
+    pesos?: Record<string, number>;
+}
+
+export interface ParticipantToAdd {
+    colaborador_id: string;
+    evaluadores?: string[];
 }
 
 export interface SaveParticipantsPayload {
-    colaborador_ids: string[];
+    agregar?: ParticipantToAdd[];
+    retirar?: string[];
     evaluadores_por_colaborador?: Record<string, string[]>;
+}
+
+export interface SaveEmailsPayload {
+    plantillas_correo_ids: string[];
 }
 
 // ─── Service hook ─────────────────────────────────────────────────────────────
@@ -102,7 +133,6 @@ export const useCompetencyEvaluationService = () => {
     const { token } = useAuthStore();
 
     const BASE_URL = `${import.meta.env.VITE_API_URL}/competency-evaluations`;
-    const EVAL_URL = `${import.meta.env.VITE_API_URL}/evaluations`;
 
     const run = async (promise: Promise<FetchResponse | null>): Promise<FetchResponse | null> => {
         try {
@@ -142,7 +172,7 @@ export const useCompetencyEvaluationService = () => {
                     return {
                         ...response,
                         data: {
-                            evaluaciones: response.data.datos ?? [],
+                            evaluaciones: response.data.datos ?? response.data.evaluaciones ?? [],
                             paginacion: response.data.paginacion ?? null,
                         },
                     };
@@ -158,18 +188,32 @@ export const useCompetencyEvaluationService = () => {
     type RawDetail = CompetencyEvaluationDetail & {
         colaboradores_evaluados?: string[];
         evaluadores_por_colaborador?: Record<string, string[]>;
-        competencias?: { competencia_id: string }[];
+        plantillas_correo_ids?: string[];
+        pesos?: Record<string, number>;
+        configuracion?: CompetencyEvaluationConfig;
     };
 
     const mapDetail = (raw: RawDetail): CompetencyEvaluationDetail => {
         const competencias = raw.competencias ?? [];
+        const weights = raw.pesos ?? raw.weights ?? {};
+        const templates = raw.plantillas_correo_ids ?? raw.templates_asociadas ?? [];
+        const config = raw.configuracion ?? raw.config;
+        const personas = raw.colaboradores_evaluados ?? raw.personas_a_evaluar ?? [];
+        const evaluadoresPorPersona = raw.evaluadores_por_colaborador ?? raw.evaluadores_por_persona ?? {};
+
         return {
             ...raw,
-            personas_a_evaluar: raw.colaboradores_evaluados ?? raw.personas_a_evaluar ?? [],
-            evaluadores_por_persona: raw.evaluadores_por_colaborador ?? raw.evaluadores_por_persona ?? {},
+            config,
+            weights,
+            pesos: weights,
+            personas_a_evaluar: personas,
+            evaluadores_por_persona: evaluadoresPorPersona,
+            evaluadores_por_colaborador: evaluadoresPorPersona,
+            templates_asociadas: templates,
+            plantillas_correo_ids: templates,
             competencias_asignadas:
                 raw.competencias_asignadas ??
-                competencias.map((c) => c.competencia_id) ??
+                competencias.map((c) => c.competencia_id || c.id) ??
                 [],
         };
     };
@@ -197,10 +241,6 @@ export const useCompetencyEvaluationService = () => {
 
     // ── GET evaluation for person ─────────────────────────────────────────────
 
-    /**
-     * Busca un proceso activo (PUBLICADO, EN_CALIFICACION, EN_REVISION) en el
-     * que el colaborador participe. Retorna el primero encontrado o null.
-     */
     const getCompetencyEvaluationForPerson = async (personaId: string): Promise<FetchResponse | null> => {
         return run(
             (async () => {
@@ -238,8 +278,6 @@ export const useCompetencyEvaluationService = () => {
                 }
 
                 if (response?.success && response.data) {
-                    // El backend puede retornar las estadísticas planas ({total, ...})
-                    // o ya envueltas en una clave `stats`. Normalizamos a {stats}.
                     const raw = response.data;
                     const stats = raw.stats && typeof raw.stats === 'object' ? raw.stats : raw;
                     return { ...response, data: { stats } };
@@ -344,10 +382,6 @@ export const useCompetencyEvaluationService = () => {
 
     // ── UPDATE ESTADO DEL FLUJO ────────────────────────────────────────────────
 
-    /**
-     * Actualiza sólo el estado extendido del flujo (estado_flujo).
-     * No toca los campos legacy (estado) salvo que se solicite.
-     */
     const updateEstadoProceso = async (
         id: string,
         estadoFlujo: EstadoProcesoCompetencia,
@@ -369,10 +403,29 @@ export const useCompetencyEvaluationService = () => {
         );
     };
 
-    // ── Guardado por secciones del proceso ─────────────────────────────────────
+    // ── Guardado por secciones modulares del proceso ──────────────────────────
 
     /**
-     * Reemplaza la configuración General del proceso (tipos de evaluación,
+     * Consulta la configuración General de evaluación del proceso.
+     */
+    const getConfig = async (procesoId: string): Promise<FetchResponse | null> => {
+        return run(
+            (async () => {
+                const response = (await fetchData({
+                    url: `${BASE_URL}/${procesoId}/config`,
+                    token: token || null,
+                })) as FetchResponse | null;
+
+                if (response?.success === false) {
+                    throw new Error(response.message || 'Error al obtener la configuración');
+                }
+                return response;
+            })()
+        );
+    };
+
+    /**
+     * Guarda la configuración General del proceso (tipos de evaluación,
      * calibración RRHH, revisión obligatoria y política de corrección).
      */
     const saveConfig = async (
@@ -382,7 +435,7 @@ export const useCompetencyEvaluationService = () => {
         return run(
             (async () => {
                 const response = (await fetchData({
-                    url: `${EVAL_URL}/${procesoId}/config`,
+                    url: `${BASE_URL}/${procesoId}/config`,
                     method: 'PUT',
                     body: config,
                     token: token || null,
@@ -397,18 +450,60 @@ export const useCompetencyEvaluationService = () => {
     };
 
     /**
-     * Reemplaza completamente las competencias del proceso, sus pesos y el origen.
+     * Consulta las competencias asignadas al proceso (paginado).
      */
-    const saveCompetencies = async (
+    const getProcessCompetencies = async (
         procesoId: string,
-        payload: SaveCompetenciesPayload,
+        params?: { pagina?: number; limite?: number; busqueda?: string; categoria_id?: string; ordenar_por?: string; orden?: string }
     ): Promise<FetchResponse | null> => {
         return run(
             (async () => {
+                const backendParams: Record<string, string | number | undefined> = {};
+                if (params?.pagina) backendParams.pagina = params.pagina;
+                if (params?.limite) backendParams.limite = params.limite;
+                if (params?.busqueda) backendParams.busqueda = params.busqueda;
+                if (params?.categoria_id) backendParams.categoria_id = params.categoria_id;
+                if (params?.ordenar_por) backendParams.ordenar_por = params.ordenar_por;
+                if (params?.orden) backendParams.orden = params.orden;
+
                 const response = (await fetchData({
-                    url: `${EVAL_URL}/${procesoId}/competencies`,
-                    method: 'PUT',
-                    body: payload,
+                    url: `${BASE_URL}/${procesoId}/competencies`,
+                    params: Object.keys(backendParams).length > 0 ? backendParams : undefined,
+                    token: token || null,
+                })) as FetchResponse | null;
+
+                if (response?.success === false) {
+                    throw new Error(response.message || 'Error al obtener las competencias del proceso');
+                }
+                return response;
+            })()
+        );
+    };
+
+    /**
+     * Actualiza incrementalmente las competencias del proceso (PATCH).
+     */
+    const saveCompetencies = async (
+        procesoId: string,
+        payload: SaveCompetenciesIncrementalPayload,
+    ): Promise<FetchResponse | null> => {
+        return run(
+            (async () => {
+                const body: Record<string, unknown> = { origen: payload.origen };
+
+                if (payload.origen === 'desde_cargos') {
+                    body.participante_ids = payload.participante_ids ?? [];
+                } else {
+                    body.agregar = payload.agregar ?? [];
+                    body.eliminar = payload.eliminar ?? [];
+                    body.actualizar = payload.actualizar ?? [];
+                    body.pesos = payload.pesos ?? {};
+                }
+
+                const response = (await fetchData({
+                    url: `${BASE_URL}/${procesoId}/competencies`,
+                    method: 'PATCH',
+                    body,
                     token: token || null,
                 })) as FetchResponse | null;
 
@@ -421,8 +516,51 @@ export const useCompetencyEvaluationService = () => {
     };
 
     /**
-     * Reemplaza completamente los participantes y evaluadores adicionales (OTRO).
-     * Requiere al menos un colaborador.
+     * Consulta los participantes asignados al proceso de manera paginada y filtrable.
+     */
+    const getProcessParticipants = async (
+        procesoId: string,
+        params?: ProcessParticipantsQueryParams
+    ): Promise<FetchResponse | null> => {
+        return run(
+            (async () => {
+                const backendParams: Record<string, string | number | undefined> = {};
+                if (params?.pagina) backendParams.pagina = params.pagina;
+                if (params?.limite) backendParams.limite = params.limite;
+                if (params?.busqueda) backendParams.busqueda = params.busqueda;
+                if (params?.unidad_organizacional_id) backendParams.unidad_organizacional_id = params.unidad_organizacional_id;
+                if (params?.cargo_id) backendParams.cargo_id = params.cargo_id;
+                if (params?.ordenar_por) backendParams.ordenar_por = params.ordenar_por;
+                if (params?.orden) backendParams.orden = params.orden;
+
+                const response = (await fetchData({
+                    url: `${BASE_URL}/${procesoId}/participants`,
+                    params: backendParams,
+                    token: token || null,
+                })) as FetchResponse | null;
+
+                if (response?.success === false) {
+                    throw new Error(response.message || 'Error al obtener los participantes');
+                }
+
+                if (response?.success && response.data) {
+                    const datos: ProcessParticipantRow[] = response.data.datos ?? response.data.participantes ?? [];
+                    const paginacion: Pagination = response.data.paginacion ?? {
+                        total: datos.length,
+                        pagina: params?.pagina ?? 1,
+                        limite: params?.limite ?? 20,
+                        total_paginas: 1,
+                    };
+                    return { ...response, data: { datos, paginacion } };
+                }
+
+                return response;
+            })()
+        );
+    };
+
+    /**
+     * Actualiza incrementalmente participantes y evaluadores de un proceso (PATCH).
      */
     const saveParticipants = async (
         procesoId: string,
@@ -431,9 +569,13 @@ export const useCompetencyEvaluationService = () => {
         return run(
             (async () => {
                 const response = (await fetchData({
-                    url: `${EVAL_URL}/${procesoId}/participants`,
-                    method: 'PUT',
-                    body: payload,
+                    url: `${BASE_URL}/${procesoId}/participants`,
+                    method: 'PATCH',
+                    body: {
+                        agregar: payload.agregar ?? [],
+                        retirar: payload.retirar ?? [],
+                        evaluadores_por_colaborador: payload.evaluadores_por_colaborador ?? {},
+                    },
                     token: token || null,
                 })) as FetchResponse | null;
 
@@ -447,19 +589,95 @@ export const useCompetencyEvaluationService = () => {
 
     /**
      * Genera (o regenera) las asignaciones de evaluadores para cada participante.
-     * Destructiva: el backend resuelve AUTOEVALUACION y JEFE_DIRECTO.
      */
     const generateAsignaciones = async (procesoId: string): Promise<FetchResponse | null> => {
         return run(
             (async () => {
                 const response = (await fetchData({
-                    url: `${EVAL_URL}/${procesoId}/generar-asignaciones`,
+                    url: `${BASE_URL}/${procesoId}/generate-assignments`,
                     method: 'POST',
                     token: token || null,
                 })) as FetchResponse | null;
 
                 if (response?.success === false) {
                     throw new Error(response.message || 'Error al generar las asignaciones');
+                }
+                return response;
+            })()
+        );
+    };
+
+    /**
+     * Calcula en el backend las competencias sugeridas derivadas de los cargos.
+     * Si se omiten `colaboradorIds`, usa todos los participantes activos del proceso.
+     */
+    const getCompetenciasSugeridas = async (
+        procesoId: string,
+        colaboradorIds?: string[],
+        pagina?: number,
+        limite?: number
+    ): Promise<FetchResponse | null> => {
+        return run(
+            (async () => {
+                const body: Record<string, unknown> = {};
+                if (colaboradorIds && colaboradorIds.length > 0) {
+                    body.colaborador_ids = colaboradorIds;
+                }
+                body.pagina = pagina ?? 1;
+                body.limite = limite ?? 100;
+
+                const response = (await fetchData({
+                    url: `${BASE_URL}/${procesoId}/suggested-competencies`,
+                    method: 'POST',
+                    body,
+                    token: token || null,
+                })) as FetchResponse | null;
+
+                if (response?.success === false) {
+                    throw new Error(response.message || 'Error al calcular las competencias sugeridas');
+                }
+                return response;
+            })()
+        );
+    };
+
+    /**
+     * Consulta las plantillas de correo vinculadas al proceso.
+     */
+    const getProcessEmails = async (procesoId: string): Promise<FetchResponse | null> => {
+        return run(
+            (async () => {
+                const response = (await fetchData({
+                    url: `${BASE_URL}/${procesoId}/emails`,
+                    token: token || null,
+                })) as FetchResponse | null;
+
+                if (response?.success === false) {
+                    throw new Error(response.message || 'Error al obtener los correos del proceso');
+                }
+                return response;
+            })()
+        );
+    };
+
+    /**
+     * Guarda las plantillas de correo vinculadas al proceso.
+     */
+    const saveProcessEmails = async (
+        procesoId: string,
+        payload: SaveEmailsPayload
+    ): Promise<FetchResponse | null> => {
+        return run(
+            (async () => {
+                const response = (await fetchData({
+                    url: `${BASE_URL}/${procesoId}/emails`,
+                    method: 'PUT',
+                    body: { plantillas_correo_ids: payload.plantillas_correo_ids },
+                    token: token || null,
+                })) as FetchResponse | null;
+
+                if (response?.success === false) {
+                    throw new Error(response.message || 'Error al guardar las plantillas de correo');
                 }
                 return response;
             })()
@@ -476,9 +694,15 @@ export const useCompetencyEvaluationService = () => {
         deleteCompetencyEvaluation,
         cloneCompetencyEvaluation,
         updateEstadoProceso,
+        getConfig,
         saveConfig,
+        getProcessCompetencies,
         saveCompetencies,
+        getProcessParticipants,
         saveParticipants,
         generateAsignaciones,
+        getCompetenciasSugeridas,
+        getProcessEmails,
+        saveProcessEmails,
     };
 };

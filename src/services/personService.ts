@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import useFetch from '../hooks/useFetch';
 import { FetchResponse } from './responseType';
 import useUIStore from '../store/uiStore';
@@ -35,7 +36,7 @@ export const usePersonService = () => {
     const { openAlert } = useUIStore();
     const { token } = useAuthStore();
     
-    const getPeople = async (params?: PersonQueryParams): Promise<FetchResponse | null> => {
+    const getPeople = useCallback(async (params?: PersonQueryParams): Promise<FetchResponse | null> => {
         try {
             const backendParams: any = {};
 
@@ -83,9 +84,9 @@ export const usePersonService = () => {
             openAlert(errorMessage, 'error');
             return null;
         }
-    };
+    }, [fetchData, token, openAlert]);
 
-    const getPersonById = async (id: string): Promise<FetchResponse | null> => {
+    const getPersonById = useCallback(async (id: string): Promise<FetchResponse | null> => {
         try {
             const response = (await fetchData({
                 url: `${import.meta.env.VITE_API_URL}/collaborators/${id}`,
@@ -102,7 +103,7 @@ export const usePersonService = () => {
             openAlert(errorMessage, 'error');
             return null;
         }
-    };
+    }, [fetchData, token, openAlert]);
 
     const createPerson = async (data: Omit<Person, 'id'>): Promise<FetchResponse | null> => {
         try {

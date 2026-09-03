@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import useFetch from '../hooks/useFetch';
 import { FetchResponse } from './responseType';
 import useUIStore from '../store/uiStore';
@@ -59,7 +60,7 @@ export const useUserService = () => {
         return user?.entidad_id || user?.tenant_id || '';
     };
 
-    const getUsers = async (params?: UserQueryParams): Promise<FetchResponse | null> => {
+    const getUsers = useCallback(async (params?: UserQueryParams): Promise<FetchResponse | null> => {
         try {
             // Convert frontend params to backend params
             const backendParams: any = {};
@@ -130,9 +131,9 @@ export const useUserService = () => {
             openAlert(errorMessage, 'error');
             return null;
         }
-    };
+    }, [fetchData, token, openAlert]);
 
-    const getUserById = async (id: string): Promise<FetchResponse | null> => {
+    const getUserById = useCallback(async (id: string): Promise<FetchResponse | null> => {
         try {
             const response = (await fetchData({
                 url: `${import.meta.env.VITE_API_URL}/users/${id}`,
@@ -170,7 +171,7 @@ export const useUserService = () => {
             openAlert(errorMessage, 'error');
             return null;
         }
-    };
+    }, [fetchData, token, openAlert]);
 
     const createUser = async (data: CreateUserRequest): Promise<FetchResponse | null> => {
         try {

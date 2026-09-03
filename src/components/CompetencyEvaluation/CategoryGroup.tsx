@@ -4,6 +4,7 @@ import { Category } from '../../services/categoryService';
 import { Competency } from '../../services/competencyService';
 import { Check as IconCheckIcon, X } from '../Common/Icon';
 import ChevronToggle from '../Common/ChevronToggle';
+import NumberInputField from '../Common/Forms/NumberInputField';
 
 export type WeightMap = Record<string, number>;
 
@@ -176,22 +177,19 @@ const CategoryGroup: React.FC<CategoryGroupProps> = ({
                                                         transition={{ duration: 0.15 }}
                                                         className="shrink-0 overflow-hidden"
                                                     >
-                                                        <div className="flex items-center gap-1.5 bg-base-200/70 rounded-lg px-3 py-2 border border-base-300 min-w-[80px]">
-                                                            <input
-                                                                type="number"
+                                                        <div className="flex items-center gap-1.5">
+                                                            <NumberInputField
+                                                                label=""
                                                                 min={0}
                                                                 max={100}
-                                                                step={1}
-                                                                value={weight === 0 ? '' : weight}
-                                                                placeholder="0"
-                                                                onClick={(e) => e.stopPropagation()}
-                                                                onChange={(e) => {
-                                                                    const val = e.target.value === ''
-                                                                        ? 0
-                                                                        : Math.min(100, Math.max(0, Number(e.target.value)));
-                                                                    onWeightChange(comp.id, val);
+                                                                step={0.01}
+                                                                value={weight}
+                                                                onChange={(val) => {
+                                                                    const clamped = Math.min(100, Math.max(0, isNaN(val) ? 0 : Math.round(val * 100) / 100));
+                                                                    onWeightChange(comp.id, clamped);
                                                                 }}
-                                                                className="w-12 bg-transparent text-sm font-bold text-base-content text-right outline-none tabular-nums"
+                                                                onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                                                                className="input-xs w-16 text-xs"
                                                             />
                                                             <span className="text-xs text-base-content/50 font-semibold">%</span>
                                                         </div>

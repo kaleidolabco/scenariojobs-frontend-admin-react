@@ -123,5 +123,6 @@ export {
     Edit3,          // edición inline (CompetencyEvaluationListPage)
     Activity,       // actividad / línea vital (CompetencyEvaluationListPage)
     CheckCircle,    // check dentro de círculo (CompetencyEvaluationListPage, difiere de CircleCheck)
+    GripVertical,   // drag handle para reordenar (drag-and-drop sections/competencias)
 } from 'lucide-react';
 export type { LucideIcon } from 'lucide-react';

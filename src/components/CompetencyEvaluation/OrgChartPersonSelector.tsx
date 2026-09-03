@@ -8,6 +8,7 @@ import Button from '../../components/Common/Button';
 interface OrgChartPersonSelectorProps {
     selectedPersonIds: string[];
     onPersonsChange: (ids: string[]) => void;
+    onPersonsLoaded?: (persons: Person[]) => void;
 }
 
 interface TreeNodeProps {
@@ -127,6 +128,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({ unit, level, selectedUnitId, onSele
 export const OrgChartPersonSelector: React.FC<OrgChartPersonSelectorProps> = ({
     selectedPersonIds,
     onPersonsChange,
+    onPersonsLoaded,
 }) => {
     const { getOrgTree, loading: treeLoading } = useOrgUnitService();
     const { getPeople } = usePersonService();
@@ -154,15 +156,17 @@ export const OrgChartPersonSelector: React.FC<OrgChartPersonSelectorProps> = ({
             setSelectedUnit(unit);
             setIsLoadingPersons(true);
             try {
-                const res = await getPeople({ departamento: unit.nombre });
+                const res = await getPeople({ departamento: unit.nombre, items_por_pagina: 100 });
                 if (res?.success) {
-                    setUnitPersons(res.data.personas || []);
+                    const persons = res.data.datos || res.data.personas || [];
+                    setUnitPersons(persons);
+                    onPersonsLoaded?.(persons);
                 }
             } finally {
                 setIsLoadingPersons(false);
             }
         },
-        [getPeople]
+        [getPeople, onPersonsLoaded]
     );
 
     const handlePersonToggle = useCallback(

@@ -4,6 +4,7 @@ import InputField from '../Common/Forms/InputField';
 import TextAreaField from '../Common/Forms/TextAreaField';
 import SelectField from '../Common/Forms/SelectField';
 import CheckboxField from '../Common/Forms/CheckboxField';
+import Button from '../Common/Button';
 import { CompetencyEvaluationStatus } from '../../services/competencyEvaluationService';
 import {
     CompetencyEvaluationConfig,
@@ -36,6 +37,9 @@ export interface GeneralTabProps {
     onCalibracionChange: (campo: 'activo' | 'modo', value: any) => void;
     onCorreccionChange: (campo: keyof CorreccionConfig, value: any) => void;
     onRevisionObligatoriaToggle: (value: boolean) => void;
+    dirty: boolean;
+    saving: boolean;
+    onSave: () => void;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -50,6 +54,9 @@ const GeneralTab: React.FC<GeneralTabProps> = ({
     onCalibracionChange,
     onCorreccionChange,
     onRevisionObligatoriaToggle,
+    dirty,
+    saving,
+    onSave,
 }) => {
     const tiposActivos = config.tipos_evaluacion.filter((t) => t.activo);
     const sumaPesosTipos = tiposActivos.reduce((s, t) => s + t.peso, 0);
@@ -249,6 +256,16 @@ const GeneralTab: React.FC<GeneralTabProps> = ({
                     )}
                 </div>
             </FormSection>
+
+            {/* Guardado de la pestaña */}
+            <div className="flex items-center justify-between gap-3 border-t border-base-200 pt-4">
+                <span className={`text-xs ${dirty ? 'text-warning' : 'text-base-content/40'}`}>
+                    {dirty ? 'Hay cambios sin guardar en esta pestaña' : 'Sin cambios pendientes'}
+                </span>
+                <Button variant="primary" onClick={onSave} disabled={!dirty || saving} loading={saving}>
+                    Guardar cambios
+                </Button>
+            </div>
         </div>
     );
 };

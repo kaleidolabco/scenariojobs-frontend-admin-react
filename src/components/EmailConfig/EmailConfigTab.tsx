@@ -16,6 +16,9 @@ interface EmailConfigTabProps {
     evaluationType: 'competencia' | 'desempeno' | 'integral'; // Tipo de evaluación
     data: EmailConfigData;
     onChange: (data: EmailConfigData) => void;
+    dirty?: boolean;
+    saving?: boolean;
+    onSave?: () => void;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -36,6 +39,9 @@ const EmailConfigTab: React.FC<EmailConfigTabProps> = ({
     evaluationType, */
     data,
     onChange,
+    dirty,
+    saving,
+    onSave,
 }) => {
     const { getTemplates, getSmtpConfig } = useEmailService();
     const [templates, setTemplates] = useState<EmailTemplate[]>([]);
@@ -294,6 +300,18 @@ const EmailConfigTab: React.FC<EmailConfigTabProps> = ({
                     </div>
                 )}
             </AnimatePresence>
+
+            {/* Guardado de la pestaña */}
+            {onSave && (
+                <div className="flex items-center justify-between gap-3 border-t border-base-200 pt-4">
+                    <span className={`text-xs ${dirty ? 'text-warning' : 'text-base-content/40'}`}>
+                        {dirty ? 'Hay cambios sin guardar en esta pestaña' : 'Sin cambios pendientes'}
+                    </span>
+                    <Button variant="primary" size="sm" onClick={onSave} disabled={!dirty || saving} loading={saving}>
+                        Guardar cambios
+                    </Button>
+                </div>
+            )}
         </motion.div>
     );
 };
