@@ -138,7 +138,7 @@ classDiagram
     class Cargo {
         +String nombre
         +String nivel
-        +String[] funciones
+        +JobFunction[] funciones
         +String bandaSalarial
         +String modalidad
         +String criticidad
@@ -232,9 +232,20 @@ classDiagram
         
     *   **Sugerencia de Competencias Asistida por IA:** Al perfilar un cargo, la Inteligencia Artificial analizará el contexto del mismo y ofrecerá una sugerencia de competencias ideales (blandas, técnicas, conocimientos) y la parametrización de sus niveles esperados y datos asociados para acelerar su definición.
         
-    *   **El Cargo define:** Competencias requeridas, niveles esperados, funciones genéricas y bandas salariales. **NO define** jefe ni ubicación en el organigrama (eso es rol del Puesto).
+    *   **El Cargo define:** Competencias requeridas, niveles esperados, funciones del cargo (estructuradas) y bandas salariales. **NO define** jefe ni ubicación en el organigrama (eso es rol del Puesto).
         
-    *   **Funciones del Cargo:** Detalle de responsabilidades inherentes al perfil.
+    *   **RF-CONF-007b: Estructura Jerárquica de Funciones (Knowledge Management):**
+        Las funciones de los cargos no son simples descripciones de texto, sino que se organizan en una estructura jerárquica de 5 niveles que permite una gestión granular del conocimiento:
+        1. **Función Principal:** Agrupador de alto nivel de responsabilidades.
+        2. **Capacidad:** Habilidad o facultad a desarrollar dentro de la función.
+        3. **Conocimiento:** Área de saber específica. En este nivel se definen metadatos críticos:
+           * *Tipo de Conocimiento:* Estándar, Interno o Crítico.
+           * *Fuentes:* Interna (empleados expertos) o Externa (referencias, institutos).
+           * *Nivel Requerido:* Escala de 0 a 3 (Desconocimiento a Avanzado).
+        4. **Módulo:** Bloque de contenido o unidad de aprendizaje.
+        5. **Tema / Detalle:** El nivel más granular de la responsabilidad o concepto.
+        
+        *   **Base para E-Learning:** Esta estructura sirve como base para el futuro módulo de capacitación (LMS), donde la IA podrá sugerir contenidos específicos para cerrar brechas de conocimiento basadas en esta taxonomía.
         
 *   **RF-CONF-007c: Clasificación Adicional de Cargos (Sugerido):**
     *   **Nivel Jerárquico:** Clasificación del cargo según su seniority (ej. "Jr", "Sr", "Liderazgo").

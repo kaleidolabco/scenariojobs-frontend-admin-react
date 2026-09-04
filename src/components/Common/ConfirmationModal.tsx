@@ -1,5 +1,14 @@
 import React from 'react';
 import GenericModal from './GenericModal';
+import Button from './Button';
+
+type ConfirmVariant = 'danger' | 'warning' | 'info';
+
+const CONFIRM_VARIANT: Record<ConfirmVariant, 'error' | 'warning' | 'info'> = {
+    danger: 'error',
+    warning: 'warning',
+    info: 'info',
+};
 
 interface ConfirmationModalProps {
     isOpen: boolean;
@@ -22,32 +31,23 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
     cancelText = 'Cancelar',
     variant = 'danger'
 }) => {
-    const getConfirmButtonClass = () => {
-        switch (variant) {
-            case 'danger': return 'btn-error';
-            case 'warning': return 'btn-warning';
-            case 'info': return 'btn-info';
-            default: return 'btn-primary';
-        }
-    };
-
     const actions = (
         <div className="flex justify-end gap-2 w-full">
-            <button
-                className="btn btn-ghost"
+            <Button
+                variant="ghost"
                 onClick={onClose}
             >
                 {cancelText}
-            </button>
-            <button
-                className={`btn ${getConfirmButtonClass()}`}
+            </Button>
+            <Button
+                variant={CONFIRM_VARIANT[variant]}
                 onClick={() => {
                     onConfirm();
                     onClose();
                 }}
             >
                 {confirmText}
-            </button>
+            </Button>
         </div>
     );
 

@@ -1,5 +1,15 @@
 import React from 'react';
 import LoadingIndicator from './LoadingIndicator';
+import Button from './Button';
+import { ChevronRight, ChevronLeft } from './Icon';
+
+// Mapea el `variant` de la API pública de `TableAction` a la variante del componente `<Button/>`.
+type ActionVariant = 'ghost' | 'primary' | 'error';
+const ACTION_BUTTON_VARIANT: Record<ActionVariant, 'ghost' | 'primary' | 'error'> = {
+    ghost: 'ghost',
+    primary: 'primary',
+    error: 'error',
+};
 
 export interface TableColumn<T> {
     key: keyof T | string;
@@ -19,13 +29,16 @@ export interface TableAction<T> {
 interface GenericTableProps<T> {
     data: T[];
     columns: TableColumn<T>[];
-    actions?: TableAction<T>[];
+    actions?: TableAction<T>[] | ((item: T) => TableAction<T>[]);
     keyExtractor: (item: T) => string | number;
 
     // Pagination
-    currentPage: number;
-    totalPages: number;
-    pageSize: number;
+    pagination?: {
+        pagina: number;
+        total_paginas: number;
+        limite: number;
+        total: number;
+    } | null;
     onPageChange: (page: number) => void;
     onPageSizeChange: (size: number) => void;
 
@@ -43,9 +56,7 @@ function GenericTable<T>({
     columns,
     actions,
     keyExtractor,
-    currentPage,
-    totalPages,
-    pageSize,
+    pagination,
     onPageChange,
     onPageSizeChange,
     sortConfig,
@@ -53,6 +64,10 @@ function GenericTable<T>({
     emptyMessage = 'No se encontraron registros',
     isLoading = false
 }: GenericTableProps<T>) {
+
+    const currentPage = pagination?.pagina || 1;
+    const totalPages = pagination?.total_paginas || 1;
+    const pageSize = pagination?.limite || 10;
 
     const renderSortIcon = (columnKey: string) => {
         if (!sortConfig || sortConfig.key !== columnKey) {
@@ -87,7 +102,7 @@ function GenericTable<T>({
                                 {column.sortable && renderSortIcon(String(column.key))}
                             </th>
                         ))}
-                        {actions && actions.length > 0 && (
+                        {actions && (
                             <th className="text-center">Acciones</th>
                         )}
                     </tr>
@@ -103,17 +118,19 @@ function GenericTable<T>({
                                             : String((item as any)[column.key] ?? '')}
                                     </td>
                                 ))}
-                                {actions && actions.length > 0 && (
+                                {actions && (
                                     <td className="hover">
-                                        {actions.map((action, idx) => (
-                                            <button
+                                        {(typeof actions === 'function' ? actions(item) : actions).map((action, idx) => (
+                                            <Button
                                                 key={idx}
-                                                className={`btn btn-${action.variant || 'ghost'} btn-xs tooltip tooltip-left-up`}
+                                                variant={ACTION_BUTTON_VARIANT[(action.variant as ActionVariant) || 'ghost']}
+                                                size="xs"
+                                                className="tooltip tooltip-left-up"
                                                 data-tip={action.tooltip || action.label}
                                                 onClick={() => action.onClick(item)}
                                             >
                                                 {action.icon}
-                                            </button>
+                                            </Button>
                                         ))}
                                     </td>
                                 )}
@@ -121,7 +138,7 @@ function GenericTable<T>({
                         ))
                     ) : (
                         <tr>
-                            <td colSpan={columns.length + (actions ? 1 : 0)} className="text-center py-4">
+                            <td colSpan={columns.length + (actions ? 1 : 0)} className="text-center py-5">
                                 {emptyMessage}
                             </td>
                         </tr>
@@ -132,6 +149,9 @@ function GenericTable<T>({
             {/* Pagination Controls */}
             <div className="w-full flex justify-between gap-4 items-center p-4 bg-base-100 border-t border-base-200">
                 <div className="flex items-center gap-2">
+                    {pagination?.total && (
+                        <span className="text-xs md:text-sm md:whitespace-nowrap mr-4">Total: {pagination.total}</span>
+                    )}
                     <span className="text-xs md:text-sm md:whitespace-nowrap">Filas por página:</span>
                     <select
                         className="select select-bordered select-sm"
@@ -146,23 +166,35 @@ function GenericTable<T>({
                 </div>
 
                 <div className="join">
-                    <button
-                        className="join-item btn btn-xs md:btn-sm"
+                    <Button
+                        variant="primary"
+                        size="xs"
+                        className="join-item md:btn-sm"
                         disabled={currentPage === 1}
                         onClick={() => onPageChange(currentPage - 1)}
+                        aria-label="Página anterior"
                     >
-                        «
-                    </button>
-                    <button className="join-item btn btn-xs md:btn-sm no-animation">
+                        <ChevronLeft size={16} />
+                    </Button>
+                    <Button
+                        variant="primary"
+                        size="xs"
+                        className="join-item md:btn-sm no-animation"
+                        disabled
+                        aria-hidden="true"
+                    >
                         Página {currentPage} de {totalPages}
-                    </button>
-                    <button
-                        className="join-item btn btn-xs md:btn-sm"
+                    </Button>
+                    <Button
+                        variant="primary"
+                        size="xs"
+                        className="join-item md:btn-sm"
                         disabled={currentPage === totalPages}
                         onClick={() => onPageChange(currentPage + 1)}
+                        aria-label="Página siguiente"
                     >
-                        »
-                    </button>
+                        <ChevronRight size={16} />
+                    </Button>
                 </div>
             </div>
         </div>

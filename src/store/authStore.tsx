@@ -36,7 +36,6 @@ const useAuthStore = create<AuthState>()(
 
         try {
           const userData = jwtDecode<User>(token);
-          console.log("Datos del usuario decodificados:", userData);
 
           // Asumir que el primer rol es el activo por defecto si existe
           const initialRole = userData.roles && userData.roles.length > 0 ? userData.roles[0] : null;

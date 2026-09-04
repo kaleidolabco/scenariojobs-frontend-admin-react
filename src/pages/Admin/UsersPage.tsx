@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import PageContainer from '../../components/Common/PageContainer';
 import GenericTable, { TableColumn, TableAction } from '../../components/Common/GenericTable';
@@ -10,8 +9,12 @@ import LoadingIndicator from '../../components/Common/LoadingIndicator';
 import { useUserService, SystemUser } from '../../services/userService';
 import UserForm from '../../components/Users/UserForm';
 import { ROUTES } from '../../constants/routes';
+import { UserRole, ROLE_LABELS } from '../../constants/roles';
+import { UserStatus, USER_STATUS_LABELS } from '../../constants/userStatus';
 import useUIStore from '../../store/uiStore';
 import { Pagination } from '../../services/responseType';
+import Button from '../../components/Common/Button';
+import { Pencil, Lock, Trash2, Plus } from '../../components/Common/Icon';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -22,6 +25,10 @@ const UsersPage: React.FC = () => {
     // State
     const [users, setUsers] = useState<SystemUser[]>([]);
     const [pagination, setPagination] = useState<Pagination | null>(null);
+    const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
+    
+    // Local search term to enable debouncing
+    const [localSearchTerm, setLocalSearchTerm] = useState('');
 
     // State for FilterBar
     const [queryParams, setQueryParams] = useState<any>({
@@ -40,6 +47,18 @@ const UsersPage: React.FC = () => {
     const [resetPasswordModalOpen, setResetPasswordModalOpen] = useState(false);
     const [userToReset, setUserToReset] = useState<SystemUser | null>(null);
 
+    // Debounce the search input to avoid making too many API calls
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setQueryParams((prev: any) => {
+                if (prev.search === localSearchTerm) return prev;
+                return { ...prev, search: localSearchTerm, pagina: 1 };
+            });
+        }, 400);
+
+        return () => clearTimeout(handler);
+    }, [localSearchTerm]);
+
     useEffect(() => {
         loadUsers();
     }, [queryParams]);
@@ -47,7 +66,7 @@ const UsersPage: React.FC = () => {
     const loadUsers = async () => {
         const response = await getUsers(queryParams);
         if (response && response.success) {
-            setUsers(response.data.usuarios);
+            setUsers(response.data.datos || []);
             setPagination(response.data.paginacion);
         }
     };
@@ -99,19 +118,19 @@ const UsersPage: React.FC = () => {
             key: 'rol',
             label: 'Rol',
             options: [
-                { label: 'Administrador', value: 'ADMIN' },
-                { label: 'Gerente RRHH', value: 'HR_MANAGER' },
-                { label: 'Evaluador', value: 'EVALUATOR' },
-                { label: 'Empleado', value: 'EMPLOYEE' }
+                { label: ROLE_LABELS[UserRole.ADMIN], value: UserRole.ADMIN },
+                { label: ROLE_LABELS[UserRole.HR_MANAGER], value: UserRole.HR_MANAGER },
+                { label: ROLE_LABELS[UserRole.EVALUATOR], value: UserRole.EVALUATOR },
+                { label: ROLE_LABELS[UserRole.EMPLOYEE], value: UserRole.EMPLOYEE }
             ]
         },
         {
             key: 'estado',
             label: 'Estado',
             options: [
-                { label: 'Activo', value: 'ACTIVO' },
-                { label: 'Inactivo', value: 'INACTIVO' },
-                { label: 'Bloqueado', value: 'BLOQUEADO' }
+                { label: USER_STATUS_LABELS[UserStatus.ACTIVO], value: UserStatus.ACTIVO },
+                { label: USER_STATUS_LABELS[UserStatus.INACTIVO], value: UserStatus.INACTIVO },
+                { label: USER_STATUS_LABELS[UserStatus.PENDIENTE], value: UserStatus.PENDIENTE }
             ]
         }
     ];
@@ -126,10 +145,11 @@ const UsersPage: React.FC = () => {
     };
 
     const handleSearch = (term: string) => {
-        setQueryParams((prev: any) => ({ ...prev, search: term, pagina: 1 }));
+        setLocalSearchTerm(term);
     };
 
     const clearFilters = () => {
+        setLocalSearchTerm('');
         setQueryParams({
             search: '',
             rol: undefined,
@@ -147,6 +167,29 @@ const UsersPage: React.FC = () => {
         setQueryParams((prev: any) => ({ ...prev, ...updates }));
     };
 
+    const handleSort = (key: string) => {
+        let direction: 'asc' | 'desc' = 'asc';
+        if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+            direction = 'desc';
+        }
+
+        setSortConfig({ key, direction });
+
+        // Map frontend column keys to backend expected sort fields
+        const sortMap: Record<string, string> = {
+            'email': 'correo',
+            'ultimo_acceso': 'ultimo_acceso'
+        };
+
+        const ordenar_por = sortMap[key] || key;
+
+        updateQueryParams({
+            ordenar_por,
+            orden: direction,
+            pagina: 1
+        });
+    };
+
     // Table Config
     const columns: TableColumn<SystemUser>[] = [
         {
@@ -161,17 +204,17 @@ const UsersPage: React.FC = () => {
             )
         },
         {
-            key: 'persona',
-            label: 'Perfil Asociado',
-            render: (user) => user.persona ? (
+            key: 'colaborador',
+            label: 'Colaborador Asociado',
+            render: (user) => user.colaborador ? (
                 <div className="flex items-center gap-2">
                     <Avatar
-                        src={user.persona.foto}
-                        name={`${user.persona.nombres} ${user.persona.apellidos}`}
+                        src={user.colaborador.foto}
+                        name={`${user.colaborador.nombres} ${user.colaborador.apellidos}`}
                         size="sm"
                     />
                     <span className="text-primary font-medium hover:underline cursor-pointer">
-                        {user.persona.nombres} {user.persona.apellidos}
+                        {user.colaborador.nombres} {user.colaborador.apellidos}
                     </span>
                     <span className="badge badge-xs badge-primary ml-1">Link</span>
                 </div>
@@ -182,7 +225,7 @@ const UsersPage: React.FC = () => {
         {
             key: 'rol',
             label: 'Rol',
-            sortable: true,
+            sortable: false,
             render: (user) => (
                 <div className="flex flex-wrap gap-1">
                     {user.roles && user.roles.length > 0 ? (
@@ -199,15 +242,16 @@ const UsersPage: React.FC = () => {
             key: 'estado',
             label: 'Estado',
             render: (user) => {
-                let color = 'badge-ghost';
-                if (user.estado === 'ACTIVO') color = 'badge-success';
-                if (user.estado === 'BLOQUEADO') color = 'badge-error';
-                return <div className={`badge ${color} badge-sm`}>{user.estado}</div>;
+                let color = 'badge-warning';
+                if (user.estado === UserStatus.ACTIVO) color = 'badge-success';
+                if (user.estado === UserStatus.PENDIENTE) color = 'badge-info';
+                return <div className={`badge ${color} badge-sm`}>{USER_STATUS_LABELS[user.estado] || user.estado}</div>;
             }
         },
         {
             key: 'ultimo_acceso',
             label: 'Último Acceso',
+            sortable: true,
             render: (user) => user.ultimo_acceso ? new Date(user.ultimo_acceso).toLocaleDateString() : '-'
         }
     ];
@@ -215,7 +259,7 @@ const UsersPage: React.FC = () => {
     const actions: TableAction<SystemUser>[] = [
         {
             label: 'Editar',
-            icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>,
+            icon: <Pencil size={20} />,
             onClick: (user) => {
                 setEditingUser(user);
                 setModalOpen(true);
@@ -224,14 +268,14 @@ const UsersPage: React.FC = () => {
         },
         {
             label: 'Reset Password',
-            icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>,
+            icon: <Lock size={20} />,
             onClick: handleResetPassword,
             variant: 'ghost',
             tooltip: 'Resetear Contraseña'
         },
         {
             label: 'Eliminar',
-            icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>,
+            icon: <Trash2 size={20} />,
             onClick: (user) => {
                 setUserToDelete(user);
                 setDeleteModalOpen(true);
@@ -252,15 +296,14 @@ const UsersPage: React.FC = () => {
             subtitle="Administre el acceso al sistema y roles de seguridad"
             breadcrumbs={breadcrumbs}
             actions={
-                <button className="btn btn-primary" onClick={() => { setEditingUser(null); setModalOpen(true); }}>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
+                <Button variant="primary" leftIcon={Plus} onClick={() => { setEditingUser(null); setModalOpen(true); }}>
                     Nuevo Usuario
-                </button>
+                </Button>
             }
         >
             <FilterBar
                 onSearch={handleSearch}
-                searchTerm={queryParams.search || ''}
+                searchTerm={localSearchTerm}
                 searchPlaceholder="Buscar por email o nombre..."
                 filters={filterDefinitions}
                 activeFilters={activeFilters}
@@ -276,9 +319,9 @@ const UsersPage: React.FC = () => {
                     columns={columns}
                     actions={actions}
                     keyExtractor={(user) => user.id}
-                    currentPage={queryParams.pagina || 1}
-                    totalPages={pagination?.total_paginas || 1}
-                    pageSize={queryParams.items_por_pagina || ITEMS_PER_PAGE}
+                    pagination={pagination}
+                    sortConfig={sortConfig}
+                    onSort={handleSort}
                     onPageChange={(page) => updateQueryParam('pagina', page)}
                     onPageSizeChange={(size) => updateQueryParams({ items_por_pagina: size, pagina: 1 })}
                     emptyMessage="No se encontraron usuarios"

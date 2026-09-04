@@ -4,6 +4,8 @@ import InputField from '../Common/Forms/InputField';
 import SelectField from '../Common/Forms/SelectField';
 import TextAreaField from '../Common/Forms/TextAreaField';
 import FormSection from '../Common/Forms/FormSection';
+import Button from '../Common/Button';
+import { Info, Check } from '../Common/Icon';
 
 interface OrgUnitFormProps {
     initialData: Partial<OrgUnit> | null;
@@ -60,7 +62,7 @@ const OrgUnitForm: React.FC<OrgUnitFormProps> = ({ initialData, parentUnit, isLo
             {/* Context Message */}
             {parentUnit && !initialData && (
                 <div className="alert alert-info shadow-sm text-sm py-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="stroke-current shrink-0 w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <Info className="stroke-current shrink-0 w-6 h-6" />
                     <span>Agregando unidad dentro de: <strong>{parentUnit.nombre}</strong></span>
                 </div>
             )}
@@ -103,33 +105,25 @@ const OrgUnitForm: React.FC<OrgUnitFormProps> = ({ initialData, parentUnit, isLo
             {/* Acciones (Sticky footer styled like CompetencyForm) */}
             <div className="sticky bottom-0 bg-base-100 border-t border-base-300 p-4 md:relative md:border-t-0 md:p-0 md:pt-4">
                 <div className="flex flex-col-reverse md:flex-row justify-end gap-2 md:gap-3">
-                    <button
+                    <Button
                         type="button"
-                        className="btn btn-ghost hover:bg-base-200 mt-2 md:mt-0 order-2 md:order-1"
+                        variant="ghost"
                         onClick={onCancel}
                         disabled={isLoading}
+                        className="mt-2 md:mt-0 order-2 md:order-1"
                     >
                         Cancelar
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                         type="submit"
-                        className="btn btn-primary w-full md:w-auto order-1 md:order-2"
+                        variant="primary"
+                        loading={isLoading}
+                        leftIcon={isLoading ? undefined : Check}
+                        className="w-full md:w-auto order-1 md:order-2"
                         disabled={isLoading}
                     >
-                        {isLoading ? (
-                            <>
-                                <span className="loading loading-spinner loading-sm"></span>
-                                <span className="ml-2">Procesando...</span>
-                            </>
-                        ) : (
-                            <>
-                                <svg className="w-4 h-4 mr-2 hidden md:inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
-                                <span>{initialData ? 'Guardar Cambios' : 'Crear Unidad'}</span>
-                            </>
-                        )}
-                    </button>
+                        {isLoading ? 'Procesando...' : (initialData ? 'Guardar Cambios' : 'Crear Unidad')}
+                    </Button>
                 </div>
             </div>
         </form>

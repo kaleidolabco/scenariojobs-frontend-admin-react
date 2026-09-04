@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useJobService, Job, JobQueryParams } from '../../services/jobService';
 import { Pagination } from '../../services/responseType';
 import PageContainer from '../../components/Common/PageContainer';
@@ -8,10 +9,13 @@ import FilterBar, { FilterDefinition } from '../../components/Common/FilterBar';
 import GenericTable, { TableColumn, TableAction } from '../../components/Common/GenericTable';
 import LoadingIndicator from '../../components/Common/LoadingIndicator';
 import JobForm from '../../components/Jobs/JobForm';
+import Button from '../../components/Common/Button';
+import { Plus, Pencil, Trash2 } from '../../components/Common/Icon';
 
 const ITEMS_PER_PAGE = 10;
 
 const JobsPage: React.FC = () => {
+    const navigate = useNavigate();
     const { getJobs, createJob, updateJob, deleteJob, loading } = useJobService();
     const [jobs, setJobs] = useState<Job[]>([]);
     const [pagination, setPagination] = useState<Pagination | null>(null);
@@ -21,6 +25,7 @@ const JobsPage: React.FC = () => {
     const [editingJob, setEditingJob] = useState<Job | null>(null);
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [jobToDelete, setJobToDelete] = useState<Job | null>(null);
+    const isFirstRender = useRef(true);
 
     // Filters
     const [searchInput, setSearchInput] = useState('');
@@ -44,6 +49,10 @@ const JobsPage: React.FC = () => {
 
     // Search debounce
     useEffect(() => {
+        if (isFirstRender.current) {
+            isFirstRender.current = false;
+            return;
+        }
         const timeout = setTimeout(() => {
             updateQueryParams({ filtro: searchInput, pagina: 1 });
         }, 500);
@@ -105,8 +114,7 @@ const JobsPage: React.FC = () => {
     };
 
     const openEditModal = (job: Job) => {
-        setEditingJob(job);
-        setModalOpen(true);
+        navigate(`/cargos/${job.id}`);
     };
 
     const openCreateModal = () => {
@@ -232,22 +240,14 @@ const JobsPage: React.FC = () => {
     const actions: TableAction<Job>[] = [
         {
             label: 'Editar',
-            icon: (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                </svg>
-            ),
+            icon: <Pencil size={20} />,
             onClick: openEditModal,
             variant: 'ghost',
             tooltip: 'Editar cargo'
         },
         {
             label: 'Eliminar',
-            icon: (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-            ),
+            icon: <Trash2 size={20} />,
             onClick: handleDeleteClick,
             variant: 'ghost',
             tooltip: 'Eliminar cargo'
@@ -259,12 +259,9 @@ const JobsPage: React.FC = () => {
             title="Gestión de Cargos"
             subtitle="Defina los perfiles funcionales con competencias, funciones y bandas salariales."
             actions={
-                <button className="btn btn-primary w-full sm:w-auto" onClick={openCreateModal}>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-                    </svg>
+                <Button variant="primary" leftIcon={Plus} onClick={openCreateModal} className="w-full sm:w-auto">
                     Nuevo Cargo
-                </button>
+                </Button>
             }
         >
             <FilterBar
@@ -285,14 +282,13 @@ const JobsPage: React.FC = () => {
                     columns={columns}
                     actions={actions}
                     keyExtractor={(job) => job.id}
-                    currentPage={queryParams.pagina || 1}
-                    totalPages={pagination?.total_paginas || 1}
-                    pageSize={queryParams.items_por_pagina || ITEMS_PER_PAGE}
+                    pagination={pagination}
                     onPageChange={(page) => updateQueryParam('pagina', page)}
                     onPageSizeChange={(size) => updateQueryParams({ items_por_pagina: size, pagina: 1 })}
                     sortConfig={sortConfig}
                     onSort={handleSort}
                     emptyMessage="No se encontraron cargos"
+                    isLoading={loading}
                 />
             )}
 
@@ -308,6 +304,7 @@ const JobsPage: React.FC = () => {
                     isLoading={loading}
                     onSubmit={editingJob ? handleUpdate : handleCreate}
                     onCancel={closeModal}
+                    isSimplified={true}
                 />
             </GenericModal>
 

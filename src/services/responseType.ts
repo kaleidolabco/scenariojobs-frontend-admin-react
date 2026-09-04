@@ -5,10 +5,10 @@ export interface FetchResponse<T = any> {
 }
 
 export interface Pagination {
-    total_items: number;
+    total: number;
     total_paginas: number;
-    cantidad_por_pagina: number;
-    pagina_actual: number;
+    limite: number;
+    pagina: number;
 }
 
 export const successMock = (data: any) => {

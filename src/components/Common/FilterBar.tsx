@@ -1,4 +1,6 @@
 import React from 'react';
+import Button from './Button';
+import { Search, X } from './Icon';
 
 export interface FilterOption {
     label: string;
@@ -42,12 +44,12 @@ const FilterBar: React.FC<FilterBarProps> = ({
                             <input
                                 type="text"
                                 placeholder={searchPlaceholder}
-                                className="input input-bordered w-full pr-10"
+                                className="input input-bordered w-full pr-10 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                                 value={searchTerm}
                                 onChange={(e) => onSearch(e.target.value)}
                             />
                             <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none opacity-50">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                                <Search size={20} className="h-5 w-5" />
                             </div>
                         </div>
                     </div>
@@ -73,12 +75,15 @@ const FilterBar: React.FC<FilterBarProps> = ({
 
                 {/* Clear Filters Button (Optional: Implement logic outside or inside) */}
                 {Object.values(activeFilters).some(v => v !== '') && onFilterChange && (
-                    <button
-                        className="btn btn-ghost btn-sm text-error"
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-error"
                         onClick={onClearFilters}
+                        leftIcon={X}
                     >
                         Limpiar
-                    </button>
+                    </Button>
                 )}
             </div>
         </div>

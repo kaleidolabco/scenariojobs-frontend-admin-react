@@ -10,8 +10,9 @@ export const ROUTES = {
     COMPANY_CONFIG: '/empresa',
     USERS: '/usuarios',
     ROLES: '/roles',
-    
-    
+    EMAIL_CONFIG: '/correos',
+
+
     // Organizational Structure (New Module)
     ORG_CHART: '/organizacion', // Main org chart view
     ORG_UNIT_DETAIL: (id: string) => `/organizacion/unidades/${id}`, // Unit detail
@@ -39,6 +40,7 @@ export const ROUTES = {
 
     // Execution (Employee/Candidate)
     MY_ASSESSMENTS: '/mis-evaluaciones',
+    MI_COMPETENCIAS_EVAL: '/mis-evaluaciones-competencias',
     TAKE_ASSESSMENT: (id: string) => `/mis-evaluaciones/${id}/realizar`,
     MY_OBJECTIVES: '/mis-objetivos',
     MY_OBJECTIVE_DETAIL: (id: string) => `/mis-objetivos/${id}`,
@@ -52,6 +54,17 @@ export const ROUTES = {
     ANALYTICS_DASHBOARD: '/analisis',
     GAP_ANALYSIS: '/analisis/brechas',
     OBJECTIVES_REPORT: '/analisis/objetivos',
+    // Performance Evaluation (Objectives)
+    PERFORMANCE: '/desempeno',
+    EVALUATION_EDITOR: (id: string) => `/desempeno/${id}`,
+
+    // Competency Evaluation (Competencies)
+    COMPETENCIES_EVAL: '/evaluaciones-competencias',
+    COMPETENCY_EVAL_DETAIL: (id: string) => `/evaluaciones-competencias/${id}`,
+
+    // Integral Evaluations
+    HR_EVALUACIONES_INTEGRAL: '/evaluaciones-integrales',
+    HR_EVALUACIONES_INTEGRAL_DETAIL: (id: string) => `/evaluaciones-integrales/${id}`,
 };
 
 export const ROUTE_LABELS: Record<string, string> = {
@@ -59,9 +72,11 @@ export const ROUTE_LABELS: Record<string, string> = {
     [ROUTES.COMPANY_CONFIG]: 'Configuración Empresa',
     [ROUTES.USERS]: 'Usuarios',
     [ROUTES.ROLES]: 'Roles',
+    [ROUTES.EMAIL_CONFIG]: 'Correos',
     [ROUTES.ORG_CHART]: 'Organigrama',
     [ROUTES.ORG_POSITIONS]: 'Puestos',
     [ROUTES.JOBS]: 'Cargos (Perfiles)',
+    '/cargos/:id': 'Detalle de Cargo',
     [ROUTES.COMPETENCIES]: 'Competencias',
     [ROUTES.STAFF_DIRECTORY]: 'Directorio',
     [ROUTES.ASSESSMENTS]: 'Evaluaciones',
@@ -75,4 +90,7 @@ export const ROUTE_LABELS: Record<string, string> = {
     [ROUTES.ANALYTICS_DASHBOARD]: 'Analítica',
     [ROUTES.GAP_ANALYSIS]: 'Brechas',
     [ROUTES.OBJECTIVES_REPORT]: 'Reporte Objetivos',
+    [ROUTES.PERFORMANCE]: 'Desempeño',
+    [ROUTES.COMPETENCIES_EVAL]: 'Evaluación de Competencias',
+    [ROUTES.HR_EVALUACIONES_INTEGRAL]: 'Evaluaciones Integrales',
 };

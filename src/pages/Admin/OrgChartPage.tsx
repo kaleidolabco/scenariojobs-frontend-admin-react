@@ -14,6 +14,8 @@ import { useOrgUnitService, OrgUnit } from '../../services/orgUnitService';
 import OrgUnitNode from '../../components/OrgUnits/OrgUnitNode';
 import OrgUnitForm from '../../components/OrgUnits/OrgUnitForm';
 import { ROUTES } from '../../constants/routes';
+import { Plus } from '../../components/Common/Icon';
+import Button from '../../components/Common/Button';
 
 const OrgChartPage: React.FC = () => {
     const navigate = useNavigate();
@@ -120,10 +122,9 @@ const OrgChartPage: React.FC = () => {
             title="Estructura Organizacional"
             subtitle="Visualice y gestione la jerarquía completa de la empresa. Haga clic en una unidad para ver sus detalles y puestos."
             actions={
-                <button className="btn btn-primary w-full sm:w-auto" onClick={handleAddRoot}>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
+                <Button variant="primary" fullWidth leftIcon={Plus} onClick={handleAddRoot}>
                     Nueva Unidad Raíz
-                </button>
+                </Button>
             }
         >
             <div className="bg-base-100/50 p-6 rounded-xl border border-base-200 min-h-[200px] overflow-auto">
@@ -176,8 +177,8 @@ const OrgChartPage: React.FC = () => {
                 onClose={() => setDeleteModalOpen(false)}
                 onConfirm={handleConfirmDelete}
                 title="Eliminar Unidad"
-                message={unitToDelete?.subnodos && unitToDelete.subnodos.length > 0
-                    ? `⚠️ Esta unidad tiene ${unitToDelete.subnodos.length} sub-unidades. No se puede eliminar hasta que mueva o elimine sus dependientes.`
+                message={unitToDelete?.subunidades && unitToDelete.subunidades.length > 0
+                    ? `⚠️ Esta unidad tiene ${unitToDelete.subunidades.length} sub-unidades. No se puede eliminar hasta que mueva o elimine sus dependientes.`
                     : `¿Está seguro de eliminar "${unitToDelete?.nombre}"? Esta acción no se puede deshacer.`}
                 confirmText="Eliminar"
                 variant="danger"

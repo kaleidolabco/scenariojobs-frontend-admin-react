@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { User as UserIcon } from '../Common/Icon';
 
 interface AvatarProps {
     src?: string | null;
@@ -8,6 +9,15 @@ interface AvatarProps {
     className?: string;
     placeholderClass?: string;
 }
+
+// Tamaño del ícono de placeholder según el `size` del Avatar.
+const PLACEHOLDER_ICON_SIZE: Record<NonNullable<AvatarProps['size']>, number> = {
+    xs: 12,
+    sm: 16,
+    md: 20,
+    lg: 32,
+    xl: 48,
+};
 
 const Avatar: React.FC<AvatarProps> = ({
     src,
@@ -19,10 +29,10 @@ const Avatar: React.FC<AvatarProps> = ({
 }) => {
     const [imgError, setImgError] = useState(false);
 
-    const getInitials = (fullName?: string | null) => {
-        if (!fullName) return '?';
+    const getInitials = (fullName?: string | null): string | React.ReactNode => {
+        if (!fullName) return <UserIcon size={PLACEHOLDER_ICON_SIZE[size]} strokeWidth={2} />;
         const updatedName = fullName.trim();
-        if (updatedName.length === 0) return '?';
+        if (updatedName.length === 0) return <UserIcon size={PLACEHOLDER_ICON_SIZE[size]} strokeWidth={2} />;
 
         const parts = updatedName.split(' ').filter(part => part.length > 0);
         if (parts.length === 1) {
@@ -44,7 +54,7 @@ const Avatar: React.FC<AvatarProps> = ({
 
     return (
         <div className={`avatar placeholder ${className}`}>
-            <div className={`flex items-center justify-center ${getSizeClass()} rounded-full ${(!src || imgError) ? placeholderClass : ''}`}>
+            <div className={`bg-secondary text-white flex items-center justify-center ${getSizeClass()} rounded-full ${(!src || imgError) ? placeholderClass : ''}`}>
                 {src && !imgError ? (
                     <img
                         src={src}

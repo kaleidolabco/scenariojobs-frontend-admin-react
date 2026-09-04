@@ -12,8 +12,8 @@ const UserDropdown = () => {
         <div className="dropdown dropdown-end">
             <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar">
                 <Avatar
-                    src={user?.foto_de_perfil || "https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"}
-                    name={`${user?.nombres} ${user?.apellidos}`}
+                    src={user?.foto_de_perfil}
+                    name={user?.nombres && user?.apellidos ? `${user?.nombres} ${user?.apellidos}` : null}
                     size="md"
                     className="w-10 rounded-full"
                 />
