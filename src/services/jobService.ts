@@ -163,7 +163,11 @@ export const useJobService = () => {
                 const mappedJob = {
                     ...j,
                     moneda: j.moneda_salarial || j.moneda || 'USD',
-                    competencias_requeridas: j.competencias_requeridas || [],
+                    competencias_requeridas: (j.competencias_requeridas || []).map((c: any) => ({
+                        ...c,
+                        nivel_esperado: Number(c.nivel_esperado),
+                        peso_ponderacion: c.peso_ponderacion !== undefined && c.peso_ponderacion !== null ? Number(c.peso_ponderacion) : undefined
+                    })),
                     funciones: j.funciones || []
                 };
 
@@ -298,8 +302,10 @@ export const useJobService = () => {
             const body = {
                 competencias: competencies.map(c => ({
                     competencia_id: c.competencia_id,
-                    nivel_esperado: c.nivel_esperado,
-                    peso_ponderacion: c.peso_ponderacion || 1.0
+                    nivel_esperado: Number(c.nivel_esperado),
+                    peso_ponderacion: c.peso_ponderacion !== undefined && c.peso_ponderacion !== null
+                        ? Number(c.peso_ponderacion)
+                        : 1.0
                 }))
             };
 
