@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     useCompetencyEvaluationService,
     CompetencyEvaluationDetail,
-    CompetencyEvaluationStatus,
 } from '../services/competencyEvaluationService';
 import {
     CompetencyEvaluationConfig,
@@ -33,7 +32,6 @@ export interface CompetencyAssignmentItem {
 export interface CompetencyEvaluationDetailFormState {
     nombre: string;
     descripcion: string;
-    estado: CompetencyEvaluationStatus;
     competencias_asignadas: string[];
     competencias_items: CompetencyAssignmentItem[];
     weights: WeightMap;
@@ -45,7 +43,6 @@ export interface CompetencyEvaluationDetailFormState {
 const INITIAL_FORM: CompetencyEvaluationDetailFormState = {
     nombre: '',
     descripcion: '',
-    estado: 'BORRADOR',
     competencias_asignadas: [],
     competencias_items: [],
     weights: {},
@@ -63,6 +60,7 @@ export const useCompetencyEvaluationDetail = (id?: string) => {
     const {
         getCompetencyEvaluationDetail,
         updateCompetencyEvaluation,
+        updateEstadoProceso,
         getConfig,
         saveConfig,
         getProcessCompetencies,
@@ -136,7 +134,6 @@ export const useCompetencyEvaluationDetail = (id?: string) => {
                         ...prev,
                         nombre: ev.nombre ?? '',
                         descripcion: ev.descripcion ?? '',
-                        estado: ev.estado ?? 'BORRADOR',
                     }));
                 }
             } catch {
@@ -325,11 +322,11 @@ export const useCompetencyEvaluationDetail = (id?: string) => {
 
     const handleChange = useCallback((
         field: string,
-        value: string | string[] | CompetencyEvaluationStatus | EvaluadoresPorPersona,
+        value: string | string[] | EvaluadoresPorPersona,
     ) => {
         setFormData((prev) => ({ ...prev, [field]: value }));
         setErrors((prev) => { const n = { ...prev }; delete n[field]; return n; });
-        if (field === 'nombre' || field === 'descripcion' || field === 'estado') {
+        if (field === 'nombre' || field === 'descripcion') {
             setDirtyGeneral(true);
         } else if (field === 'personas_a_evaluar' || field === 'evaluadores_por_persona') {
             setDirtyParticipantes(true);
@@ -496,7 +493,6 @@ export const useCompetencyEvaluationDetail = (id?: string) => {
             const resGeneral = await updateCompetencyEvaluation(id, {
                 nombre: formData.nombre,
                 descripcion: formData.descripcion,
-                estado: formData.estado,
             });
             if (!resGeneral?.success) return;
 
@@ -508,7 +504,7 @@ export const useCompetencyEvaluationDetail = (id?: string) => {
         } finally {
             setSavingGeneral(false);
         }
-    }, [id, validateGeneral, formData.nombre, formData.descripcion, formData.estado, config, updateCompetencyEvaluation, saveConfig, openAlert]);
+    }, [id, validateGeneral, formData.nombre, formData.descripcion, config, updateCompetencyEvaluation, saveConfig, openAlert]);
 
     const saveCompetenciasTab = useCallback(async () => {
         if (!id || !validateCompetencias()) return;
@@ -646,6 +642,7 @@ export const useCompetencyEvaluationDetail = (id?: string) => {
         saveCompetenciasTab,
         saveParticipantsTab,
         saveEmailsTab,
+        updateEstadoProceso,
     };
 };
 

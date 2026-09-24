@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { UserRole, ROLE_LABELS } from '../../constants/roles';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -8,8 +8,9 @@ import Tabs from '../../components/Common/Tabs';
 import EmailConfigTab from '../../components/EmailConfig/EmailConfigTab';
 import Button from '../../components/Common/Button';
 import { ROUTES } from '../../constants/routes';
-import { CompetencyEvaluationStatus } from '../../services/competencyEvaluationService';
+import { EstadoProcesoCompetencia } from '../../services/competencyEvaluationService';
 import useCompetencyEvaluationDetail from '../../hooks/useCompetencyEvaluationDetail';
+import ConfirmationModal from '../../components/Common/ConfirmationModal';
 
 import CompetenciesTab from '../../components/CompetencyEvaluation/CompetenciesTab';
 import ParticipantsTab from '../../components/CompetencyEvaluation/ParticipantsTab';
@@ -17,9 +18,12 @@ import GeneralTab from '../../components/CompetencyEvaluation/GeneralTab';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const STATUS_BADGE: Record<CompetencyEvaluationStatus, string> = {
+const STATUS_BADGE: Record<EstadoProcesoCompetencia, string> = {
     BORRADOR: 'badge-warning',
     PUBLICADO: 'badge-success',
+    EN_CALIFICACION: 'badge-info',
+    EN_REVISION: 'badge-warning',
+    CERRADO: 'badge-success',
     ARCHIVADO: 'badge-ghost',
 };
 
@@ -67,7 +71,16 @@ const CompetencyEvaluationAdminDetailPage: React.FC = () => {
         saveCompetenciasTab,
         saveParticipantsTab,
         saveEmailsTab,
+        updateEstadoProceso,
     } = useCompetencyEvaluationDetail(id);
+
+    // ── Publish confirmation modal state ────────────────────────────────────────
+    const [publishConfirmOpen, setPublishConfirmOpen] = useState(false);
+    const [publishLoading, setPublishLoading] = useState(false);
+
+    // ── Current process state from evaluation (authoritative source) ────────────
+    const currentState = (evaluation?.estado_flujo || evaluation?.estado || 'BORRADOR') as EstadoProcesoCompetencia;
+    const isBorrador = currentState === 'BORRADOR';
 
     // ── Tabs (con badges) ──────────────────────────────────────────────────────
 
@@ -123,28 +136,61 @@ const CompetencyEvaluationAdminDetailPage: React.FC = () => {
         </PageContainer>
     );
 
-    const statusLabelMap: Record<CompetencyEvaluationStatus, string> = {
+    const statusLabelMap: Record<EstadoProcesoCompetencia, string> = {
         BORRADOR: 'Borrador',
         PUBLICADO: 'Publicado',
+        EN_CALIFICACION: 'En Calificación',
+        EN_REVISION: 'En Revisión',
+        CERRADO: 'Cerrado',
         ARCHIVADO: 'Archivado',
     };
 
     return (
         <PageContainer
             title={formData.nombre || evaluation.nombre}
-            subtitle="Edita el proceso de evaluación de competencias"
+            subtitle={isBorrador ? 'Edita el proceso de evaluación de competencias' : `Proceso en estado: ${statusLabelMap[currentState]} — Solo visualización y ajustes de políticas`}
             breadcrumbs={breadcrumbs}
             actions={
                 <div className="flex items-center gap-2 flex-wrap">
-                    <span className={`badge ${STATUS_BADGE[formData.estado]} badge-outline font-medium`}>
-                        {statusLabelMap[formData.estado]}
+                    <span className={`badge ${STATUS_BADGE[currentState]} badge-outline font-medium`}>
+                        {statusLabelMap[currentState]}
                     </span>
-                    <Button variant="ghost" onClick={() => navigate(ROUTES.COMPETENCIES_EVAL)}>
+                    {isBorrador && (
+                        <Button
+                            variant="info"
+                            onClick={() => setPublishConfirmOpen(true)}
+                            disabled={publishLoading}
+                            loading={publishLoading}
+                        >
+                            Publicar
+                        </Button>
+                    )}
+                    {/* <Button variant="ghost" onClick={() => navigate(ROUTES.COMPETENCIES_EVAL)}>
                         Cancelar
-                    </Button>
+                    </Button> */}
                 </div>
             }
         >
+            {isBorrador && (
+                <div className="alert alert-info mb-4">
+                    <span>
+                        El proceso está en estado <strong>Borrador</strong>. 
+                        Puedes editar toda la configuración. Al publicar, se generarán las asignaciones de evaluadores
+                        y las competencias, participantes y tipos de evaluación quedarán bloqueados.
+                        Solo se podrán ajustar las políticas de corrección y calibración.
+                    </span>
+                </div>
+            )}
+            {!isBorrador && (
+                <div className="alert alert-warning mb-4">
+                    <span>
+                        El proceso está en estado <strong>{statusLabelMap[currentState]}</strong>. 
+                        La edición de competencias, participantes y configuración de tipos de evaluación está bloqueada.
+                        Solo se pueden ajustar las políticas de corrección y calibración en la pestaña "Información General".
+                    </span>
+                </div>
+            )}
+
             <Tabs
                 tabs={tabsDef}
                 activeTab={activeTab}
@@ -165,7 +211,6 @@ const CompetencyEvaluationAdminDetailPage: React.FC = () => {
                             formData={{
                                 nombre: formData.nombre,
                                 descripcion: formData.descripcion,
-                                estado: formData.estado,
                             }}
                             config={config}
                             errors={errors}
@@ -228,6 +273,61 @@ const CompetencyEvaluationAdminDetailPage: React.FC = () => {
                     )}
                 </motion.div>
             </AnimatePresence>
+
+            {/* Publish Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={publishConfirmOpen}
+                onClose={() => setPublishConfirmOpen(false)}
+                onConfirm={async () => {
+                    setPublishLoading(true);
+                    try {
+                        const res = await updateEstadoProceso(id!, 'PUBLICADO');
+                        if (res?.success) {
+                            setPublishConfirmOpen(false);
+                            // Reload the page to reflect new state
+                            window.location.reload();
+                        }
+                    } finally {
+                        setPublishLoading(false);
+                    }
+                }}
+                title="Publicar proceso de evaluación"
+                message={
+                    <>
+                        <p className="mb-4">
+                            ¿Estás seguro de que quieres publicar este proceso de evaluación?
+                        </p>
+
+                        <div className="rounded-lg border border-warning/30 bg-warning/10 p-4">
+                            <p className="mb-2 font-medium text-warning-content">
+                                Ten en cuenta antes de publicar
+                            </p>
+
+                            <ul className="list-disc pl-6 space-y-2 text-sm text-base-content/80">
+                                <li>
+                                    Una vez publicado, <strong>no podrás volver a Borrador</strong>.
+                                </li>
+                                <li>
+                                    Se generarán automáticamente las asignaciones de evaluadores si no existen.
+                                    Esto requiere al menos <strong>1 competencia y 1 participante</strong>.
+                                </li>
+                                <li>
+                                    Las <strong>competencias, participantes y tipos de evaluación</strong>
+                                    quedarán bloqueados para edición.
+                                </li>
+                                <li>
+                                    Después de publicar, solo podrás modificar las{' '}
+                                    <strong>políticas de corrección y calibración</strong> desde
+                                    "Información General".
+                                </li>
+                            </ul>
+                        </div>
+                    </>
+                }
+                confirmText="Publicar"
+                cancelText="Cancelar"
+                variant="info"
+            />
         </PageContainer>
     );
 };

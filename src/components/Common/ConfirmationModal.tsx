@@ -15,7 +15,7 @@ interface ConfirmationModalProps {
     onClose: () => void;
     onConfirm: () => void;
     title: string;
-    message: string;
+    message: string | React.ReactNode;
     confirmText?: string;
     cancelText?: string;
     variant?: 'danger' | 'warning' | 'info';
@@ -59,7 +59,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
             actions={actions}
             size="sm"
         >
-            <p className="text-base text-base-content/80">{message}</p>
+            <div className="text-base text-base-content/80">{message}</div>
         </GenericModal>
     );
 };

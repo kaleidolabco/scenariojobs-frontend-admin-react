@@ -5,7 +5,6 @@ import TextAreaField from '../Common/Forms/TextAreaField';
 import SelectField from '../Common/Forms/SelectField';
 import CheckboxField from '../Common/Forms/CheckboxField';
 import Button from '../Common/Button';
-import { CompetencyEvaluationStatus } from '../../services/competencyEvaluationService';
 import {
     CompetencyEvaluationConfig,
     CorreccionConfig,
@@ -13,21 +12,12 @@ import {
     TIPO_EVALUACION_LABELS,
 } from '../../services/evaluationAssignmentService';
 
-// ─── Constants ────────────────────────────────────────────────────────────────
-
-const STATUS_OPTIONS: { value: CompetencyEvaluationStatus; label: string }[] = [
-    { value: 'BORRADOR', label: 'Borrador' },
-    { value: 'PUBLICADO', label: 'Publicado' },
-    { value: 'ARCHIVADO', label: 'Archivado' },
-];
-
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 export interface GeneralTabProps {
     formData: {
         nombre: string;
         descripcion: string;
-        estado: CompetencyEvaluationStatus;
     };
     config: CompetencyEvaluationConfig;
     errors: Record<string, string>;
@@ -65,7 +55,7 @@ const GeneralTab: React.FC<GeneralTabProps> = ({
         <div className="space-y-6">
             <FormSection
                 title="Información del proceso"
-                description="Configura los datos básicos y el estado de esta evaluación"
+                description="Configura los datos básicos de esta evaluación"
             >
                 <div className="space-y-4 max-w-2xl">
                     <InputField
@@ -89,15 +79,6 @@ const GeneralTab: React.FC<GeneralTabProps> = ({
                         error={errors.descripcion}
                         helpText={`${formData.descripcion.length}/1000`}
                     />
-                    <div className="max-w-xs">
-                        <SelectField
-                            label="Estado"
-                            name="estado"
-                            value={formData.estado}
-                            onChange={(e) => onFieldChange('estado', e.target.value as CompetencyEvaluationStatus)}
-                            options={STATUS_OPTIONS}
-                        />
-                    </div>
                 </div>
             </FormSection>
 
