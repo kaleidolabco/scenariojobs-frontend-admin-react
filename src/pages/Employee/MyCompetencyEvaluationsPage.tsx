@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserRole, ROLE_LABELS } from '../../constants/roles';
 import PageContainer from '../../components/Common/PageContainer';
@@ -6,14 +6,11 @@ import GenericTable, { TableColumn, TableAction } from '../../components/Common/
 import LoadingIndicator from '../../components/Common/LoadingIndicator';
 import { ROUTES } from '../../constants/routes';
 import useUIStore from '../../store/uiStore';
-import useAuthStore from '../../store/authStore';
 import {
     useCompetencyEvaluationService,
-    CompetencyEvaluationDetail,
+    CompetencyAssignment,
 } from '../../services/competencyEvaluationService';
-import { usePersonService, Person } from '../../services/personService';
 import {
-    useEvaluationAssignmentService,
     EstadoAsignacion,
     ESTADO_ASIGNACION_LABELS,
     ESTADO_ASIGNACION_BADGE,
@@ -28,6 +25,7 @@ interface EvalRow {
     competenciesCount: number;
     estado: EstadoAsignacion;
     asignacionId: string;
+    colaboradorId: string;
 }
 
 const ESTADO_BADGE_MAP = Object.fromEntries(
@@ -40,30 +38,19 @@ const ESTADO_BADGE_MAP = Object.fromEntries(
 const MyCompetencyEvaluationsPage: React.FC = () => {
     const navigate = useNavigate();
     const { openAlert } = useUIStore();
-    const { user } = useAuthStore();
-    const currentUserId = user?.id || 'usr_9';
 
-    const { getCompetencyEvaluations } = useCompetencyEvaluationService();
-    const { getPeople } = usePersonService();
-    const { getAsignacionesSync } = useEvaluationAssignmentService();
+    const { getMyAssignments } = useCompetencyEvaluationService();
 
     const [loading, setLoading] = useState(true);
-    const [processes, setProcesses] = useState<CompetencyEvaluationDetail[]>([]);
-    const [persons, setPersons] = useState<Person[]>([]);
+    const [assignments, setAssignments] = useState<CompetencyAssignment[]>([]);
 
     const loadData = useCallback(async () => {
         setLoading(true);
         try {
-            const [processesRes, personsRes] = await Promise.all([
-                getCompetencyEvaluations({ items_por_pagina: 100 }),
-                getPeople({ items_por_pagina: 500 }),
-            ]);
-
-            if (processesRes?.success) {
-                setProcesses(processesRes.data.evaluaciones || []);
-            }
-            if (personsRes?.success) {
-                setPersons(personsRes.data.personas || personsRes.data.datos || []);
+            // Asignaciones self-scoped del usuario autenticado como evaluador (= autoevaluación)
+            const res = await getMyAssignments({ tipo: 'AUTOEVALUACION', limite: 100 });
+            if (res?.success) {
+                setAssignments(res.data.asignaciones ?? []);
             }
         } catch (error) {
             openAlert('Error al cargar los datos', 'error');
@@ -71,39 +58,26 @@ const MyCompetencyEvaluationsPage: React.FC = () => {
         } finally {
             setLoading(false);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {
         loadData();
     }, [loadData]);
 
-    const currentPersonId = useMemo(() => {
-        const p = persons.find((p) => p.usuario_id === currentUserId);
-        return p?.id;
-    }, [persons, currentUserId]);
-
-    const asignaciones = useMemo(() => {
-        if (!currentPersonId) return [];
-        return getAsignacionesSync({ persona_id: currentPersonId, tipo: 'AUTOEVALUACION' });
-    }, [currentPersonId, getAsignacionesSync]);
-
-    const rows: EvalRow[] = useMemo(() => {
-        return asignaciones.map((a) => {
-            const proc = processes.find((p) => p.id === a.proceso_id);
-            return {
-                id: a.id,
-                processId: a.proceso_id,
-                processName: proc?.nombre || a.proceso_id,
-                competenciesCount: proc?.competencias_asignadas?.length ?? 0,
-                estado: a.estado,
-                asignacionId: a.id,
-            };
-        });
-    }, [asignaciones, processes]);
+    const rows: EvalRow[] = assignments.map((a) => ({
+        id: a.id,
+        processId: a.proceso_id,
+        processName: a.proceso_nombre,
+        competenciesCount: a.total_competencias,
+        estado: a.estado,
+        asignacionId: a.id,
+        colaboradorId: a.colaborador_id,
+    }));
 
     const handleNavigate = (row: EvalRow) => {
         navigate(
-            `${ROUTES.GRADING_DETAIL(row.processId)}?personId=${currentPersonId}&asignacionId=${row.asignacionId}&tipo=AUTOEVALUACION`
+            `${ROUTES.GRADING_DETAIL(row.processId)}?personId=${row.colaboradorId}&asignacionId=${row.asignacionId}&tipo=AUTOEVALUACION`
         );
     };
 
@@ -126,13 +100,17 @@ const MyCompetencyEvaluationsPage: React.FC = () => {
     ];
 
     const actionsByEstado = (row: EvalRow): TableAction<EvalRow>[] => {
-        if (row.estado === 'PENDIENTE' || row.estado === 'DEVUELTO') {
+        if (
+            row.estado === 'PENDIENTE' ||
+            row.estado === 'EN_PROGRESO' ||
+            row.estado === 'DEVUELTO'
+        ) {
             return [{
                 label: 'Autoevaluarse',
                 icon: <Pencil size={16} />,
                 onClick: () => handleNavigate(row),
                 variant: 'primary',
-                tooltip: 'Iniciar autoevaluación',
+                tooltip: 'Completar autoevaluación',
             }];
         }
         return [{
@@ -158,17 +136,7 @@ const MyCompetencyEvaluationsPage: React.FC = () => {
             subtitle="Procesos de autoevaluación de competencias asignados"
             breadcrumbs={breadcrumbs}
         >
-            {!currentPersonId ? (
-                <div className="flex items-center justify-center min-h-[300px]">
-                    <div className="text-center">
-                        <div className="text-6xl mb-4">👤</div>
-                        <h3 className="text-lg font-semibold text-base-content mb-2">Perfil no encontrado</h3>
-                        <p className="text-sm text-base-content/60">
-                            No se encontró un perfil de persona asociado a tu usuario.
-                        </p>
-                    </div>
-                </div>
-            ) : rows.length === 0 ? (
+            {rows.length === 0 ? (
                 <div className="flex items-center justify-center min-h-[300px]">
                     <div className="text-center">
                         <div className="text-6xl mb-4">📋</div>

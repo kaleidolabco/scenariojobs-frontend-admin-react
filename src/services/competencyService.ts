@@ -109,7 +109,7 @@ export const useCompetencyService = () => {
 
     const getCompetencies = useCallback(async (params?: CompetenciesQueryParams): Promise<FetchResponse | null> => {
         try {
-            const backendParams: any = {};
+            const backendParams: Record<string, string | number> = {};
             
             if (params?.filtro) {
                 backendParams.busqueda = params.filtro;
@@ -149,6 +149,36 @@ export const useCompetencyService = () => {
                         competencias: response.data.datos,
                         paginacion: response.data.paginacion
                     }
+                };
+            }
+
+            return response;
+        } catch (err) {
+            openAlert(err instanceof Error ? err.message : String(err), 'error');
+            return null;
+        }
+    }, [fetchData, token, openAlert]);
+
+    /**
+     * Detalle de una competencia (`GET /competencies/:id`).
+     * Incluye `definiciones_niveles` completo (a diferencia del listado).
+     * Devuelve `data.competencia`.
+     */
+    const getCompetencyById = useCallback(async (id: string): Promise<FetchResponse | null> => {
+        try {
+            const response = (await fetchData({
+                url: `${import.meta.env.VITE_API_URL}/competencies/${id}`,
+                token: token || null,
+            })) as FetchResponse | null;
+
+            if (response?.success === false) {
+                throw new Error(response.message || 'Error al obtener la competencia');
+            }
+
+            if (response?.success && response.data) {
+                return {
+                    ...response,
+                    data: { ...response.data, competencia: response.data.competencia ?? response.data },
                 };
             }
 
@@ -241,5 +271,5 @@ export const useCompetencyService = () => {
         }
     }, [fetchData, token, openAlert]);
 
-    return { getCompetencies, createCompetency, updateCompetency, deleteCompetency, loading, error };
+    return { getCompetencies, getCompetencyById, createCompetency, updateCompetency, deleteCompetency, loading, error };
 };

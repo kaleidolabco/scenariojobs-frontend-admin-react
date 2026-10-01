@@ -1,36 +1,43 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserRole, ROLE_LABELS } from '../../constants/roles';
 import PageContainer from '../../components/Common/PageContainer';
 import GenericTable, { TableColumn, TableAction } from '../../components/Common/GenericTable';
 import LoadingIndicator from '../../components/Common/LoadingIndicator';
+import FilterBar from '../../components/Common/FilterBar';
+import { StatsGrid } from '../../components/Common/StatsCard';
 import { ROUTES } from '../../constants/routes';
 import useUIStore from '../../store/uiStore';
-import useAuthStore from '../../store/authStore';
+import { Pagination } from '../../services/responseType';
 import {
     useCompetencyEvaluationService,
-    CompetencyEvaluationDetail,
+    CompetencyAssignment,
+    CompetencyEvaluationSummary,
+    MyAssignmentsResumen,
 } from '../../services/competencyEvaluationService';
-import { usePersonService, Person } from '../../services/personService';
-import { useEvaluationResponseService, EvaluationResponse } from '../../services/evaluationResponseService';
 import {
-    useEvaluationAssignmentService,
-    EvaluatorAssignment,
     EstadoAsignacion,
     ESTADO_ASIGNACION_LABELS,
     ESTADO_ASIGNACION_BADGE,
+    ESTADO_PROCESO_LABELS,
     TipoEvaluacion,
+    TIPO_EVALUACION_LABELS,
 } from '../../services/evaluationAssignmentService';
 import StatusBadge from '../../components/Common/StatusBadge';
-import { Eye, RotateCcw, CheckCircle } from '../../components/Common/Icon';
+import { Eye, RotateCcw, Activity, Clock, CheckCircle, Users, ClipboardList } from '../../components/Common/Icon';
+
+const ITEMS_PER_PAGE = 10;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
+
+type TipoFiltro = 'TODAS' | 'AUTOEVALUACION' | 'COMO_EVALUADOR';
 
 interface EvaluationRow {
     id: string;
     processId: string;
     personId: string;
     processName: string;
+    processEstado: string;
     personName: string;
     personPosition: string;
     competenciesCount: number;
@@ -48,169 +55,129 @@ const ESTADO_BADGE_MAP = Object.fromEntries(
     ])
 ) as Record<EstadoAsignacion, { color: string; label: string }>;
 
-// const TIPO_LABELS: Record<TipoEvaluacion, string> = {
-//     AUTOEVALUACION: 'Autoevaluación',
-//     JEFE_DIRECTO: 'Jefe directo',
-//     OTRO: 'Otro',
-// };
+const TOGGLE_OPTIONS: { value: TipoFiltro; label: string }[] = [
+    { value: 'TODAS', label: 'Todas' },
+    { value: 'AUTOEVALUACION', label: 'Autoevaluaciones' },
+    { value: 'COMO_EVALUADOR', label: 'Como evaluador' },
+];
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 const CalificationListPage: React.FC = () => {
     const navigate = useNavigate();
     const { openAlert } = useUIStore();
-    const { user } = useAuthStore();
 
-    const currentUserId = user?.id || 'usr_9'; // fallback para entorno mock
+    const { getMyAssignments, getCompetencyEvaluations, startAssignment } =
+        useCompetencyEvaluationService();
 
-    const { getCompetencyEvaluations } = useCompetencyEvaluationService();
-    const { getPeople } = usePersonService();
-    const { getEvaluationResponses } = useEvaluationResponseService();
-    const {
-        getAsignacionesSync,
-        getConfig,
-        iniciarEdicion,
-    } = useEvaluationAssignmentService();
+    // State
+    const [rows, setRows] = useState<CompetencyAssignment[]>([]);
+    const [resumen, setResumen] = useState<MyAssignmentsResumen | null>(null);
+    const [pagination, setPagination] = useState<Pagination | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [procesos, setProcesos] = useState<CompetencyEvaluationSummary[]>([]);
 
-    const [loading, setLoading] = useState(true);
-    const [processes, setProcesses] = useState<CompetencyEvaluationDetail[]>([]);
-    const [personsData, setPersonsData] = useState<Record<string, Person>>({});
-    const [responses, setResponses] = useState<EvaluationResponse[]>([]);
-    const [asignaciones, setAsignaciones] = useState<EvaluatorAssignment[]>([]);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [pageSize, setPageSize] = useState(10);
-    const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
+    // Query params (servidor)
+    const [queryParams, setQueryParams] = useState<{
+        tipo?: TipoEvaluacion;
+        estado?: EstadoAsignacion;
+        proceso_id?: string;
+        pagina: number;
+        limite: number;
+    }>({
+        tipo: undefined,
+        estado: undefined,
+        proceso_id: undefined,
+        pagina: 1,
+        limite: ITEMS_PER_PAGE,
+    });
 
-    // Filas: evaluador externo vs autoevaluación
-    const buildRows = useCallback(
-        (procesos: CompetencyEvaluationDetail[]): { evaluador: EvaluationRow[]; autoeval: EvaluationRow[] } => {
-            const evaluador: EvaluationRow[] = [];
-            const autoeval: EvaluationRow[] = [];
-
-            const respByAsignacion = new Map<string, EvaluationResponse>();
-            responses.forEach((r) => {
-                if (r.asignacion_id) respByAsignacion.set(r.asignacion_id, r);
-            });
-
-            asignaciones.forEach((a) => {
-                if (a.evaluador_id !== currentUserId) return;
-                const proces = procesos.find((p) => p.id === a.proceso_id);
-                if (!proces) return;
-                const person = personsData[a.persona_id];
-                if (!person && a.tipo !== 'AUTOEVALUACION') {
-                    // Para autoevaluación, la persona es el propio evaluador (person_id = evaluador_id mapeado)
-                }
-
-                // const resp = respByAsignacion.get(a.id);
-                // const estado: EstadoAsignacion = resp?.estado === 'COMPLETADO' ? a.estado : a.estado;
-                const competenciesCount = proces.competencias_asignadas?.length ?? 0;
-
-                const configProceso = getConfig(a.proceso_id);
-                const correccionVoluntaria =
-                    configProceso.correccion.permitir &&
-                    configProceso.correccion.permitir_voluntaria &&
-                    a.correccion_disponible;
-
-                const personName = person
-                    ? `${person.nombres} ${person.apellidos}`
-                    : a.tipo === 'AUTOEVALUACION'
-                    ? 'Yo'
-                    : '—';
-
-                const row: EvaluationRow = {
-                    id: `${a.proceso_id}_${a.persona_id}_${a.id}`,
-                    processId: a.proceso_id,
-                    personId: a.persona_id,
-                    processName: proces.nombre,
-                    personName,
-                    personPosition: person?.puesto_nombre || '-',
-                    competenciesCount,
-                    estado: a.estado,
-                    tipo: a.tipo,
-                    asignacionId: a.id,
-                    correccionDisponible: a.correccion_disponible,
-                    correccionVoluntaria,
-                };
-
-                if (a.tipo === 'AUTOEVALUACION') autoeval.push(row);
-                else evaluador.push(row);
-            });
-
-            return { evaluador, autoeval };
-        },
-        [responses, asignaciones, personsData, currentUserId, getConfig]
-    );
-
-    const evaluadorRows = useMemo(() => buildRows(processes).evaluador, [buildRows, processes]);
-    const autoevalRows = useMemo(() => buildRows(processes).autoeval, [buildRows, processes]);
-
-    const pagination = useMemo(
-        () => ({
-            pagina: currentPage,
-            limite: pageSize,
-            total_paginas: Math.ceil(evaluadorRows.length / pageSize),
-            total: evaluadorRows.length,
-        }),
-        [currentPage, pageSize, evaluadorRows.length]
-    );
-
-    const paginationAutoeval = useMemo(
-        () => ({
-            pagina: currentPage,
-            limite: pageSize,
-            total_paginas: Math.ceil(autoevalRows.length / pageSize),
-            total: autoevalRows.length,
-        }),
-        [currentPage, pageSize, autoevalRows.length]
-    );
-
-    const loadData = useCallback(async () => {
-        setLoading(true);
-        try {
-            const processesRes = await getCompetencyEvaluations({ items_por_pagina: 100 });
-            const procList: CompetencyEvaluationDetail[] = processesRes?.success
-                ? processesRes.data.evaluaciones || []
-                : [];
-            setProcesses(procList);
-
-            const personsRes = await getPeople({ items_por_pagina: 500 });
-            if (personsRes?.success) {
-                const map: Record<string, Person> = {};
-                (personsRes.data.personas || personsRes.data.datos || []).forEach(
-                    (p: Person) => { map[p.id] = p; }
-                );
-                setPersonsData(map);
-            }
-
-            const responsesRes = await getEvaluationResponses({
-                evaluador_id: currentUserId,
-                items_por_pagina: 500,
-            });
-            if (responsesRes?.success) {
-                setResponses(responsesRes.data.respuestas || []);
-            }
-
-            const asignacionesDelEvaluator = getAsignacionesSync({ evaluador_id: currentUserId });
-            setAsignaciones(asignacionesDelEvaluator);
-        } catch (error) {
-            openAlert('Error al cargar los datos', 'error');
-            console.error(error);
-        } finally {
-            setLoading(false);
+    // Carga unilateral de procesos para el filtro de "Proceso"
+    const loadProcesos = useCallback(async () => {
+        const response = await getCompetencyEvaluations({ items_por_pagina: 100 });
+        if (response?.success) {
+            setProcesos(response.data.evaluaciones || []);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentUserId]);
+    }, []);
 
     useEffect(() => {
-        loadData();
-    }, [loadData]);
+        loadProcesos();
+    }, [loadProcesos]);
+
+    // Consulta server-side de asignaciones (self-scoped al evaluador autenticado)
+    const loadAsignaciones = useCallback(async () => {
+        setLoading(true);
+        const response = await getMyAssignments({
+            tipo: queryParams.tipo,
+            estado: queryParams.estado,
+            proceso_id: queryParams.proceso_id,
+            pagina: queryParams.pagina,
+            limite: queryParams.limite,
+        });
+        if (response?.success) {
+            setRows(response.data.asignaciones || []);
+            setResumen(response.data.resumen ?? null);
+            setPagination(response.data.paginacion ?? null);
+        }
+        setLoading(false);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [queryParams]);
+
+    useEffect(() => {
+        loadAsignaciones();
+    }, [loadAsignaciones]);
+
+    const handleToggle = (toggle: TipoFiltro) => {
+        setQueryParams((p) => ({
+            ...p,
+            tipo:
+                toggle === 'TODAS'
+                    ? undefined
+                    : toggle === 'AUTOEVALUACION'
+                    ? 'AUTOEVALUACION'
+                    : 'JEFE_DIRECTO',
+            pagina: 1,
+        }));
+    };
+
+    // Deriva el toggle activo desde el filtro `tipo` (ambos sincronizados)
+    const activeToggle: TipoFiltro =
+        queryParams.tipo === undefined
+            ? 'TODAS'
+            : queryParams.tipo === 'AUTOEVALUACION'
+            ? 'AUTOEVALUACION'
+            : 'COMO_EVALUADOR';
+
+    const handleFilterChange = (key: string, value: string | number) => {
+        setQueryParams((p) => {
+            const clean = typeof value === 'string' && value !== '' ? value : undefined;
+            if (key === 'tipo') return { ...p, tipo: clean as TipoEvaluacion | undefined, pagina: 1 };
+            if (key === 'estado')
+                return { ...p, estado: clean as EstadoAsignacion | undefined, pagina: 1 };
+            if (key === 'proceso_id') return { ...p, proceso_id: clean, pagina: 1 };
+            return p;
+        });
+    };
+
+    const clearFilters = () =>
+        setQueryParams({
+            tipo: undefined,
+            estado: undefined,
+            proceso_id: undefined,
+            pagina: 1,
+            limite: ITEMS_PER_PAGE,
+        });
+
+    // ── Acciones ──────────────────────────────────────────────────────────────
 
     const handleCorregir = async (row: EvaluationRow) => {
         if (!row.correccionDisponible) {
             openAlert('No le quedan correcciones disponibles para esta asignación.', 'warning');
             return;
         }
-        const res = await iniciarEdicion(row.asignacionId);
+        // PATCH /assignments/:id/start — desde COMPLETADO/EN_REVISION cuenta como corrección
+        const res = await startAssignment(row.asignacionId);
         if (res?.success) {
             openAlert('Asignación reabierta para corrección.', 'success');
             navigate(
@@ -219,36 +186,11 @@ const CalificationListPage: React.FC = () => {
         }
     };
 
-    const columns: TableColumn<EvaluationRow>[] = [
-        { key: 'processName', label: 'Proceso', sortable: true },
-        { key: 'personName', label: 'Persona', sortable: true },
-        { key: 'personPosition', label: 'Puesto', sortable: true },
-        {
-            key: 'competenciesCount',
-            label: 'Competencias',
-            sortable: true,
-            render: (r) => <span className="badge badge-sm badge-primary">{r.competenciesCount}</span>,
-        },
-        {
-            key: 'estado',
-            label: 'Estado',
-            sortable: true,
-            render: (r) => (
-                <StatusBadge
-                    estado={r.estado}
-                    map={ESTADO_BADGE_MAP}
-                    size="sm"
-                />
-            ),
-        },
-    ];
-
     const actionsByEstado = (row: EvaluationRow): TableAction<EvaluationRow>[] => {
         const acciones: TableAction<EvaluationRow>[] = [];
 
         const isAprobadoOCerrado = row.estado === 'APROBADO';
 
-        // Acción principal según estado
         if (
             row.estado === 'PENDIENTE' ||
             row.estado === 'EN_PROGRESO' ||
@@ -277,12 +219,7 @@ const CalificationListPage: React.FC = () => {
             });
         }
 
-        // Botón "Corregir" si está COMPLETADO/EN_REVISION y hay corrección voluntaria disponible.
-        if (
-            !isAprobadoOCerrado &&
-            row.correccionVoluntaria &&
-            (row.estado === 'COMPLETADO' || row.estado === 'EN_REVISION')
-        ) {
+        if (!isAprobadoOCerrado && row.correccionVoluntaria && row.correccionDisponible) {
             acciones.push({
                 label: 'Corregir',
                 icon: <RotateCcw size={16} />,
@@ -295,30 +232,131 @@ const CalificationListPage: React.FC = () => {
         return acciones;
     };
 
-    const sortRows = (rows: EvaluationRow[]) => {
-        let sorted = [...rows];
-        if (sortConfig) {
-            sorted.sort((a, b) => {
-                const av = a[sortConfig.key as keyof EvaluationRow] ?? '';
-                const bv = b[sortConfig.key as keyof EvaluationRow] ?? '';
-                if (av < bv) return sortConfig.direction === 'asc' ? -1 : 1;
-                if (av > bv) return sortConfig.direction === 'asc' ? 1 : -1;
-                return 0;
-            });
-        }
-        return sorted;
+    // ── Columnas / filtros ────────────────────────────────────────────────────
+
+    const columns: TableColumn<EvaluationRow>[] = [
+        {
+            key: 'processName',
+            label: 'Proceso',
+            render: (r) => (
+                <div className="flex flex-col gap-0.5 max-w-xs">
+                    <span className="font-semibold text-base-content leading-snug">{r.processName}</span>
+                    <span className="text-xs text-base-content/50">
+                        {ESTADO_PROCESO_LABELS[r.processEstado as keyof typeof ESTADO_PROCESO_LABELS] ||
+                            r.processEstado}
+                    </span>
+                </div>
+            ),
+        },
+        { key: 'personName', label: 'Persona' },
+        { key: 'personPosition', label: 'Cargo' },
+        {
+            key: 'competenciesCount',
+            label: 'Competencias',
+            render: (r) => <span className="badge badge-sm badge-primary">{r.competenciesCount}</span>,
+        },
+        {
+            key: 'estado',
+            label: 'Estado',
+            render: (r) => <StatusBadge estado={r.estado} map={ESTADO_BADGE_MAP} size="sm" />,
+        },
+    ];
+
+    const estadoFilterOptions = (Object.keys(ESTADO_ASIGNACION_LABELS) as EstadoAsignacion[]).map(
+        (e) => ({ label: ESTADO_ASIGNACION_LABELS[e], value: e })
+    );
+    const tipoFilterOptions = (Object.keys(TIPO_EVALUACION_LABELS) as TipoEvaluacion[]).map((t) => ({
+        label: TIPO_EVALUACION_LABELS[t],
+        value: t,
+    }));
+    const procesoFilterOptions = procesos.map((p) => ({ label: p.nombre, value: p.id }));
+
+    const filterDefinitions = [
+        { key: 'tipo', label: 'Tipo', options: tipoFilterOptions },
+        { key: 'estado', label: 'Estado', options: estadoFilterOptions },
+        { key: 'proceso_id', label: 'Proceso', options: procesoFilterOptions },
+    ];
+
+    const activeFilters = {
+        ...(queryParams.tipo && { tipo: queryParams.tipo }),
+        ...(queryParams.estado && { estado: queryParams.estado }),
+        ...(queryParams.proceso_id && { proceso_id: queryParams.proceso_id }),
     };
 
-    const handleSort = (key: string) => {
-        setSortConfig((prev) =>
-            prev?.key === key
-                ? { key, direction: prev.direction === 'asc' ? 'desc' : 'asc' }
-                : { key, direction: 'asc' }
-        );
-        setCurrentPage(1);
+    const statsCards = resumen
+        ? [
+              {
+                  label: 'Total evaluaciones',
+                  value: resumen.total ?? 0,
+                  variant: 'info' as const,
+                  icon: <ClipboardList size={20} />,
+              },
+              {
+                  label: 'Pendientes',
+                  value: resumen.pendientes ?? 0,
+                  variant: 'warning' as const,
+                  icon: <Clock size={20} />,
+              },
+              {
+                  label: 'En progreso',
+                  value: resumen.en_progreso ?? 0,
+                  variant: 'primary' as const,
+                  icon: <Activity size={20} />,
+              },
+              {
+                  label: 'Por corregir',
+                  value: resumen.por_corregir ?? 0,
+                  variant: 'error' as const,
+                  icon: <RotateCcw size={20} />,
+              },
+              {
+                  label: 'En revisión',
+                  value: resumen.en_revision ?? 0,
+                  variant: 'warning' as const,
+                  icon: <Eye size={20} />,
+              },
+              {
+                  label: 'Completadas',
+                  value: resumen.completadas ?? 0,
+                  variant: 'success' as const,
+                  icon: <CheckCircle size={20} />,
+              },
+              {
+                  label: 'Autoevaluaciones pend.',
+                  value: resumen.autoevaluaciones_pendientes ?? 0,
+                  variant: 'success' as const,
+                  icon: <Users size={20} />,
+              },
+          ]
+        : [];
+
+    const mapAssignment = (a: CompetencyAssignment): EvaluationRow => {
+        const esAutoevaluacion = a.evaluador_id === a.colaborador_id;
+        return {
+            id: a.id,
+            processId: a.proceso_id,
+            personId: a.colaborador_id,
+            processName: a.proceso_nombre,
+            processEstado: a.proceso_estado,
+            personName: esAutoevaluacion ? 'Yo' : a.colaborador_nombre,
+            personPosition: a.colaborador_cargo,
+            competenciesCount: a.total_competencias,
+            estado: a.estado,
+            tipo: a.tipo,
+            asignacionId: a.id,
+            correccionDisponible: a.correccion_disponible,
+            correccionVoluntaria: a.correccion_voluntaria && a.correccion_disponible,
+        };
     };
 
-    if (loading) return <LoadingIndicator />;
+    const rowsTable: EvaluationRow[] = rows.map(mapAssignment);
+
+    const emptyMessage =
+        activeToggle === 'AUTOEVALUACION'
+            ? 'No tienes autoevaluaciones asignadas en este momento.'
+            : activeToggle === 'COMO_EVALUADOR'
+            ? 'No tienes evaluaciones por calificar como evaluador.'
+            : 'No hay evaluaciones que coincidan con los filtros.';
 
     const breadcrumbs = [
         { label: 'Inicio', to: ROUTES.HOME },
@@ -326,91 +364,60 @@ const CalificationListPage: React.FC = () => {
         { label: 'Mis Evaluaciones', to: undefined },
     ];
 
-    const paginadas = sortRows(evaluadorRows).slice(
-        (currentPage - 1) * pageSize,
-        (currentPage - 1) * pageSize + pageSize
-    );
-    // const paginadasAuto = sortRows(autoevalRows).slice(
-    //     (currentPage - 1) * pageSize,
-    //     (currentPage - 1) * pageSize + pageSize
-    // );
-
-    const EmptyState = ({ emoji, title, msg }: { emoji: string; title: string; msg: string }) => (
-        <div className="flex items-center justify-center min-h-[300px]">
-            <div className="text-center">
-                <div className="text-6xl mb-4">{emoji}</div>
-                <h3 className="text-lg font-semibold text-base-content mb-2">{title}</h3>
-                <p className="text-sm text-base-content/60 max-w-md">{msg}</p>
-            </div>
-        </div>
-    );
-
-    const renderTable = (
-        rows: EvaluationRow[],
-        pag: typeof pagination,
-        emptyState: React.ReactNode
-    ) =>
-        rows.length === 0 ? (
-            emptyState
-        ) : (
-            <GenericTable<EvaluationRow>
-                data={paginadas}
-                columns={columns}
-                actions={(row) => actionsByEstado(row)}
-                keyExtractor={(row) => row.id}
-                pagination={pag}
-                onPageChange={setCurrentPage}
-                onPageSizeChange={setPageSize}
-                sortConfig={sortConfig}
-                onSort={handleSort}
-                isLoading={loading}
-                emptyMessage="No hay evaluaciones para mostrar"
-            />
-        );
-
+    // Render
     return (
         <PageContainer
             title="Mis Evaluaciones de Competencias"
             subtitle="Procesos de evaluación asignados y autoevaluaciones pendientes"
             breadcrumbs={breadcrumbs}
         >
-            <div className="space-y-8">
-                {/* Sección Autoevaluación */}
-                <section>
-                    <div className="flex items-center gap-2 mb-3">
-                        <CheckCircle size={18} className="text-primary" />
-                        <h2 className="text-lg font-semibold text-base-content">Mi autoevaluación</h2>
-                        <span className="badge badge-success badge-sm">{autoevalRows.length}</span>
-                    </div>
-                    {renderTable(
-                        autoevalRows,
-                        paginationAutoeval,
-                        <EmptyState
-                            emoji="🪞"
-                            title="Sin autoevaluaciones pendientes"
-                            msg="No tienes procesos de autoevaluación asignados en este momento."
-                        />
-                    )}
-                </section>
+            {/* Stats cards desde el resumen del endpoint */}
+            {statsCards.length > 0 && <StatsGrid stats={statsCards} columns={4} className="mb-6" />}
 
-                {/* Sección Como evaluador */}
-                <section>
-                    <div className="flex items-center gap-2 mb-3">
-                        <Eye size={18} className="text-secondary" />
-                        <h2 className="text-lg font-semibold text-base-content">Como evaluador</h2>
-                        <span className="badge badge-secondary badge-sm">{evaluadorRows.length}</span>
-                    </div>
-                    {renderTable(
-                        evaluadorRows,
-                        pagination,
-                        <EmptyState
-                            emoji="📋"
-                            title="No hay evaluaciones pendientes"
-                            msg="No tienes procesos de evaluación asignados en este momento."
-                        />
-                    )}
-                </section>
+            {/* Toggle segmentado: Todas / Autoevaluaciones / Como evaluador */}
+            <div className="flex flex-wrap items-center gap-2 mb-4">
+                <div className="join">
+                    {TOGGLE_OPTIONS.map((opt) => (
+                        <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => handleToggle(opt.value)}
+                            className={`join-item btn btn-sm no-animation ${
+                                activeToggle === opt.value ? 'btn-primary' : 'btn-ghost'
+                            }`}
+                        >
+                            {opt.label}
+                        </button>
+                    ))}
+                </div>
             </div>
+
+            {/* Filtros */}
+            <FilterBar
+                filters={filterDefinitions}
+                activeFilters={activeFilters}
+                onFilterChange={handleFilterChange}
+                onClearFilters={clearFilters}
+            />
+
+            {/* Tabla única con paginación del servidor */}
+            {loading && !rowsTable.length ? (
+                <LoadingIndicator />
+            ) : (
+                <GenericTable
+                    data={rowsTable}
+                    columns={columns}
+                    actions={(row) => actionsByEstado(row)}
+                    keyExtractor={(row) => row.id}
+                    pagination={pagination}
+                    onPageChange={(page) => setQueryParams((p) => ({ ...p, pagina: page }))}
+                    onPageSizeChange={(size) =>
+                        setQueryParams((p) => ({ ...p, limite: size, pagina: 1 }))
+                    }
+                    isLoading={loading}
+                    emptyMessage={emptyMessage}
+                />
+            )}
         </PageContainer>
     );
 };

@@ -4,21 +4,26 @@ import { UserRole, ROLE_LABELS } from '../../constants/roles';
 import { motion, AnimatePresence } from 'framer-motion';
 import PageContainer from '../../components/Common/PageContainer';
 import LoadingIndicator from '../../components/Common/LoadingIndicator';
-import VideoRecorder from '../../components/Common/VideoRecorder';
+import StatusBadge from '../../components/Common/StatusBadge';
 import { ROUTES } from '../../constants/routes';
 import useUIStore from '../../store/uiStore';
-import useAuthStore from '../../store/authStore';
 import {
     useCompetencyEvaluationService,
     CompetencyEvaluationDetail,
+    CompetencyAssignment,
+    ProcessCompetencyItem,
+    SaveEvaluationResponsePayload,
+    EvaluationResponseItem,
 } from '../../services/competencyEvaluationService';
 import { useCompetencyService, Competency } from '../../services/competencyService';
-import { usePersonService, Person } from '../../services/personService';
-import { useEvaluationResponseService, EvaluationComments } from '../../services/evaluationResponseService';
 import { useIntegralEvaluationService } from '../../services/integralEvaluationService';
-import { useEvaluationAssignmentService } from '../../services/evaluationAssignmentService';
+import {
+    EstadoAsignacion,
+    ESTADO_ASIGNACION_LABELS,
+    ESTADO_ASIGNACION_BADGE,
+} from '../../services/evaluationAssignmentService';
 import Button from '../../components/Common/Button';
-import { Check, Info, ArrowLeft, ListChecks, ClipboardList, Video } from '../../components/Common/Icon';
+import { Check, Info, ArrowLeft, ListChecks, ClipboardList } from '../../components/Common/Icon';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -36,14 +41,25 @@ interface Tab {
     icon: React.ReactNode;
 }
 
+/** Estados desde los cuales el evaluador aún puede editar/guardar (§2.3). */
+const EDITABLE_ESTADOS: EstadoAsignacion[] = ['PENDIENTE', 'EN_PROGRESO', 'DEVUELTO'];
+
+const ESTADO_BADGE_MAP = Object.fromEntries(
+    Object.entries(ESTADO_ASIGNACION_BADGE).map(([k, color]) => [
+        k,
+        { color, label: ESTADO_ASIGNACION_LABELS[k as EstadoAsignacion] },
+    ])
+) as Record<EstadoAsignacion, { color: string; label: string }>;
+
 // ─── Comments Section ─────────────────────────────────────────────────────────
 
 interface CommentsSectionProps {
     textComment: string;
     onTextChange: (value: string) => void;
+    disabled?: boolean;
 }
 
-const CommentsSection: React.FC<CommentsSectionProps> = ({ textComment, onTextChange }) => {
+const CommentsSection: React.FC<CommentsSectionProps> = ({ textComment, onTextChange, disabled }) => {
     const [activeCommentTab, setActiveCommentTab] = useState<'text' | 'video'>('text');
 
     return (
@@ -80,15 +96,12 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({ textComment, onTextCh
                 </button>
                 <button
                     type="button"
-                    onClick={() => setActiveCommentTab('video')}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                        activeCommentTab === 'video'
-                            ? 'bg-base-100 text-base-content shadow-sm'
-                            : 'text-base-content/60 hover:text-base-content'
-                    }`}
+                    disabled
+                    title="Próximamente: el comentario en video estará disponible"
+                    className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all cursor-not-allowed opacity-50"
                 >
-                    <Video size={16} />
-                    Comentario en video
+                    Video
+                    <span className="badge badge-ghost badge-xs">Próximamente</span>
                 </button>
             </div>
 
@@ -112,7 +125,8 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({ textComment, onTextCh
                                 onChange={(e) => onTextChange(e.target.value)}
                                 placeholder="Escribe aquí tus comentarios sobre el desempeño de la persona evaluada. Puedes mencionar fortalezas, áreas de mejora, logros destacados, etc."
                                 rows={6}
-                                className="textarea textarea-bordered w-full text-sm resize-none focus:outline-none focus:border-primary"
+                                disabled={disabled}
+                                className="textarea textarea-bordered w-full text-sm resize-none focus:outline-none focus:border-primary disabled:opacity-60"
                             />
                         </label>
                         <div className="flex items-center justify-between text-xs text-base-content/40">
@@ -127,9 +141,7 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({ textComment, onTextCh
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -6 }}
                         transition={{ duration: 0.15 }}
-                    >
-                        <VideoRecorder />
-                    </motion.div>
+                    />
                 )}
             </AnimatePresence>
         </div>
@@ -146,22 +158,19 @@ const CompetencyEvaluationEvaluatorDetailPage: React.FC = () => {
     const personId = searchParams.get('personId');
     const asignacionId = searchParams.get('asignacionId');
     const tipo = searchParams.get('tipo');
-    const integralId = (location.state as any)?.integralId;
+    const integralId = (location.state as { integralId?: string } | null)?.integralId;
     const { openAlert } = useUIStore();
-    const { user } = useAuthStore();
-    const currentUserId = user?.id || 'usr_9';
 
-    const { getCompetencyEvaluationDetail } = useCompetencyEvaluationService();
-    const { getCompetencies } = useCompetencyService();
-    const { getPersonById } = usePersonService();
-    const { saveEvaluationResponse, getEvaluationResponseByKey } = useEvaluationResponseService();
+    const { getCompetencyEvaluationDetail, getMyAssignments, getProcessCompetencies, startAssignment, saveResponse, getResponseByAssignment } =
+        useCompetencyEvaluationService();
+    const { getCompetencyById } = useCompetencyService();
     const { syncComponente } = useIntegralEvaluationService();
-    const { iniciarEdicion, completarAsignacion } = useEvaluationAssignmentService();
 
     // State
     const [loading, setLoading] = useState(true);
     const [process, setProcess] = useState<CompetencyEvaluationDetail | null>(null);
-    const [person, setPerson] = useState<Person | null>(null);
+    const [assignment, setAssignment] = useState<CompetencyAssignment | null>(null);
+    const [existingResponse, setExistingResponse] = useState<EvaluationResponseItem | null>(null);
     const [competencies, setCompetencies] = useState<Competency[]>([]);
     const [responses, setResponses] = useState<CompetencyEvaluationResponse>({});
     const [isSaving, setIsSaving] = useState(false);
@@ -175,10 +184,15 @@ const CompetencyEvaluationEvaluatorDetailPage: React.FC = () => {
         { id: 'comentarios', label: 'Comentarios', icon: <ClipboardList size={16} /> },
     ];
 
+    const readOnly = assignment
+        ? !EDITABLE_ESTADOS.includes(assignment.estado)
+        : true;
+    const colaboradorNombre = assignment?.colaborador_nombre ?? '';
+
     // Load data
     useEffect(() => {
         const load = async () => {
-            if (!processId || !personId) {
+            if (!processId || !personId || !asignacionId) {
                 openAlert('Faltan parámetros requeridos', 'error');
                 const fallback = tipo === 'AUTOEVALUACION' ? ROUTES.MI_COMPETENCIAS_EVAL : ROUTES.GRADING_PENDING;
                 navigate(fallback);
@@ -187,45 +201,82 @@ const CompetencyEvaluationEvaluatorDetailPage: React.FC = () => {
 
             setLoading(true);
             try {
-                const processRes = await getCompetencyEvaluationDetail(processId);
+                // 1. Asignación (self-scoped): estado, nombre del colaborador y flags de corrección
+                let foundAssignment: CompetencyAssignment | null = null;
+                const [assignRes, processRes] = await Promise.all([
+                    getMyAssignments({ proceso_id: processId, colaborador_id: personId, limite: 100 }),
+                    getCompetencyEvaluationDetail(processId),
+                ]);
+
+                if (assignRes?.success) {
+                    const asignaciones = (assignRes.data?.asignaciones ?? []) as CompetencyAssignment[];
+                    foundAssignment = asignaciones.find((a) => a.id === asignacionId) ?? null;
+                    setAssignment(foundAssignment);
+                }
                 if (processRes?.success && processRes.data?.evaluacion) {
                     setProcess(processRes.data.evaluacion);
                 }
 
-                const personRes = await getPersonById(personId);
-                if (personRes?.success && personRes.data?.persona) {
-                    setPerson(personRes.data.persona);
-                }
+                // 2. Competencias activas del proceso (§6.1, paginado) ordenadas por `orden`
+                const items: ProcessCompetencyItem[] = [];
+                let pagina = 1;
+                let totalPaginas = 1;
+                do {
+                    const compRes = await getProcessCompetencies(processId, { pagina, limite: 100 });
+                    if (!compRes?.success || !compRes.data) break;
+                    items.push(...((compRes.data.datos ?? []) as ProcessCompetencyItem[]));
+                    totalPaginas = compRes.data.paginacion?.total_paginas ?? 1;
+                    pagina += 1;
+                } while (pagina <= totalPaginas);
 
-                const compRes = await getCompetencies({ items_por_pagina: 200 });
-                if (compRes?.success && processRes?.success && processRes.data?.evaluacion) {
-                    const allComps = compRes.data.competencias || [];
-                    const assignedCompIds = processRes.data.evaluacion.competencias_asignadas || [];
-                    const assignedComps = allComps.filter((comp: Competency) =>
-                        assignedCompIds.includes(comp.id)
-                    );
-                    setCompetencies(assignedComps);
-                }
+                const ordered = [...items].sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0));
 
-                // Iniciar edición de la asignación (PENDIENTE → EN_PROGRESO)
-                if (asignacionId) {
-                    await iniciarEdicion(asignacionId);
-                }
+                // 3. Detalle de cada competencia para obtener `definiciones_niveles`
+                const detalles = await Promise.all(
+                    ordered.map(async (item) => {
+                        const res = await getCompetencyById(item.competencia_id);
+                        return res?.success && res.data?.competencia
+                            ? (res.data.competencia as Competency)
+                            : null;
+                    })
+                );
 
-                // Load existing responses if available
-                if (personId) {
-                    const existingRes = await getEvaluationResponseByKey(currentUserId, processId, personId);
-                    
-                    if (existingRes?.success && existingRes.data?.respuesta) {
-                        const savedResponse = existingRes.data.respuesta;
-                        setResponses({
-                            [personId]: savedResponse.competencias_evaluadas || {},
-                        });
-                        if (savedResponse.comentarios?.text) {
-                            setTextComment(savedResponse.comentarios.text);
-                        }
-                    } else {
-                        setResponses({ [personId]: {} });
+                const merged: Competency[] = ordered.map((item, idx) => {
+                    const full = detalles[idx];
+                    const escala = full?.escala ?? item.escala ?? 1;
+                    const definiciones_niveles = full?.definiciones_niveles?.length
+                        ? full.definiciones_niveles
+                        : Array.from({ length: escala }, (_, i) => ({
+                              nivel: i + 1,
+                              nombre: `Nivel ${i + 1}`,
+                              descripcion: '',
+                          }));
+                    return {
+                        id: item.competencia_id,
+                        nombre: full?.nombre ?? item.nombre,
+                        descripcion: full?.descripcion ?? item.descripcion,
+                        categoria: full?.categoria ?? '',
+                        escala,
+                        definiciones_niveles,
+                    };
+                });
+                setCompetencies(merged);
+
+                // 4. Respuesta existente de esta asignación (§9.4)
+                const respRes = await getResponseByAssignment(asignacionId);
+                const savedResponse: EvaluationResponseItem | null =
+                    respRes?.success && respRes.data?.respuesta ? respRes.data.respuesta : null;
+                setExistingResponse(savedResponse);
+                setResponses({ [personId]: savedResponse?.competencias_evaluadas ?? {} });
+                setTextComment(savedResponse?.comentarios?.text ?? '');
+
+                // 5. Marcar EN_PROGRESO al abrir una asignación pendiente (§9.3).
+                //    Solo desde PENDIENTE: desde COMPLETADO/EN_REVISION la re-apertura
+                //    cuenta como corrección y la dispara la lista ("Corregir").
+                if (foundAssignment?.estado === 'PENDIENTE') {
+                    const startRes = await startAssignment(asignacionId);
+                    if (startRes?.success && startRes.data?.asignacion) {
+                        setAssignment(startRes.data.asignacion as CompetencyAssignment);
                     }
                 }
             } catch (error) {
@@ -241,6 +292,7 @@ const CompetencyEvaluationEvaluatorDetailPage: React.FC = () => {
 
     // Handlers
     const handleSelectLevel = (competencyId: string, level: number) => {
+        if (readOnly) return;
         setResponses((prev) => ({
             ...prev,
             [personId!]: {
@@ -251,10 +303,11 @@ const CompetencyEvaluationEvaluatorDetailPage: React.FC = () => {
     };
 
     const handleSave = async () => {
-        if (!person || !process) return;
+        if (!process || !assignment || !processId || !personId || !asignacionId) return;
 
-        const evaluatedCount = Object.keys(responses[personId!] || {}).length;
-        if (evaluatedCount !== competencies.length) {
+        const evaluated = responses[personId] ?? {};
+        const faltantes = competencies.filter((c) => typeof evaluated[c.id] !== 'number');
+        if (faltantes.length > 0) {
             openAlert(`Debes evaluar todas las ${competencies.length} competencias`, 'warning');
             setActiveTab('competencias');
             return;
@@ -262,51 +315,41 @@ const CompetencyEvaluationEvaluatorDetailPage: React.FC = () => {
 
         setIsSaving(true);
         try {
-            const comentarios: EvaluationComments = {};
-            if (textComment.trim().length > 0) {
-                comentarios.text = textComment;
-            }
-
-            const saveData = {
-                evaluador_id: currentUserId,
-                proceso_id: processId!,
-                persona_id: personId!,
-                competencias_evaluadas: responses[personId!],
-                comentarios,
-                estado: 'COMPLETADO' as const,
-                asignacion_id: asignacionId || undefined,
+            const payload: SaveEvaluationResponsePayload = {
+                asignacion_id: asignacionId,
+                proceso_id: processId,
+                colaborador_id: personId,
+                competencias_evaluadas: evaluated,
+                comentarios: textComment.trim().length > 0 ? { text: textComment } : {},
             };
 
-            const result = await saveEvaluationResponse(saveData);
+            const result = await saveResponse(payload);
 
             if (result?.success) {
-                // Completar asignación (EN_PROGRESO → COMPLETADO / EN_REVISION)
-                if (asignacionId) {
-                    await completarAsignacion(asignacionId);
-                }
+                const saved: EvaluationResponseItem | undefined = result.data?.respuesta;
 
                 // If part of an integral evaluation, sync the component
-                if (integralId && result.data?.respuesta) {
-                    const evalResponse = result.data.respuesta;
-                    
-                    if (evalResponse.puntaje_normalizado !== undefined && evalResponse.puntaje_numerico !== undefined) {
-                        await syncComponente(integralId, 'competencias', {
-                            puntaje: evalResponse.puntaje_normalizado,
-                            puntaje_numerico: evalResponse.puntaje_numerico,
-                            escala_maxima: evalResponse.escala_maxima,
-                            estado: 'COMPLETADA',
-                        });
-                        
-                        window.dispatchEvent(new Event('integralEvaluationUpdated'));
-                    }
+                if (integralId && saved && saved.puntaje_normalizado !== undefined && saved.puntaje_numerico !== undefined) {
+                    await syncComponente(integralId, 'competencias', {
+                        puntaje: saved.puntaje_normalizado,
+                        puntaje_numerico: saved.puntaje_numerico,
+                        escala_maxima: saved.escala_maxima,
+                        estado: 'COMPLETADA',
+                    });
+
+                    window.dispatchEvent(new Event('integralEvaluationUpdated'));
                 }
-                
-                openAlert('Evaluación guardada correctamente', 'success');
+
+                openAlert(
+                    saved?.estado === 'EN_REVISION'
+                        ? 'Evaluación enviada correctamente. Queda pendiente de revisión.'
+                        : 'Evaluación guardada correctamente',
+                    'success'
+                );
                 const fallback = tipo === 'AUTOEVALUACION' ? ROUTES.MI_COMPETENCIAS_EVAL : ROUTES.GRADING_PENDING;
                 navigate(fallback);
-            } else {
-                openAlert('Error al guardar la evaluación', 'error');
             }
+            // En caso de null el servicio ya mostró el mensaje del backend
         } catch (error) {
             openAlert('Error al guardar la evaluación', 'error');
             console.error(error);
@@ -318,7 +361,7 @@ const CompetencyEvaluationEvaluatorDetailPage: React.FC = () => {
     // Guards
     if (loading) return <LoadingIndicator />;
 
-    if (!process || !person) {
+    if (!process || !assignment) {
         return (
             <PageContainer
                 title="Error"
@@ -361,26 +404,26 @@ const CompetencyEvaluationEvaluatorDetailPage: React.FC = () => {
             { label: 'Inicio', to: ROUTES.HOME },
             { label: 'Empleado', to: undefined },
             { label: 'Autoevaluación Competencias', to: ROUTES.MI_COMPETENCIAS_EVAL },
-            { label: `${person.nombres} ${person.apellidos}`, to: undefined },
+            { label: colaboradorNombre, to: undefined },
         ]
         : [
             { label: 'Inicio', to: ROUTES.HOME },
             { label: 'Evaluador', to: undefined },
             { label: 'Mis Evaluaciones', to: ROUTES.GRADING_PENDING },
-            { label: `${person.nombres} ${person.apellidos}`, to: undefined },
+            { label: colaboradorNombre, to: undefined },
         ];
 
     const returnRoute = isAutoevaluacion ? ROUTES.MI_COMPETENCIAS_EVAL : ROUTES.GRADING_PENDING;
 
     return (
         <PageContainer
-            title={`${isAutoevaluacion ? 'Autoevaluación' : 'Evaluar'}: ${person.nombres} ${person.apellidos}`}
+            title={`${isAutoevaluacion ? 'Autoevaluación' : 'Evaluar'}: ${colaboradorNombre}`}
             subtitle={process.nombre}
             breadcrumbs={breadcrumbs}
         >
             <div className="space-y-6">
                 {/* Header Actions */}
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-3">
                     <Button
                         variant="ghost"
                         size="sm"
@@ -389,6 +432,19 @@ const CompetencyEvaluationEvaluatorDetailPage: React.FC = () => {
                     >
                         Volver
                     </Button>
+
+                    {assignment && (
+                        <div className="flex items-center gap-2">
+                            <StatusBadge estado={assignment.estado} map={ESTADO_BADGE_MAP} size="sm" />
+                            {readOnly && (
+                                <span className="text-xs text-base-content/60">
+                                    Vista de solo lectura
+                                    {existingResponse?.puntaje_numerico !== undefined &&
+                                        ` · Puntaje ${existingResponse.puntaje_numerico}/5`}
+                                </span>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 {/* Progress */}
@@ -486,12 +542,13 @@ const CompetencyEvaluationEvaluatorDetailPage: React.FC = () => {
                                                 <button
                                                     key={level.nivel}
                                                     type="button"
+                                                    disabled={readOnly}
                                                     onClick={() => handleSelectLevel(comp.id, level.nivel)}
                                                     className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
                                                         selectedLevel === level.nivel
                                                             ? 'border-primary bg-primary/5'
                                                             : 'border-base-200 hover:bg-base-100'
-                                                    }`}
+                                                    } ${readOnly ? 'cursor-not-allowed opacity-80' : ''}`}
                                                 >
                                                     <div className="flex items-start gap-3">
                                                         <div
@@ -505,9 +562,11 @@ const CompetencyEvaluationEvaluatorDetailPage: React.FC = () => {
                                                         </div>
                                                         <div className="flex-1">
                                                             <p className="font-medium text-sm">{level.nombre}</p>
-                                                            <p className="text-xs text-base-content/60 mt-0.5">
-                                                                {level.descripcion}
-                                                            </p>
+                                                            {level.descripcion && (
+                                                                <p className="text-xs text-base-content/60 mt-0.5">
+                                                                    {level.descripcion}
+                                                                </p>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </button>
@@ -540,6 +599,7 @@ const CompetencyEvaluationEvaluatorDetailPage: React.FC = () => {
                             <CommentsSection
                                 textComment={textComment}
                                 onTextChange={setTextComment}
+                                disabled={readOnly}
                             />
                         </motion.div>
                     )}
@@ -547,23 +607,35 @@ const CompetencyEvaluationEvaluatorDetailPage: React.FC = () => {
 
                 {/* Actions */}
                 <div className="flex gap-2 justify-end pt-4 border-t border-base-200">
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => navigate(returnRoute)}
-                        disabled={isSaving}
-                    >
-                        Cancelar
-                    </Button>
-                    <Button
-                        variant="primary"
-                        size="sm"
-                        onClick={handleSave}
-                        disabled={!allEvaluated || isSaving}
-                        loading={isSaving}
-                    >
-                        {isSaving ? 'Guardando...' : 'Guardar Evaluación'}
-                    </Button>
+                    {readOnly ? (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => navigate(returnRoute)}
+                        >
+                            Volver
+                        </Button>
+                    ) : (
+                        <>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => navigate(returnRoute)}
+                                disabled={isSaving}
+                            >
+                                Cancelar
+                            </Button>
+                            <Button
+                                variant="primary"
+                                size="sm"
+                                onClick={handleSave}
+                                disabled={!allEvaluated || isSaving}
+                                loading={isSaving}
+                            >
+                                {isSaving ? 'Guardando...' : 'Guardar Evaluación'}
+                            </Button>
+                        </>
+                    )}
                 </div>
             </div>
         </PageContainer>

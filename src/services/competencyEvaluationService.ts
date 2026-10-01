@@ -2,7 +2,11 @@ import useFetch from '../hooks/useFetch';
 import { FetchResponse, Pagination } from './responseType';
 import useUIStore from '../store/uiStore';
 import useAuthStore from '../store/authStore';
-import { CompetencyEvaluationConfig } from './evaluationAssignmentService';
+import {
+    CompetencyEvaluationConfig,
+    EstadoAsignacion,
+    TipoEvaluacion,
+} from './evaluationAssignmentService';
 import { ProcessParticipantRow, ProcessParticipantsQueryParams } from '../components/CompetencyEvaluation/types';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -85,6 +89,50 @@ export interface CompetencyEvaluationDetail extends CompetencyEvaluationSummary 
     }[];
 }
 
+// ─── Asignaciones del evaluador ──────────────────────────────────────────────
+
+/** Item de asignación tal como lo devuelve `GET /my-assignments` (y `/assignments`). */
+export interface CompetencyAssignment {
+    id: string;
+    proceso_id: string;
+    proceso_nombre: string;
+    proceso_estado: EstadoProcesoCompetencia;
+    total_competencias: number;
+    colaborador_id: string;
+    evaluador_id: string;
+    tipo: TipoEvaluacion;
+    peso: number;
+    estado: EstadoAsignacion;
+    contador_correcciones: number;
+    correccion_disponible: boolean;
+    correccion_voluntaria: boolean;
+    calibrado_por?: string | null;
+    fecha_calibracion?: string | null;
+    comentario_calibracion?: string | null;
+    colaborador_nombre: string;
+    colaborador_cargo: string;
+}
+
+/** Resumen de estados de las asignaciones del evaluador (mismos filtros que la consulta). */
+export interface MyAssignmentsResumen {
+    total: number;
+    pendientes: number;
+    en_progreso: number;
+    por_corregir: number;
+    en_revision: number;
+    completadas: number;
+    autoevaluaciones_pendientes: number;
+}
+
+export interface AssignmentsQueryParams {
+    proceso_id?: string;
+    colaborador_id?: string;
+    estado?: EstadoAsignacion;
+    tipo?: TipoEvaluacion;
+    pagina?: number;
+    limite?: number;
+}
+
 // ─── Payload helpers ──────────────────────────────────────────────────────────
 
 export interface CompetenciaItemPayload {
@@ -123,6 +171,49 @@ export interface SaveParticipantsPayload {
 
 export interface SaveEmailsPayload {
     plantillas_correo_ids: string[];
+}
+
+// ─── Ejecución (evaluador): competencias, respuestas ─────────────────────────
+
+/** Ítem devuelto por `GET /:id/competencies` (§6.1). */
+export interface ProcessCompetencyItem {
+    id: string;
+    competencia_id: string;
+    nombre: string;
+    descripcion: string;
+    escala: number;
+    categoria?: { id: string; nombre: string } | string;
+    orden?: number;
+    seccion?: string;
+    peso_ponderacion?: number;
+}
+
+/** Body de `POST /competency-evaluations/responses` (§9.3). */
+export interface SaveEvaluationResponsePayload {
+    asignacion_id: string;
+    proceso_id: string;
+    colaborador_id: string;
+    /** Mapa competencia_id → nivel (0–5); debe incluir todas las competencias activas del proceso. */
+    competencias_evaluadas: Record<string, number>;
+    comentarios?: { text?: string; video_url?: string };
+}
+
+/** Respuesta de evaluación devuelta por `POST/GET /responses` (§9.3/§9.4). */
+export interface EvaluationResponseItem {
+    id: string;
+    asignacion_id: string;
+    proceso_id: string;
+    colaborador_id: string;
+    evaluador_id: string;
+    competencias_evaluadas: Record<string, number>;
+    comentarios?: { text?: string; video_url?: string };
+    estado: EstadoAsignacion;
+    puntaje_numerico?: number;
+    escala_minima?: number;
+    escala_maxima?: number;
+    puntaje_normalizado?: number;
+    fecha_envio?: string;
+    fecha_ultima_edicion?: string;
 }
 
 // ─── Service hook ─────────────────────────────────────────────────────────────
@@ -175,6 +266,48 @@ export const useCompetencyEvaluationService = () => {
                             evaluaciones: response.data.datos ?? response.data.evaluaciones ?? [],
                             paginacion: response.data.paginacion ?? null,
                         },
+                    };
+                }
+
+                return response;
+            })()
+        );
+    };
+
+    // ── GET mis asignaciones (self-scoped) ────────────────────────────────────
+
+    const getMyAssignments = async (
+        params?: AssignmentsQueryParams
+    ): Promise<FetchResponse | null> => {
+        return run(
+            (async () => {
+                const backendParams: Record<string, string | number | undefined> = {};
+                if (params?.proceso_id) backendParams.proceso_id = params.proceso_id;
+                if (params?.colaborador_id) backendParams.colaborador_id = params.colaborador_id;
+                if (params?.estado) backendParams.estado = params.estado;
+                if (params?.tipo) backendParams.tipo = params.tipo;
+                if (params?.pagina) backendParams.pagina = params.pagina;
+                if (params?.limite) backendParams.limite = params.limite;
+
+                const response = (await fetchData({
+                    url: `${BASE_URL}/my-assignments`,
+                    params: backendParams,
+                    token: token || null,
+                })) as FetchResponse | null;
+
+                if (response?.success === false) {
+                    throw new Error(response.message || 'Error al obtener tus asignaciones de evaluación');
+                }
+
+                if (response?.success && response.data) {
+                    const resumen: MyAssignmentsResumen = response.data.resumen ?? {};
+                    const datos: CompetencyAssignment[] =
+                        response.data.data?.datos ?? response.data.datos ?? [];
+                    const paginacion: Pagination =
+                        response.data.data?.paginacion ?? response.data.paginacion ?? null;
+                    return {
+                        ...response,
+                        data: { resumen, asignaciones: datos, paginacion },
                     };
                 }
 
@@ -684,8 +817,92 @@ export const useCompetencyEvaluationService = () => {
         );
     };
 
+    // ── Ejecución: transiciones y respuestas del evaluador (§9.3/§9.4) ───────
+
+    /**
+     * `PATCH /assignments/:asignacionId/start` (§9.3) — pasa la asignación a EN_PROGRESO.
+     * Desde COMPLETADO/EN_REVISION el backend lo interpreta como corrección (requiere
+     * `config.correccion.permitir`; puede devolver 403).
+     * Devuelve `data.asignacion` con el item actualizado.
+     */
+    const startAssignment = async (asignacionId: string): Promise<FetchResponse | null> => {
+        return run(
+            (async () => {
+                const response = (await fetchData({
+                    url: `${BASE_URL}/assignments/${asignacionId}/start`,
+                    method: 'PATCH',
+                    token: token || null,
+                })) as FetchResponse | null;
+
+                if (response?.success === false) {
+                    throw new Error(response.message || 'No se pudo iniciar la asignación');
+                }
+                if (response?.success && response.data) {
+                    return { ...response, data: { asignacion: response.data } };
+                }
+                return response;
+            })()
+        );
+    };
+
+    /**
+     * `POST /responses` (§9.3) — upsert 1:1 por `asignacion_id`.
+     * El backend calcula puntajes y transiciona la asignación (COMPLETADO o EN_REVISION).
+     * Devuelve `data.respuesta`.
+     */
+    const saveResponse = async (
+        payload: SaveEvaluationResponsePayload
+    ): Promise<FetchResponse | null> => {
+        return run(
+            (async () => {
+                const response = (await fetchData({
+                    url: `${BASE_URL}/responses`,
+                    method: 'POST',
+                    body: payload as unknown as Record<string, unknown>,
+                    token: token || null,
+                })) as FetchResponse | null;
+
+                if (response?.success === false) {
+                    throw new Error(response.message || 'Error al guardar la respuesta');
+                }
+                if (response?.success && response.data) {
+                    return { ...response, data: { respuesta: response.data } };
+                }
+                return response;
+            })()
+        );
+    };
+
+    /**
+     * `GET /responses?asignacion_id=...` (§9.4) — respuesta exacta de una asignación.
+     * Devuelve `data.respuesta` (null si aún no existe).
+     */
+    const getResponseByAssignment = async (
+        asignacionId: string
+    ): Promise<FetchResponse | null> => {
+        return run(
+            (async () => {
+                const response = (await fetchData({
+                    url: `${BASE_URL}/responses`,
+                    params: { asignacion_id: asignacionId, limite: 1 },
+                    token: token || null,
+                })) as FetchResponse | null;
+
+                if (response?.success === false) {
+                    throw new Error(response.message || 'Error al consultar la respuesta');
+                }
+                if (response?.success && response.data) {
+                    const datos: EvaluationResponseItem[] = response.data.datos ?? [];
+                    return { ...response, data: { respuesta: datos[0] ?? null } };
+                }
+                return response;
+            })()
+        );
+    };
+
     return {
         getCompetencyEvaluations,
+        getMyAssignments,
         getCompetencyEvaluationDetail,
         getCompetencyEvaluationForPerson,
         getCompetencyEvaluationStats,
@@ -704,5 +921,8 @@ export const useCompetencyEvaluationService = () => {
         getCompetenciasSugeridas,
         getProcessEmails,
         saveProcessEmails,
+        startAssignment,
+        saveResponse,
+        getResponseByAssignment,
     };
 };
