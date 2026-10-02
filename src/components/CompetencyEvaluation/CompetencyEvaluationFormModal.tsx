@@ -4,7 +4,7 @@ import Button from '../Common/Button';
 import FormSection from '../Common/Forms/FormSection';
 import InputField from '../Common/Forms/InputField';
 import TextAreaField from '../Common/Forms/TextAreaField';
-import SelectField from '../Common/Forms/SelectField';
+// import SelectField from '../Common/Forms/SelectField';
 import useUIStore from '../../store/uiStore';
 import {
     useCompetencyEvaluationService,
@@ -59,6 +59,7 @@ const CompetencyEvaluationForm: React.FC<CompetencyEvaluationFormProps> = ({
         if (!formData.nombre.trim()) newErrors.nombre = 'El nombre es requerido';
         if (formData.nombre.length > 255) newErrors.nombre = 'El nombre no puede exceder 255 caracteres';
         if (formData.descripcion.length > 1000) newErrors.descripcion = 'La descripción no puede exceder 1000 caracteres';
+        formData.estado = 'BORRADOR' as CompetencyEvaluationStatus; // Ensure estado is of the correct type
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -75,7 +76,7 @@ const CompetencyEvaluationForm: React.FC<CompetencyEvaluationFormProps> = ({
             <FormSection title="Información General" description="Datos básicos del proceso de evaluación">
                 <div className="space-y-4">
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4">
                         <InputField
                             label="Nombre del Proceso"
                             name="nombre"
@@ -87,7 +88,7 @@ const CompetencyEvaluationForm: React.FC<CompetencyEvaluationFormProps> = ({
                             maxLength={255}
                         />
 
-                        <SelectField
+                        {/* <SelectField
                             label="Estado"
                             name="estado"
                             value={formData.estado}
@@ -99,7 +100,7 @@ const CompetencyEvaluationForm: React.FC<CompetencyEvaluationFormProps> = ({
                                 { value: 'PUBLICADO', label: 'Publicado' },
                                 { value: 'ARCHIVADO', label: 'Archivado' },
                             ]}
-                        />
+                        /> */}
                     </div>
 
                     <TextAreaField
