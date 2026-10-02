@@ -178,7 +178,7 @@ export const useUserService = () => {
             // Add tenant ID to the request
             const requestData = {
                 ...data,
-                enviar_correo: false, // Para pruebas, se puede quitar esta línea o hacerla configurable
+                enviar_correo: data.enviar_correo ?? false,
                 entidad_id: getTenantId()
             };
 
@@ -262,6 +262,26 @@ export const useUserService = () => {
         }
     };
 
+    const resendActivation = async (id: string): Promise<boolean> => {
+        try {
+            const response = await fetchData({
+                url: `${import.meta.env.VITE_API_URL}/users/${id}/resend-activation`,
+                method: 'POST',
+                token: token || null
+            });
+
+            if(response?.success === false){
+                throw new Error(response.message || 'Error al reenviar correo de activación');
+            }
+
+            return true;
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            openAlert(errorMessage, 'error');
+            return false;
+        }
+    };
+
     return {
         getUsers,
         getUserById,
@@ -269,6 +289,7 @@ export const useUserService = () => {
         updateUser,
         deleteUser,
         resetPassword,
+        resendActivation,
         loading,
         error
     };

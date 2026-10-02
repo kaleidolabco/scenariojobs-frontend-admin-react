@@ -14,6 +14,9 @@ import PrivateRoute from './components/Auth/PrivateRoute';
 //Pages
 import NotFound from "./pages/NotFound/NotFound";
 import Login from "./pages/Login/Login";
+import ActivateAccountPage from "./pages/Auth/ActivateAccountPage";
+import ForgotPasswordPage from "./pages/Auth/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/Auth/ResetPasswordPage";
 import CompetenciesPage from "./pages/Admin/CompetenciesPage";
 import JobsPage from "./pages/Admin/JobsPage";
 import JobDetailPage from "./pages/Admin/JobDetailPage";
@@ -50,6 +53,9 @@ function App() {
         {/* Layout Público (Login, 404, Generales) */}
         <Route element={<PublicLayout />}>
           <Route path="/autenticacion" element={<PageAnimation key={location.pathname}><Login /></PageAnimation>} />
+          <Route path={ROUTES.ACTIVATE_ACCOUNT} element={<PageAnimation key={location.pathname}><ActivateAccountPage /></PageAnimation>} />
+          <Route path={ROUTES.FORGOT_PASSWORD} element={<PageAnimation key={location.pathname}><ForgotPasswordPage /></PageAnimation>} />
+          <Route path={ROUTES.RESET_PASSWORD} element={<PageAnimation key={location.pathname}><ResetPasswordPage /></PageAnimation>} />
           <Route path="/404" element={<PageAnimation key={location.pathname}><NotFound /></PageAnimation>} />
         </Route>
 

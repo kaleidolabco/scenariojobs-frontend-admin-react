@@ -2,6 +2,9 @@ export const ROUTES = {
     // Public
     LOGIN: '/autenticacion',
     NOT_FOUND: '/404',
+    ACTIVATE_ACCOUNT: '/activar',
+    FORGOT_PASSWORD: '/olvide-contrasena',
+    RESET_PASSWORD: '/restablecer-contrasena',
 
     // Dashboard Common
     HOME: '/inicio',

@@ -4,6 +4,7 @@ import { UserStatus, USER_STATUS_LABELS } from '../../constants/userStatus';
 import InputField from '../Common/Forms/InputField';
 import SelectField from '../Common/Forms/SelectField';
 import CheckboxGroup from '../Common/Forms/CheckboxGroup';
+import CheckboxField from '../Common/Forms/CheckboxField';
 import AutocompleteField from '../Common/Forms/AutocompleteField';
 import { usePersonService, Person } from '../../services/personService';
 import Button from '../Common/Button';
@@ -21,6 +22,7 @@ const UserForm: React.FC<UserFormProps> = ({ initialData, isLoading = false, onS
     const [email, setEmail] = useState('');
     const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
     const [estado, setEstado] = useState<UserStatus>(UserStatus.ACTIVO);
+    const [enviarCorreo, setEnviarCorreo] = useState(false);
 
     // States for autocomplete / search collaborator
     const [colaboradores, setColaboradores] = useState<Person[]>([]);
@@ -45,7 +47,9 @@ const UserForm: React.FC<UserFormProps> = ({ initialData, isLoading = false, onS
         } else {
             setEmail('');
             setSelectedRoles([UserRole.EMPLOYEE]); // Default role
-            setEstado(UserStatus.ACTIVO);
+            // En creación el usuario siempre nace PENDIENTE hasta que active su cuenta
+            setEstado(UserStatus.PENDIENTE);
+            setEnviarCorreo(false);
             setSelectedColaborador(null);
             setSearchQuery('');
         }
@@ -96,7 +100,8 @@ const UserForm: React.FC<UserFormProps> = ({ initialData, isLoading = false, onS
             correo: email,
             roles: selectedRoles,
             estado,
-            colaborador_id: selectedColaborador ? selectedColaborador.id : undefined
+            colaborador_id: selectedColaborador ? selectedColaborador.id : undefined,
+            ...(initialData ? {} : { enviar_correo: enviarCorreo })
         });
     };
 
@@ -107,11 +112,19 @@ const UserForm: React.FC<UserFormProps> = ({ initialData, isLoading = false, onS
         { value: UserRole.EMPLOYEE, label: ROLE_LABELS[UserRole.EMPLOYEE] },
     ];
 
-    const statusOptions = [
-        { value: UserStatus.ACTIVO, label: USER_STATUS_LABELS[UserStatus.ACTIVO] },
-        { value: UserStatus.INACTIVO, label: USER_STATUS_LABELS[UserStatus.INACTIVO] },
-        { value: UserStatus.PENDIENTE, label: USER_STATUS_LABELS[UserStatus.PENDIENTE] }
-    ];
+    // En edición solo se permite alternar entre Activo/Inactivo: volver a
+    // Pendiente implicaría revalidar la cuenta, escenario no contemplado aún
+    // en el backend. Si el usuario editado está Pendiente, se conserva el
+    // valor actual como opción deshabilitada.
+    const statusOptions = initialData
+        ? [
+            { value: UserStatus.ACTIVO, label: USER_STATUS_LABELS[UserStatus.ACTIVO] },
+            { value: UserStatus.INACTIVO, label: USER_STATUS_LABELS[UserStatus.INACTIVO] },
+            ...(estado === UserStatus.PENDIENTE
+                ? [{ value: UserStatus.PENDIENTE, label: `${USER_STATUS_LABELS[UserStatus.PENDIENTE]} (sin activar)`, disabled: true }]
+                : [])
+        ]
+        : [];
 
     // Map Person objects to AutocompleteOption format
     const autocompleteOptions = colaboradores.map(c => ({
@@ -159,23 +172,59 @@ const UserForm: React.FC<UserFormProps> = ({ initialData, isLoading = false, onS
                     helpText="Permisos y funciones disponibles."
                 />
 
-                <SelectField
-                    label="Estado de Cuenta"
-                    value={estado}
-                    onChange={(e) => setEstado(e.target.value as UserStatus)}
-                    options={statusOptions}
-                    required
-                    helpText="Estado actual de la cuenta"
-                />
+                {initialData ? (
+                    <SelectField
+                        label="Estado de Cuenta"
+                        value={estado}
+                        onChange={(e) => setEstado(e.target.value as UserStatus)}
+                        options={statusOptions}
+                        required
+                        helpText="Estado actual de la cuenta"
+                    />
+                ) : (
+                    <div className="space-y-2">
+                        <label className="block">
+                            <span className="label-text font-medium">Estado de Cuenta</span>
+                        </label>
+                        <div className="select select-bordered w-full flex items-center bg-base-200/50 cursor-not-allowed">
+                            <span className="mr-2">{USER_STATUS_LABELS[UserStatus.PENDIENTE]}</span> 
+                            {/* badge badge-info badge-md 
+                            <span className="text-sm text-base-content/60">Se activará al confirmar el correo</span> 
+                            */}
+                        </div>
+                        <p className="text-xs text-base-content/60">Todo usuario nuevo inicia como Pendiente hasta activar su cuenta</p>
+                    </div>
+                )}
             </div>
 
-            <div className="alert alert-info text-sm shadow-sm">
-                <Info className="stroke-current shrink-0 w-6 h-6" />
-                <div>
-                    <h3 className="font-bold">Nota de Seguridad</h3>
-                    <div className="text-xs">Se enviará un correo de invitación para configurar la contraseña.</div>
-                </div>
-            </div>
+            {!initialData && (
+                <>
+                    <CheckboxField
+                        label="Enviar correo de activación"
+                        description="El usuario recibirá un correo con el enlace para activar su cuenta y crear su contraseña."
+                        checked={enviarCorreo}
+                        onChange={setEnviarCorreo}
+                    />
+
+                    {enviarCorreo ? (
+                        <div className="alert alert-info text-sm shadow-sm">
+                            <Info className="stroke-current shrink-0 w-6 h-6" />
+                            <div>
+                                <h3 className="font-bold">Nota de Activación</h3>
+                                <div className="text-xs">Se enviará un correo con el enlace de activación para configurar la contraseña. Si el envío falla, el usuario no quedará creado.</div>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="alert alert-warning text-sm shadow-sm">
+                            <Info className="stroke-current shrink-0 w-6 h-6" />
+                            <div>
+                                <h3 className="font-bold">Nota de Activación</h3>
+                                <div className="text-xs">El usuario se creará sin enviar correo y quedará Pendiente. Podrá reenviar la activación desde la lista de usuarios.</div>
+                            </div>
+                        </div>
+                    )}
+                </>
+            )}
 
             <div className="modal-action">
                 <Button type="button" variant="ghost" onClick={onCancel} disabled={isLoading}>

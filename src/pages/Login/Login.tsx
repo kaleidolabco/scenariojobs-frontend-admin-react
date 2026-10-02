@@ -1,5 +1,5 @@
 import React, { useEffect, useState, ChangeEvent, FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 // Assets
 import logo from "../../assets/logos/scenario-logo-color.png";
@@ -13,6 +13,9 @@ import useUIStore from "../../store/uiStore";
 
 // Types
 import { FetchResponse } from "../../hooks/useFetch";
+
+// Constants
+import { ROUTES } from "../../constants/routes";
 
 interface LoginResponse {
   access_token: string;
@@ -109,9 +112,9 @@ const Login: React.FC = () => {
               required
             />
             <label className="label">
-              <a href="#" className="label-text-alt link link-hover">
+              <Link to={ROUTES.FORGOT_PASSWORD} className="label-text-alt link link-hover">
                 ¿Olvidaste tu contraseña?
-              </a>
+              </Link>
             </label>
           </div>
 

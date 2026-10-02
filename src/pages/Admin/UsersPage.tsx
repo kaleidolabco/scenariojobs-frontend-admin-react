@@ -14,12 +14,12 @@ import { UserStatus, USER_STATUS_LABELS } from '../../constants/userStatus';
 import useUIStore from '../../store/uiStore';
 import { Pagination } from '../../services/responseType';
 import Button from '../../components/Common/Button';
-import { Pencil, Lock, Trash2, Plus } from '../../components/Common/Icon';
+import { Pencil, Lock, Trash2, Plus, Mail } from '../../components/Common/Icon';
 
 const ITEMS_PER_PAGE = 10;
 
 const UsersPage: React.FC = () => {
-    const { getUsers, createUser, updateUser, deleteUser, resetPassword, loading } = useUserService();
+    const { getUsers, createUser, updateUser, deleteUser, resetPassword, resendActivation, loading } = useUserService();
     const { openAlert } = useUIStore();
 
     // State
@@ -46,6 +46,8 @@ const UsersPage: React.FC = () => {
     const [userToDelete, setUserToDelete] = useState<SystemUser | null>(null);
     const [resetPasswordModalOpen, setResetPasswordModalOpen] = useState(false);
     const [userToReset, setUserToReset] = useState<SystemUser | null>(null);
+    const [resendActivationModalOpen, setResendActivationModalOpen] = useState(false);
+    const [userToResend, setUserToResend] = useState<SystemUser | null>(null);
 
     // Debounce the search input to avoid making too many API calls
     useEffect(() => {
@@ -75,6 +77,11 @@ const UsersPage: React.FC = () => {
         const response = await createUser(data);
         if (response && response.success) {
             setModalOpen(false);
+            if (response.data?.correo_activacion?.enviado) {
+                openAlert(`Usuario creado y correo de activación enviado a ${data.correo}`, 'success');
+            } else {
+                openAlert('Usuario creado. No se envió correo de activación.', 'success');
+            }
             loadUsers();
         }
     };
@@ -110,6 +117,21 @@ const UsersPage: React.FC = () => {
         setResetPasswordModalOpen(false);
         openAlert(`Correo de restablecimiento enviado a ${userToReset.email}`, 'success');
         setUserToReset(null);
+    };
+
+    const handleResendActivation = (user: SystemUser) => {
+        setUserToResend(user);
+        setResendActivationModalOpen(true);
+    };
+
+    const confirmResendActivation = async () => {
+        if (!userToResend) return;
+        const success = await resendActivation(userToResend.id);
+        if (success) {
+            openAlert(`Correo de activación reenviado a ${userToResend.email}`, 'success');
+        }
+        setResendActivationModalOpen(false);
+        setUserToResend(null);
     };
 
     // Filter Definitions
@@ -256,33 +278,49 @@ const UsersPage: React.FC = () => {
         }
     ];
 
-    const actions: TableAction<SystemUser>[] = [
-        {
-            label: 'Editar',
-            icon: <Pencil size={20} />,
-            onClick: (user) => {
-                setEditingUser(user);
-                setModalOpen(true);
+    const buildActions = (user: SystemUser): TableAction<SystemUser>[] => {
+        const rowActions: TableAction<SystemUser>[] = [
+            {
+                label: 'Editar',
+                icon: <Pencil size={20} />,
+                onClick: (u) => {
+                    setEditingUser(u);
+                    setModalOpen(true);
+                },
+                variant: 'ghost'
             },
-            variant: 'ghost'
-        },
-        {
-            label: 'Reset Password',
-            icon: <Lock size={20} />,
-            onClick: handleResetPassword,
-            variant: 'ghost',
-            tooltip: 'Resetear Contraseña'
-        },
-        {
-            label: 'Eliminar',
-            icon: <Trash2 size={20} />,
-            onClick: (user) => {
-                setUserToDelete(user);
-                setDeleteModalOpen(true);
+            {
+                label: 'Reset Password',
+                icon: <Lock size={20} />,
+                onClick: handleResetPassword,
+                variant: 'ghost',
+                tooltip: 'Resetear Contraseña'
             },
-            variant: 'ghost' // Will be styled as error in table if configured
+            {
+                label: 'Eliminar',
+                icon: <Trash2 size={20} />,
+                onClick: (u) => {
+                    setUserToDelete(u);
+                    setDeleteModalOpen(true);
+                },
+                variant: 'ghost' // Will be styled as error in table if configured
+            }
+        ];
+
+        // Solo usuarios que aún no han activado su cuenta pueden recibir
+        // el reenvío del correo de activación.
+        if (user.estado === UserStatus.PENDIENTE) {
+            rowActions.splice(1, 0, {
+                label: 'Reenviar correo de activación',
+                icon: <Mail size={20} />,
+                onClick: handleResendActivation,
+                variant: 'ghost',
+                tooltip: 'Reenviar correo de activación'
+            });
         }
-    ];
+
+        return rowActions;
+    };
 
     const breadcrumbs = [
         { label: 'Inicio', to: ROUTES.HOME },
@@ -317,7 +355,7 @@ const UsersPage: React.FC = () => {
                 <GenericTable
                     data={users}
                     columns={columns}
-                    actions={actions}
+                    actions={buildActions}
                     keyExtractor={(user) => user.id}
                     pagination={pagination}
                     sortConfig={sortConfig}
@@ -352,6 +390,20 @@ const UsersPage: React.FC = () => {
                 message={`¿Está seguro de eliminar el acceso para ${userToDelete?.email}? Esta acción no se puede deshacer.`}
                 confirmText="Eliminar Definitivamente"
                 variant="danger"
+            />
+
+            {/* Resend Activation Confirmation */}
+            <ConfirmationModal
+                isOpen={resendActivationModalOpen}
+                onClose={() => {
+                    setResendActivationModalOpen(false);
+                    setUserToResend(null);
+                }}
+                onConfirm={confirmResendActivation}
+                title="Reenviar Correo de Activación"
+                message={`¿Enviar nuevamente el correo de activación a ${userToResend?.email}? El enlace anterior quedará invalidado.`}
+                confirmText="Reenviar Correo"
+                variant="info"
             />
 
             {/* Reset Password Confirmation */}

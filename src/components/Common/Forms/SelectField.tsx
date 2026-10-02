@@ -3,6 +3,7 @@ import React from 'react';
 interface SelectOption {
     value: string;
     label: string;
+    disabled?: boolean;
 }
 
 interface SelectFieldProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
@@ -34,7 +35,7 @@ const SelectField: React.FC<SelectFieldProps> = ({
                 {...props}
             >
                 {options.map((option) => (
-                    <option key={option.value} value={option.value}>
+                    <option key={option.value} value={option.value} disabled={option.disabled}>
                         {option.label}
                     </option>
                 ))}

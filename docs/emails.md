@@ -505,7 +505,54 @@ Internamente las plantillas usan el parámetro `ESTADO_PLANTILLA_CORREO` con val
 
 ---
 
-## 18. Manejo de Errores
+## 18. Cómo se envían los correos del sistema (`MailService.sendFromTemplate`)
+
+Los envíos que hace el propio sistema (bienvenida/activación, restablecimiento de contraseña y futuras notificaciones de evaluaciones) **no** pasan por un endpoint público de envío: son disparados internamente por los módulos de negocio a través del método `MailService.sendFromTemplate`.
+
+### Resolución de la plantilla
+
+Para un tipo de plantilla dado (ej. `BIENVENIDA`, `RESTABLECER_CONTRASENA`), el sistema resuelve en cascada:
+
+1. **Plantilla del tenant** activa de ese tipo (`POST /emails/templates`, `activo: true`).
+2. **Plantilla global** de la plataforma (seed `07-plantillas-correo`).
+3. **HTML de respaldo** interno (archivos `src/mail/templates/*.hbs`), marcando el envío con `uso_fallback = true`.
+
+### Variables
+
+- Cada plantilla declara sus variables (ej. `{{nombre_usuario}}`, `{{link_acceso}}`). El render se hace con Handlebars (sintaxis `{{variable}}`).
+- El sistema inyecta automáticamente variables de contexto: `nombre_empresa`, `app_url`, `anio_actual`. El módulo consumidor aporta las específicas.
+- En envíos masivos se soportan `variablesComunes` (aplican a todos) + variables individuales por destinatario.
+
+### Envío síncrono y política de fallos
+
+- Los envíos de **activación de cuenta** son **bloqueantes**: si el correo falla, la operación de negocio se revierte (el usuario/tenant no queda creado) y la API responde `500` con mensaje orientativo. Esto garantiza que ninguna cuenta quede sin posibilidad de activación.
+- En **restablecimiento de contraseña**, si el correo falla, el token no se persiste (no bloquea reintentos).
+- Para reenviar la activación de una cuenta ya creada existe `POST /users/:id/resend-activation` (ver `users.md`).
+
+### Trazabilidad: tabla `correos_enviados`
+
+Cada intento de envío (exitoso o fallido) queda registrado con:
+
+| Campo | Descripción |
+| :--- | :--- |
+| `entidad_id` | Tenant origen del envío |
+| `estado` | Parámetro `ESTADO_CORREO`: `ENVIADO`, `FALLIDO`, `PENDIENTE` (este último preparado para colas futuras) |
+| `canal` | Canal/proveedor: `SMTP` (hoy); preparado para `SENDGRID_API`, `RESEND_API`, `AWS_SES`, etc. |
+| `servidor_host` / `remitente_email` / `remitente_nombre` | Origen efectivo del envío |
+| `destinatario_email` / `asunto_final` | Destino y asunto ya renderizado |
+| `cuerpo_html_snippet` | Primeros ~500 caracteres del HTML (auditoría ligera; **nunca** se persiste el cuerpo completo porque puede contener enlaces con tokens) |
+| `plantilla_correo_id` / `plantilla_correo_global_id` / `tipo` | Plantilla utilizada (nullable si se usó fallback) |
+| `uso_fallback` | `true` si se usó el HTML de respaldo |
+| `variables_json` | Variables del render, **sanitizadas** (se omiten claves tipo `token`/`contrasena` y se recortan querystrings de URLs) |
+| `referencia_tipo` / `referencia_id` | Origen del envío (ej. `USUARIO`, `TENANT`, `PROCESO_EVALUACION`) |
+| `idempotency_key` | Clave de deduplicación (preparado para colas/reintentos futuros) |
+| `error_mensaje` / `intentos` / `fecha_envio` / `message_id` | Resultado del intento (Message-ID del proveedor para rastreo/bounces) |
+
+> Si el parámetro `ESTADO_CORREO` no está sembrado, el envío funciona igual pero se omite el registro (con warning en logs). Ejecutar el seed `02-parametros`.
+
+---
+
+## 19. Manejo de Errores
 
 | Código | Causa |
 | :--- | :--- |
