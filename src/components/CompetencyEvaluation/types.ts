@@ -69,6 +69,19 @@ export interface AvisoDerivacion {
     mensaje: string;
 }
 
+/** Competencia sugerida por el backend (§6.3). */
+export interface SugerenciaCompetenciaItem {
+    id?: string;
+    competencia_id?: string;
+    nombre?: string;
+    descripcion?: string;
+    escala?: number;
+    categoria?: { id: string; nombre: string } | string;
+    seccion?: string;
+    peso_calculado?: number;
+    nivel_esperado?: number;
+}
+
 export interface SugerenciaCompetencias {
     ids: string[];
     pesos: Record<string, number>;
@@ -79,6 +92,8 @@ export interface SugerenciaCompetencias {
     nPersonas?: number;
     total_personas?: number;
     total_competencias?: number;
+    /** Detalle de cada competencia sugerida (nombre, descripción, escala, peso_calculado...). */
+    competencias?: SugerenciaCompetenciaItem[];
     avisos: AvisoDerivacion[];
 }
 

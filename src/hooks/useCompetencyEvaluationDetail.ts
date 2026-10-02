@@ -12,6 +12,7 @@ import {
 import {
     OrigenCompetencias,
     SugerenciaCompetencias,
+    SugerenciaCompetenciaItem,
     EvaluadoresPorPersona,
     PersonRow,
 } from '../components/CompetencyEvaluation/types';
@@ -91,7 +92,9 @@ export const useCompetencyEvaluationDetail = (id?: string) => {
     const [appliedSugerenciaKey, setAppliedSugerenciaKey] = useState<string | null>(null);
     const [sugerencia, setSugerencia] = useState<SugerenciaCompetencias | null>(null);
 
-    const [activeTab, setActiveTab] = useState<'general' | 'competencias' | 'participantes' | 'correos'>('general');
+    const [activeTab, setActiveTab] = useState<
+        'general' | 'competencias' | 'participantes' | 'correos' | 'revision'
+    >('general');
 
     // Control de pestañas ya cargadas para evitar peticiones repetitivas (Lazy Loading cacheado)
     const [fetchedTabs, setFetchedTabs] = useState<Record<string, boolean>>({});
@@ -161,12 +164,26 @@ export const useCompetencyEvaluationDetail = (id?: string) => {
             } else if (activeTab === 'competencias') {
                 const res = await getProcessCompetencies(id);
                 if (!cancelled && res?.success && res.data) {
+                    type ProcessCompRaw = {
+                        id?: string;
+                        competencia_id?: string;
+                        nombre?: string;
+                        descripcion?: string;
+                        escala?: number;
+                        categoria?: { id: string; nombre: string } | string;
+                        orden?: number;
+                        seccion?: string;
+                        peso_ponderacion?: number;
+                        peso?: number;
+                    };
                     const d = res.data;
-                    const comps = d.datos ?? d.competencias ?? [];
-                    const assignedIds = comps.map((c: any) => c.competencia_id || c.id);
+                    const comps: ProcessCompRaw[] = d.datos ?? d.competencias ?? [];
+                    const assignedIds = comps
+                        .map((c) => c.competencia_id || c.id)
+                        .filter((id): id is string => Boolean(id));
 
-                    const items: CompetencyAssignmentItem[] = comps.map((c: any) => ({
-                        competencia_id: c.competencia_id || c.id,
+                    const items: CompetencyAssignmentItem[] = comps.map((c) => ({
+                        competencia_id: (c.competencia_id || c.id) as string,
                         nombre: c.nombre,
                         descripcion: c.descripcion,
                         escala: c.escala,
@@ -221,9 +238,17 @@ export const useCompetencyEvaluationDetail = (id?: string) => {
             const res = await getCompetenciasSugeridas(id);
             if (!cancelled && res?.success && res.data) {
                 const raw = res.data;
+                // §6.3: el detalle viene en `competencias[]` (nombre, escala, peso_calculado...)
+                // y el mapa de pesos se construye por ítem (no hay mapa separado).
+                const competencias: SugerenciaCompetenciaItem[] = raw.competencias ?? [];
+                const pesosFromItems: Record<string, number> = {};
+                competencias.forEach((c) => {
+                    const compId = c.competencia_id || c.id;
+                    if (compId) pesosFromItems[compId] = c.peso_calculado ?? 0;
+                });
                 const sug: SugerenciaCompetencias = {
                     ids: raw.ids ?? [],
-                    pesos: raw.pesos ?? {},
+                    pesos: raw.pesos ?? (Object.keys(pesosFromItems).length > 0 ? pesosFromItems : {}),
                     expectedLevels: raw.expectedLevels ?? raw.niveles_esperados ?? {},
                     niveles_esperados: raw.niveles_esperados ?? raw.expectedLevels ?? {},
                     nCargos: raw.total_cargos ?? raw.nCargos ?? 0,
@@ -231,6 +256,7 @@ export const useCompetencyEvaluationDetail = (id?: string) => {
                     nPersonas: raw.total_personas ?? raw.nPersonas ?? 0,
                     total_personas: raw.total_personas ?? raw.nPersonas ?? 0,
                     total_competencias: raw.total_competencias ?? raw.ids?.length ?? 0,
+                    competencias,
                     avisos: raw.avisos ?? [],
                 };
                 setSugerencia(sug);
@@ -284,22 +310,25 @@ export const useCompetencyEvaluationDetail = (id?: string) => {
                 }
             }
 
-            const sugCompetencias = (sugerencia as any).competencias ?? [];
+            const sugCompetencias = sugerencia.competencias ?? [];
             const newItems: CompetencyAssignmentItem[] = mode === 'reemplazar'
-                ? sugCompetencias.map((c: any, idx: number) => ({
-                    competencia_id: c.competencia_id || c.id,
-                    nombre: c.nombre,
-                    descripcion: c.descripcion,
-                    escala: c.escala,
-                    categoria: c.categoria,
-                    orden: idx,
-                    seccion: c.seccion ?? (typeof c.categoria === 'object' ? c.categoria?.nombre : c.categoria) ?? 'General',
-                    peso_ponderacion: c.peso_calculado ?? weights[c.competencia_id || c.id] ?? 0,
-                }))
+                ? sugCompetencias.map((c, idx: number) => {
+                    const compId = (c.competencia_id || c.id) as string;
+                    return {
+                        competencia_id: compId,
+                        nombre: c.nombre,
+                        descripcion: c.descripcion,
+                        escala: c.escala,
+                        categoria: c.categoria,
+                        orden: idx,
+                        seccion: c.seccion ?? (typeof c.categoria === 'object' ? c.categoria?.nombre : c.categoria) ?? 'General',
+                        peso_ponderacion: c.peso_calculado ?? weights[compId] ?? 0,
+                    };
+                })
                 : ids.map((compId, idx) => {
                     const existing = prev.competencias_items.find((i) => i.competencia_id === compId);
                     if (existing) return { ...existing, orden: idx, peso_ponderacion: weights[compId] ?? 0 };
-                    const sug = sugCompetencias.find((c: any) => (c.competencia_id || c.id) === compId);
+                    const sug = sugCompetencias.find((c) => (c.competencia_id || c.id) === compId);
                     return {
                         competencia_id: compId,
                         nombre: sug?.nombre,

@@ -293,7 +293,11 @@ Si prefieres una lectura lineal sin diagrama:
 9. **Aislamiento multi-tenant:** todos los endpoints filtran por `entidad_id` del usuario (salvo superadmin).
 10. **Máquina de estados del proceso:** transiciones validadas estrictamente (§2.2). `PUBLICADO → BORRADOR` bloqueado.
 11. **Auto-generación idempotente al publicar:** al llegar a `PUBLICADO`, si `count(asignaciones) === 0`, se generan automáticamente.
-12. **Inmutabilidad por datos (guards S2):**
+12. **Escalas por competencia (homogeneización):** cada competencia define su propia escala (`1..escala`, con niveles rotulados tipo "Bajo/Medio/Alto" en `CompetenciaNivel`). El sistema **sí tiene en cuenta estos máximos/mínimos**:
+    - Al calificar o calibrar, el nivel debe estar dentro de la escala de **su** competencia (no un rango plano 1–5).
+    - El `puntaje_numerico` de la respuesta y la consolidación de §10 homogeneizan cada nivel a un relativo `0..1` (`(nivel−1)/(escala−1)`) antes de promediar/ponderar, y lo expresan de vuelta en una escala común (1–5 en la respuesta; escala del catálogo en §10).
+    - El snapshot de la respuesta conserva escalas y etiquetas de nivel al momento del envío (inmutables para el historial).
+13. **Inmutabilidad por datos (guards S2):**
     - `PATCH competencies`: bloqueado si hay respuestas activas o proceso en `CERRADO/ARCHIVADO`.
     - `POST generate-assignments`: bloqueado si hay asignaciones avanzadas (con respuestas o estado > `PENDIENTE`) o proceso en `CERRADO/ARCHIVADO`.
     - `PATCH participants` (`agregar`): bloqueado en `CERRADO/ARCHIVADO`; `retirar` mantiene su validación de inmutabilidad.
@@ -960,6 +964,8 @@ Esta sección cubre el ciclo de ejecución: listar/iniciar asignaciones, enviar 
     "total_competencias": 5,
     "colaborador_id": "uuid-colaborador",
     "evaluador_id": "uuid-usuario-evaluador",
+    "evaluador_nombre": "Carlos Ruiz",
+    "evaluador_email": "carlos.ruiz@empresa.com",
     "tipo": "JEFE_DIRECTO",
     "peso": 60,
     "estado": "EN_REVISION",
@@ -1061,20 +1067,23 @@ Esta sección cubre el ciclo de ejecución: listar/iniciar asignaciones, enviar 
   | Asignación no existe / no es del evaluador / tenant | `404` |
   | Estado de la asignación ∉ `PENDIENTE, EN_PROGRESO, DEVUELTO, COMPLETADO, EN_REVISION` (p.ej. `APROBADO`) | `400` |
   | Faltan competencias por calificar | `400` con lista de IDs faltantes |
-  | Nivel fuera de `0–5` | `400` |
+  | Nivel fuera de la escala de **su** competencia (`1 ≤ nivel ≤ escala_maxima` de esa competencia; ej. `4` en una competencia de 3 niveles) | `400` |
 
 - **Efectos:**
   1. **Upsert** de la respuesta por `asignacion_id` (1:1). Si ya existía, se sobrescribe y se actualiza `fecha_ultima_edicion`; si no, se crea.
-  2. Calcula:
-     - `puntaje_numerico` = promedio de los niveles (2 decimales).
-     - `puntaje_normalizado` = `(puntaje − 1.0) / (5.0 − 1.0)` recortado a `[0, 1]` (escala fija 1–5).
-     - `snapshot_escalas_json` = snapshot inmutable `{ competencia_id: { nombre, escala_maxima } }` al momento del envío.
+  2. Calcula (con **homogeneización por escala de cada competencia**):
+     - Por competencia: `relativo = (nivel − 1) / (escala_maxima − 1)` (usando la escala real del catálogo, no una escala fija; si la escala es 1, el relativo es `1`).
+     - `puntaje_numerico` = promedio de los relativos, expresado en escala 1–5 equivalente: `1 + promedioRelativo × 4` (2 decimales).
+     - `puntaje_normalizado` = `(puntaje − 1.0) / (5.0 − 1.0)` recortado a `[0, 1]`.
+     - `snapshot_escalas_json` = snapshot inmutable `{ competencia_id: { nombre, escala_maxima, niveles: { [nivel]: { nombre, descripcion } } } }` al momento del envío (incluye las etiquetas tipo "Bajo/Medio/Alto").
   3. **Estado destino** (aplica a respuesta **y** asignación):
      ```
      si (revision_obligatoria OR correccion.requiere_revision) → EN_REVISION
      si no                                                     → COMPLETADO
      ```
   4. Actualiza el estado de la asignación al mismo destino.
+
+  > **Ejemplo de homogeneización:** "Liderazgo" (escala 5) calificado en 4 → `(4−1)/4 = 0.75`; "Cumplimiento normativo" (escala 3, niveles Bajo/Medio/Alto) calificado en "Medio" (2) → `(2−1)/2 = 0.50`. Puntaje = `1 + ((0.75+0.50)/2) × 4 = 3.5`. Sin homogeneizar hubiera sido `(4+2)/2 = 3.0`, distorsionando la competencia de 3 niveles.
 
 - **Retorno (`data`):**
   ```json
@@ -1158,11 +1167,12 @@ Acciones exclusivas de RRHH sobre una asignación. **Todas requieren** `config.c
 
 | Acción | Endpoint | Estado destino | Condiciones adicionales |
 |---|---|---|---|
-| **Aprobar** | `PATCH /competency-evaluations/assignments/:asignacionId/approve` | `APROBADO` | Solo `calibracion_rrhh.activo`. Si hay respuesta, **reescribe** sus puntajes con `competencias_calibradas` y recalcula `puntaje_numerico`. |
-| **Calibrar** | `PATCH /competency-evaluations/assignments/:asignacionId/calibrate` | `EN_REVISION` (permanece en revisión) | Además requiere `calibracion_rrhh.modo = EDITAR` (si no → `403`). Reescribe puntajes de la respuesta. |
+| **Aprobar** | `PATCH /competency-evaluations/assignments/:asignacionId/approve` | `APROBADO` | Solo `calibracion_rrhh.activo`. Si hay respuesta, **reescribe** sus puntajes con `competencias_calibradas` y recalcula `puntaje_numerico` **y `puntaje_normalizado`** (homogeneizados por escala). |
+| **Calibrar** | `PATCH /competency-evaluations/assignments/:asignacionId/calibrate` | `EN_REVISION` (permanece en revisión) | Además requiere `calibracion_rrhh.modo = EDITAR` (si no → `403`). Reescribe puntajes de la respuesta (y recalcula normalizado). |
 | **Devolver** | `PATCH /competency-evaluations/assignments/:asignacionId/return` | `DEVUELTO` | Además requiere `correccion.permitir_cuando_devuelto = true` (si no → `403`). No modifica los puntajes de la respuesta. |
 
 - **Permiso (los 3):** `EVALUACIONES:EDITAR` **+** `EVALUACIONES:VER_TODAS` (o superadmin)
+- **Validación adicional (approve/calibrate):** cada nivel de `competencias_calibradas` debe estar dentro de la escala real de su competencia (`1 ≤ nivel ≤ escala_maxima`, tomada del snapshot de la respuesta o del catálogo). Un valor fuera de escala → `400`.
 - **Body (los 3):**
   ```json
   {
@@ -1183,6 +1193,197 @@ Acciones exclusivas de RRHH sobre una asignación. **Todas requieren** `config.c
 
 - **Errores:** `404` asignación no encontrada; `403` por política de config o falta de permiso `EVALUACIONES:VER_TODAS`.
 
+### 9.6 Resumen de Revisión por Proceso (RRHH)
+
+Vista de revisión de RRHH: agrupa las asignaciones del proceso por **colaborador** o **evaluador**, con contadores por estado y progreso, para monitorear el avance de la campaña.
+
+- **Endpoint:** `GET /competency-evaluations/:procesoId/review-summary`
+- **Permiso:** `EVALUACIONES:LEER` — **y** el usuario debe tener `EVALUACIONES:VER_TODAS` (o ser superadmin); en caso contrario → `403 Forbidden`. **Vista exclusiva RRHH: no se auto-scopa.**
+- **Query Params:**
+  - `agrupar_por` (`colaborador` | `evaluador`, default: `colaborador`)
+  - `busqueda` (string, insensible, sobre el **nombre del grupo**)
+  - `estado` (string: `PENDIENTE`, `EN_PROGRESO`, `COMPLETADO`, `EN_REVISION`, `APROBADO`, `DEVUELTO`) — filtra las asignaciones; **el grupo sobrevive si tiene ≥1 asignación que calce**
+  - `pagina`, `limite` (paginación estándar **sobre grupos**, `limite` max 100)
+- **Orden:** grupos por `nombre` ascendente; `asignaciones` dentro de cada grupo por `fecha_registro` descendente.
+- **Retorno (`data`):** objeto con `resumen` (conteos sobre **todas** las asignaciones filtradas, sin paginación — mismo patrón que §9.2) + `data` paginado de grupos:
+  ```json
+  {
+    "resumen": {
+      "total": 24,
+      "pendientes": 8,
+      "en_progreso": 3,
+      "en_revision": 5,
+      "devueltas": 1,
+      "completadas": 4,
+      "aprobadas": 3
+    },
+    "data": {
+      "datos": [
+        {
+          "grupo_id": "uuid-colaborador-o-evaluador",
+          "nombre": "María Gómez",
+          "subtitulo": "Líder de Desarrollo",
+          "total_asignaciones": 2,
+          "completadas": 1,
+          "aprobadas": 0,
+          "en_revision": 1,
+          "devueltas": 0,
+          "pendientes_o_en_progreso": 0,
+          "progreso": 0.5,
+          "asignaciones": [
+            {
+              "id": "uuid-asignacion",
+              "proceso_id": "uuid-proceso",
+              "proceso_nombre": "Evaluación de Desempeño 2026",
+              "proceso_estado": "EN_CALIFICACION",
+              "total_competencias": 5,
+              "colaborador_id": "uuid-colaborador",
+              "evaluador_id": "uuid-usuario-evaluador",
+              "evaluador_nombre": "María Gómez",
+              "evaluador_email": "maria.gomez@empresa.com",
+              "tipo": "AUTOEVALUACION",
+              "peso": 40,
+              "estado": "COMPLETADO",
+              "contador_correcciones": 0,
+              "correccion_disponible": false,
+              "correccion_voluntaria": false,
+              "calibrado_por": null,
+              "fecha_calibracion": null,
+              "comentario_calibracion": null,
+              "colaborador_nombre": "María Gómez",
+              "colaborador_cargo": "Líder de Desarrollo",
+              "evaluador_nombre": "María Gómez"
+            }
+          ]
+        }
+      ],
+      "paginacion": { "total": 12, "pagina": 1, "limite": 20, "total_paginas": 1 }
+    }
+  }
+  ```
+  - `grupo_id` / `nombre` / `subtitulo`: si `agrupar_por=colaborador` → colaborador (`nombre` = nombre completo, `subtitulo` = cargo); si `agrupar_por=evaluador` → usuario evaluador (`subtitulo` = correo).
+  - `progreso` = `(completadas + aprobadas) / total_asignaciones` (0–1, 2 decimales; `0` si el grupo no tiene asignaciones).
+  - `asignaciones[]`: mismo shape del item de §9.1 + `evaluador_nombre`.
+- **Cómo se calculan los totales:** el `resumen` y los contadores por grupo se computan sobre **todas** las asignaciones del proceso que cumplen los filtros (incluido `estado`); solo la lista de grupos está paginada. Es decir, paginar con `pagina`/`limite` **no afecta** los totales: `resumen.total` y los contadores de cada grupo son siempre del universo filtrado completo.
+  > **Nota de escalabilidad:** la centralización de conteos usa `count()` en base de datos (mismo patrón que §9.2); la agrupación de filas se hace en memoria para poder anidar `asignaciones[]` por grupo. El volumen esperado (participantes × tipos activos) lo hace razonable; si en el futuro un proceso manejara decenas de miles de asignaciones, la evolución natural es un `GROUP BY` en DB para los contadores por grupo y fetch paginado de las asignaciones de la página.
+- **Errores:** `404` proceso no encontrado; `403` si falta `EVALUACIONES:VER_TODAS`.
+
+### 9.7 Detalle de Asignaciones con Calificaciones y Calibraciones (RRHH)
+
+Lista plana, paginada y ordenable de asignaciones con el detalle por competencia: nivel original del evaluador, valor calibrado por RRHH (si aplica) y nivel vigente.
+
+- **Endpoints (dos variantes, mismo handler):**
+  | Variante | URL | Proceso |
+  |---|---|---|
+  | **Scoped (por proceso)** | `GET /competency-evaluations/:procesoId/assignments-detail` | Obligatorio en la ruta |
+  | **Global** | `GET /competency-evaluations/assignments-detail` | Opcional vía query `proceso_id` |
+- **Permiso:** `EVALUACIONES:LEER` — **y** el usuario debe tener `EVALUACIONES:VER_TODAS` (o ser superadmin); en caso contrario → `403 Forbidden`. **Vista exclusiva RRHH: no se auto-scopa.**
+- **Query Params:**
+  - `asignacion_id` (UUID, filtra por una asignación concreta — permite consultar el detalle **con enviar solo este parámetro**, sin proceso, colaborador ni evaluador)
+  - `proceso_id` (UUID) — **solo en la ruta global**; en la ruta scoped se ignora **salvo** que difiera del `:procesoId` de la URL, en cuyo caso → `400 BadRequest`
+  - `colaborador_id` (UUID, filtrar por evaluado)
+  - `evaluador_id` (UUID, filtrar por evaluador)
+  - `estado` (string, catálogo de asignación)
+  - `tipo` (string: `AUTOEVALUACION`, `JEFE_DIRECTO`, `OTRO`)
+  - `busqueda` (string, insensible; busca sobre nombres/apellidos del colaborador **o** del evaluador)
+  - `ordenar_por` (`fecha_registro` | `colaborador_nombre` | `evaluador_nombre` | `estado` | `tipo` | `peso`, default: `fecha_registro`)
+  - `orden` (`asc` | `desc`, default: `desc`)
+  - `pagina`, `limite` (paginación estándar, `limite` max 100)
+- **Retorno (`data`):** paginado; cada item de `datos`:
+  ```json
+  {
+    "datos": [
+      {
+        "id": "uuid-asignacion",
+        "proceso_id": "uuid-proceso",
+        "tipo": "JEFE_DIRECTO",
+        "estado": "EN_REVISION",
+        "peso": 60,
+        "contador_correcciones": 1,
+        "total_calibraciones": 2,
+        "fecha_registro": "2026-01-20T10:00:00.000Z",
+        "fecha_envio": "2026-02-01T12:00:00.000Z",
+        "fecha_ultima_edicion": "2026-02-02T09:00:00.000Z",
+        "colaborador": {
+          "id": "uuid-colaborador",
+          "nombres": "María",
+          "apellidos": "Gómez",
+          "nombre_completo": "María Gómez",
+          "cargo": "Líder de Desarrollo"
+        },
+        "jefe_directo": "Carlos Ruiz",
+        "evaluador": {
+          "id": "uuid-usuario-evaluador",
+          "nombres": "Carlos",
+          "apellidos": "Ruiz",
+          "nombre_completo": "Carlos Ruiz",
+          "correo": "carlos.ruiz@empresa.com"
+        },
+        "competencias": [
+          {
+            "competencia_id": "uuid-comp-1",
+            "nombre": "Liderazgo",
+            "descripcion": "Capacidad de guiar equipos hacia el logro de objetivos",
+            "nivel_evaluador": 3,
+            "nivel_calibrado": 4,
+            "nivel_actual": 4,
+            "fue_calibrada": true,
+            "nivel_nombre": "Alto",
+            "nivel_descripcion": "Ejerce liderazgo activo en su equipo",
+            "escala_minima": 1,
+            "escala_maxima": 5
+          },
+          {
+            "competencia_id": "uuid-comp-2",
+            "nombre": "Comunicación",
+            "descripcion": "Habilidad para transmitir ideas con claridad",
+            "nivel_evaluador": 2,
+            "nivel_calibrado": null,
+            "nivel_actual": 2,
+            "fue_calibrada": false,
+            "nivel_nombre": "Medio",
+            "nivel_descripcion": "Se comunica de forma efectiva en su equipo",
+            "escala_minima": 1,
+            "escala_maxima": 3
+          }
+        ],
+        "comentarios_evaluador": {
+          "text": "Desempeño sólido durante el período; destacar su gestión del equipo.",
+          "video_url": "https://..."
+        },
+        "puntaje_numerico": 4.0,
+        "puntaje_normalizado": 0.75
+      }
+    ],
+    "paginacion": {
+      "total": 24,
+      "pagina": 1,
+      "limite": 20,
+      "total_paginas": 2
+    }
+  }
+  ```
+- **Semántica de campos clave:**
+  - `jefe_directo`: nombre del ocupante del **puesto supervisor** (`jefe_puesto_id`) de la asignación activa del colaborador; `null` si el puesto no tiene jefe o está vacante.
+  - `contador_correcciones`: veces que el evaluador **corrigió** su evaluación (columna de la asignación; se incrementa en `PATCH .../start` desde estados corregibles).
+  - `total_calibraciones`: número de entradas en el **log de calibración** de la asignación (acciones RRHH: aprobar/calibrar/devolver).
+  - Por competencia:
+    - `nivel_evaluador`: nivel **original** emitido por el evaluador (si hubo calibración, se recupera del primer log de calibración, donde quedó el snapshot original). Si nunca se calibró, coincide con `nivel_actual`.
+    - `nivel_calibrado`: último valor calibrado por RRHH para esa competencia (del último log donde aparece); `null` si nunca fue calibrada.
+    - `nivel_actual`: valor vigente en la respuesta (tras cualquier calibración).
+    - `fue_calibrada`: `true` si la competencia aparece en algún log de calibración de la asignación.
+    - `nivel_nombre` / `nivel_descripcion`: etiqueta del nivel vigente (ej. "Medio"), tomada del snapshot de la respuesta o del catálogo `CompetenciaNivel`.
+    - `escala_minima` / `escala_maxima`: del snapshot inmutable tomado al enviar la respuesta (`1` y la escala de la competencia).
+    - `descripcion`: descripción actual del catálogo de la competencia (puede ser `null`).
+  - `comentarios_evaluador`: comentarios que dejó el evaluador al responder (`text` y/o `video_url`, del `comentario_texto`/`video_url` de la respuesta); `null` si la asignación aún no tiene respuesta.
+  - Si la asignación **aún no tiene respuesta** → `competencias: []`, `comentarios_evaluador: null`, `puntaje_numerico` / `puntaje_normalizado` / `fecha_envio` / `fecha_ultima_edicion` en `null`.
+- **Nota técnica sobre la calibración:** al aprobar/calibrar, la respuesta se **reescribe** con los valores calibrados (§9.5); por eso el valor original del evaluador se reconstruye desde el **log de calibración** (`competencias_originales_json` del primer registro y `competencias_calibradas_json` del último).
+- **Nota sobre filtros:**
+  - **Si envías solo `asignacion_id`** (en cualquiera de las dos variantes), el endpoint devuelve la lista con un único item; las demás condiciones quedan redundantes pero la combinación es válida. Con la **ruta global** ni siquiera necesitas conocer el proceso.
+  - **Si envías `colaborador_id` y/o `evaluador_id` sin `asignacion_id`:** una misma pareja colaborador↔evaluador (o un mismo colaborador) puede tener asignaciones en **múltiples procesos**; usa la variante **scoped** (proceso en la URL) o pasa `proceso_id` en la global para segmentar. Si lo omites en la global, el resultado agrupa asignaciones de **todos los procesos** del tenant (útil para un historial cruzado).
+  - El ordenamiento nativo (`ordenar_por` + `orden`) se hace en base de datos — incluye ordenar por nombre del colaborador o del evaluador (relaciones), estado, tipo, peso y fecha.
+- **Errores:** `404` proceso no encontrado (cuando se especifica proceso); `403` si falta `EVALUACIONES:VER_TODAS`; `400` si `proceso_id` del query difiere del `:procesoId` de la ruta.
+
 ---
 
 ## 10. Resultados y Análisis de Brechas
@@ -1198,13 +1399,15 @@ Obtiene los puntajes finales consolidados por competencia y el cálculo de brech
 
 - **Algoritmo:**
   1. Toma las asignaciones del colaborador en el proceso con estado **`APROBADO` o `COMPLETADO`** (las `EN_REVISION`, `EN_PROGRESO`, `PENDIENTE` y `DEVUELTO` **no** cuentan).
-  2. Para cada asignación, lee su respuesta más reciente (`fecha_envio` desc) y el `peso` de la asignación.
-  3. **Consolidación ponderada** por competencia:
+  2. Para cada asignación, lee su respuesta más reciente (`fecha_envio` desc), su `snapshot_escalas_json` (escalas al momento del envío) y el `peso` de la asignación.
+  3. **Consolidación ponderada homogeneizada** por competencia — cada nivel se normaliza por la escala de su competencia antes de ponderar:
      ```
-     nivel_obtenido(comp) = Σ(nivel_evaluador × peso_asignación) / Σ(peso_asignación)
+     relativo(comp, asig) = (nivel − 1) / (escala_maxima_comp_en_asig − 1)
+     relativo_final(comp) = Σ(relativo × peso_asignación) / Σ(peso_asignación)
+     nivel_obtenido(comp) = 1 + relativo_final × (escala_catalogo_comp − 1)
      ```
-     (asignaciones con `peso ≤ 0` se ignoran).
-  4. **Nivel esperado:** `CompetenciaCargo.nivel_esperado` del **cargo** del puesto activo (`asignacion` con `fecha_fin = null`) del colaborador.
+     (asignaciones con `peso ≤ 0` se ignoran; el resultado se expresa en la escala actual del catálogo para compararlo contra el nivel esperado).
+  4. **Nivel esperado:** `CompetenciaCargo.nivel_esperado` del **cargo** del puesto activo (`asignacion` con `fecha_fin = null`) del colaborador (en la misma escala del catálogo de la competencia).
   5. **Brecha** = `nivel_obtenido − nivel_esperado` (2 decimales). Positivo = por encima del estándar.
 
 - **Retorno (`data`):**
@@ -1217,6 +1420,8 @@ Obtiene los puntajes finales consolidados por competencia y el cálculo de brech
         "competencia_id": "uuid-comp-1",
         "competencia_nombre": "Liderazgo",
         "nivel_obtenido": 4.2,
+        "nivel_nombre": "Alto",
+        "nivel_descripcion": "Ejerce liderazgo activo en su equipo",
         "nivel_esperado": 4.0,
         "brecha": 0.2,
         "escala_maxima": 5

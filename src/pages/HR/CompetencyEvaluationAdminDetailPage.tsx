@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { UserRole, ROLE_LABELS } from '../../constants/roles';
 import { motion, AnimatePresence } from 'framer-motion';
 import PageContainer from '../../components/Common/PageContainer';
@@ -15,6 +15,8 @@ import ConfirmationModal from '../../components/Common/ConfirmationModal';
 import CompetenciesTab from '../../components/CompetencyEvaluation/CompetenciesTab';
 import ParticipantsTab from '../../components/CompetencyEvaluation/ParticipantsTab';
 import GeneralTab from '../../components/CompetencyEvaluation/GeneralTab';
+import ReviewTab from '../../components/CompetencyEvaluation/ReviewTab';
+import ReviewCountBadge from '../../components/CompetencyEvaluation/ReviewCountBadge';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -32,6 +34,7 @@ const STATUS_BADGE: Record<EstadoProcesoCompetencia, string> = {
 const CompetencyEvaluationAdminDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
 
     const {
         evaluation,
@@ -82,6 +85,16 @@ const CompetencyEvaluationAdminDetailPage: React.FC = () => {
     const currentState = (evaluation?.estado_flujo || evaluation?.estado || 'BORRADOR') as EstadoProcesoCompetencia;
     const isBorrador = currentState === 'BORRADOR';
 
+    // ── Deep-link por query param (?tab=revision | general | ...) ────────────
+    useEffect(() => {
+        const q = searchParams.get('tab');
+        const valid = ['general', 'competencias', 'participantes', 'correos', 'revision'];
+        if (q && valid.includes(q)) {
+            setActiveTab(q as typeof activeTab);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
     // ── Tabs (con badges) ──────────────────────────────────────────────────────
 
     const compsCount = formData.competencias_asignadas.length > 0 ? formData.competencias_asignadas.length : (evaluation?.total_competencias ?? 0);
@@ -114,6 +127,16 @@ const CompetencyEvaluationAdminDetailPage: React.FC = () => {
             ),
         },
         { id: 'correos', label: 'Correos' },
+        // Pestaña de revisión sólo tras publicar el proceso
+        ...(!isBorrador && id
+            ? [
+                  {
+                      id: 'revision',
+                      label: 'Revisión',
+                      badge: <ReviewCountBadge procesoId={id} />,
+                  },
+              ]
+            : []),
     ];
 
     // ── Render ────────────────────────────────────────────────────────────────
@@ -270,6 +293,10 @@ const CompetencyEvaluationAdminDetailPage: React.FC = () => {
                             saving={savingCorreos}
                             onSave={saveEmailsTab}
                         />
+                    )}
+
+                    {activeTab === 'revision' && evaluation && (
+                        <ReviewTab procesoId={evaluation.id} />
                     )}
                 </motion.div>
             </AnimatePresence>

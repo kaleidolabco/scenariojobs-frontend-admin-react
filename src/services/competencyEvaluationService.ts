@@ -100,6 +100,9 @@ export interface CompetencyAssignment {
     total_competencias: number;
     colaborador_id: string;
     evaluador_id: string;
+    /** Nombre legible del evaluador (embellece §9.1/§9.6). */
+    evaluador_nombre?: string | null;
+    evaluador_email?: string | null;
     tipo: TipoEvaluacion;
     peso: number;
     estado: EstadoAsignacion;
@@ -111,6 +114,8 @@ export interface CompetencyAssignment {
     comentario_calibracion?: string | null;
     colaborador_nombre: string;
     colaborador_cargo: string;
+    /** Puntaje vigente de la respuesta (si el backend lo embellece como campo opcional). */
+    puntaje_numerico?: number | null;
 }
 
 /** Resumen de estados de las asignaciones del evaluador (mismos filtros que la consulta). */
@@ -214,6 +219,140 @@ export interface EvaluationResponseItem {
     puntaje_normalizado?: number;
     fecha_envio?: string;
     fecha_ultima_edicion?: string;
+}
+
+// ─── Revisión / Calibración RRHH y resultados (§9.5, §10) ────────────────────
+
+/** Acción de calibración de RRHH sobre una asignación (§9.5). */
+export type AccionCalibracion = 'approve' | 'calibrate' | 'return';
+
+/** Body compartido para `PATCH .../assignments/:id/approve | calibrate | return` (§9.5). */
+export interface CalibrationPayload {
+    /** Mapa competencia_id → nivel (0–5). Obligatorio; en approve/calibrate se persiste sobre la respuesta. */
+    competencias_calibradas: Record<string, number>;
+    comentario?: string;
+}
+
+/** Item de `niveles_competencia` devuelto por `GET /:procesoId/collaborators/:colaboradorId/competency-levels` (§10). */
+export interface CompetencyLevelItem {
+    competencia_id: string;
+    competencia_nombre: string;
+    nivel_obtenido: number;
+    /** Etiqueta del nivel obtenido (del catálogo), ej. "Alto". */
+    nivel_nombre?: string | null;
+    nivel_descripcion?: string | null;
+    nivel_esperado: number | null;
+    brecha?: number | null;
+    escala_maxima: number;
+}
+
+// ─── Resumen de revisión y detalle de asignaciones (§9.6, §9.7) ──────────────
+
+/** Dimensión de agrupación para `GET /:procesoId/review-summary` (§9.6). */
+export type AgruparPor = 'colaborador' | 'evaluador';
+
+/** Conteos globales del proceso (sobre el universo filtrado, sin paginación) en §9.6. */
+export interface ReviewSummaryResumen {
+    total: number;
+    pendientes: number;
+    en_progreso: number;
+    en_revision: number;
+    devueltas: number;
+    completadas: number;
+    aprobadas: number;
+}
+
+/** Grupo (colaborador o evaluador) devuelto por §9.6. */
+export interface ReviewSummaryGroup {
+    grupo_id: string;
+    nombre: string;
+    subtitulo?: string | null;
+    total_asignaciones: number;
+    completadas: number;
+    aprobadas: number;
+    en_revision: number;
+    devueltas: number;
+    pendientes_o_en_progreso: number;
+    progreso: number;
+    asignaciones: CompetencyAssignment[];
+}
+
+export interface ReviewSummaryParams {
+    agrupar_por?: AgruparPor;
+    busqueda?: string;
+    estado?: EstadoAsignacion;
+    pagina?: number;
+    limite?: number;
+}
+
+/** Competencia dentro del item de `assignments-detail` (§9.7). */
+export interface AssignmentDetailCompetencia {
+    competencia_id: string;
+    nombre: string;
+    descripcion?: string | null;
+    /** Nivel original emitido por el evaluador (snapshot del primer log si hubo calibración). */
+    nivel_evaluador: number;
+    /** Último valor calibrado por RRHH; null si nunca se calibró. */
+    nivel_calibrado: number | null;
+    /** Valor vigente en la respuesta. */
+    nivel_actual: number;
+    /** true si la competencia aparece en algún log de calibración. */
+    fue_calibrada: boolean;
+    /** Etiqueta del nivel vigente (snapshot de la respuesta / catálogo), ej. "Medio". */
+    nivel_nombre?: string | null;
+    nivel_descripcion?: string | null;
+    escala_minima: number;
+    escala_maxima: number;
+}
+
+/** Item de `GET /:procesoId/assignments-detail` (§9.7). */
+export interface AssignmentDetailItem {
+    id: string;
+    proceso_id: string;
+    tipo: TipoEvaluacion;
+    estado: EstadoAsignacion;
+    peso: number;
+    /** Veces que el evaluador corrigió su evaluación. */
+    contador_correcciones: number;
+    /** Número de entradas en el log de calibración. */
+    total_calibraciones: number;
+    fecha_registro: string;
+    fecha_envio: string | null;
+    fecha_ultima_edicion: string | null;
+    colaborador: {
+        id: string;
+        nombres: string;
+        apellidos: string;
+        nombre_completo: string;
+        cargo?: string | null;
+    };
+    /** Nombre del ocupante del puesto supervisor del colaborador (null si vacante). */
+    jefe_directo: string | null;
+    evaluador: {
+        id: string;
+        nombres: string;
+        apellidos: string;
+        nombre_completo: string;
+        correo?: string | null;
+    };
+    competencias: AssignmentDetailCompetencia[];
+    /** Comentarios del evaluador sobre la respuesta (null si no hay respuesta). */
+    comentarios_evaluador?: { text?: string; video_url?: string } | null;
+    puntaje_numerico: number | null;
+    puntaje_normalizado: number | null;
+}
+
+export interface AssignmentsDetailParams {
+    asignacion_id?: string;
+    colaborador_id?: string;
+    evaluador_id?: string;
+    estado?: EstadoAsignacion;
+    tipo?: TipoEvaluacion;
+    busqueda?: string;
+    ordenar_por?: string;
+    orden?: 'asc' | 'desc';
+    pagina?: number;
+    limite?: number;
 }
 
 // ─── Service hook ─────────────────────────────────────────────────────────────
@@ -900,6 +1039,222 @@ export const useCompetencyEvaluationService = () => {
         );
     };
 
+    // ── Revisión / Calibración RRHH (§9.1 admin, §9.5) y resultados (§10) ────
+
+    /**
+     * `GET /assignments` (§9.1) — cola de revisión para RRHH.
+     * A diferencia de `my-assignments`, no devuelve `resumen`; si el usuario no
+     * tiene `EVALUACIONES:VER_TODAS`, el backend la auto-scopa al usuario.
+     * Devuelve `data.asignaciones` + `data.paginacion`.
+     */
+    const getAssignments = async (
+        params?: AssignmentsQueryParams
+    ): Promise<FetchResponse | null> => {
+        return run(
+            (async () => {
+                const backendParams: Record<string, string | number | undefined> = {};
+                if (params?.proceso_id) backendParams.proceso_id = params.proceso_id;
+                if (params?.colaborador_id) backendParams.colaborador_id = params.colaborador_id;
+                if (params?.estado) backendParams.estado = params.estado;
+                if (params?.tipo) backendParams.tipo = params.tipo;
+                if (params?.pagina) backendParams.pagina = params.pagina;
+                if (params?.limite) backendParams.limite = params.limite;
+
+                const response = (await fetchData({
+                    url: `${BASE_URL}/assignments`,
+                    params: Object.keys(backendParams).length > 0 ? backendParams : undefined,
+                    token: token || null,
+                })) as FetchResponse | null;
+
+                if (response?.success === false) {
+                    throw new Error(response.message || 'Error al obtener las asignaciones');
+                }
+                if (response?.success && response.data) {
+                    return {
+                        ...response,
+                        data: {
+                            asignaciones: (response.data.datos ?? []) as CompetencyAssignment[],
+                            paginacion: (response.data.paginacion ?? null) as Pagination | null,
+                        },
+                    };
+                }
+                return response;
+            })()
+        );
+    };
+
+    /**
+     * Ejecuta una acción de calibración de RRHH (§9.5) sobre una asignación:
+     * `approve` → APROBADO · `calibrate` → permanece EN_REVISION · `return` → DEVUELTO.
+     * Requiere `EVALUACIONES:EDITAR` + `EVALUACIONES:VER_TODAS` y las políticas de config.
+     * Devuelve `data` tal cual (`{ id, estado }`).
+     */
+    const executeCalibracion = async (
+        asignacionId: string,
+        accion: AccionCalibracion,
+        payload: CalibrationPayload
+    ): Promise<FetchResponse | null> => {
+        return run(
+            (async () => {
+                const response = (await fetchData({
+                    url: `${BASE_URL}/assignments/${asignacionId}/${accion}`,
+                    method: 'PATCH',
+                    body: payload as unknown as Record<string, unknown>,
+                    token: token || null,
+                })) as FetchResponse | null;
+
+                if (response?.success === false) {
+                    throw new Error(response.message || 'No se pudo ejecutar la acción');
+                }
+                return response;
+            })()
+        );
+    };
+
+    /**
+     * `GET /:procesoId/collaborators/:colaboradorId/competency-levels` (§10) —
+     * consolidado ponderado por competencia (sólo asignaciones COMPLETADO/APROBADO)
+     * y brecha frente al nivel esperado del cargo activo.
+     * Devuelve `data.niveles_competencia` + `data.brechas`.
+     */
+    const getCompetencyLevels = async (
+        procesoId: string,
+        colaboradorId: string
+    ): Promise<FetchResponse | null> => {
+        return run(
+            (async () => {
+                const response = (await fetchData({
+                    url: `${BASE_URL}/${procesoId}/collaborators/${colaboradorId}/competency-levels`,
+                    token: token || null,
+                })) as FetchResponse | null;
+
+                if (response?.success === false) {
+                    throw new Error(response.message || 'Error al obtener los niveles consolidados');
+                }
+                if (response?.success && response.data) {
+                    return {
+                        ...response,
+                        data: {
+                            niveles_competencia: (response.data.niveles_competencia ?? []) as CompetencyLevelItem[],
+                            brechas: (response.data.brechas ?? {}) as Record<string, number>,
+                        },
+                    };
+                }
+                return response;
+            })()
+        );
+    };
+
+    /**
+     * `GET /:procesoId/review-summary` (§9.6) — vista de revisión RRHH agrupada
+     * por `agrupar_por` ('colaborador' | 'evaluador'), con contadores globales en `resumen`.
+     * Vista exclusiva RRHH (403 sin `EVALUACIONES:VER_TODAS`).
+     * Devuelve `data.resumen` + `data.grupos` + `data.paginacion` (paginación sobre grupos).
+     */
+    const getReviewSummary = async (
+        procesoId: string,
+        params?: ReviewSummaryParams
+    ): Promise<FetchResponse | null> => {
+        return run(
+            (async () => {
+                const backendParams: Record<string, string | number | undefined> = {};
+                if (params?.agrupar_por) backendParams.agrupar_por = params.agrupar_por;
+                if (params?.busqueda) backendParams.busqueda = params.busqueda;
+                if (params?.estado) backendParams.estado = params.estado;
+                if (params?.pagina) backendParams.pagina = params.pagina;
+                if (params?.limite) backendParams.limite = params.limite;
+
+                const response = (await fetchData({
+                    url: `${BASE_URL}/${procesoId}/review-summary`,
+                    params: Object.keys(backendParams).length > 0 ? backendParams : undefined,
+                    token: token || null,
+                })) as FetchResponse | null;
+
+                if (response?.success === false) {
+                    throw new Error(response.message || 'Error al obtener el resumen de revisión');
+                }
+                if (response?.success && response.data) {
+                    return {
+                        ...response,
+                        data: {
+                            resumen: (response.data.resumen ?? null) as ReviewSummaryResumen | null,
+                            grupos: (response.data.data?.datos ?? response.data.datos ?? []) as ReviewSummaryGroup[],
+                            paginacion: (response.data.data?.paginacion ?? response.data.paginacion ?? null) as Pagination | null,
+                        },
+                    };
+                }
+                return response;
+            })()
+        );
+    };
+
+    /**
+     * `GET /:procesoId/assignments-detail` (§9.7, variante scoped) — lista plana,
+     * ordenable y paginada de asignaciones con el detalle por competencia
+     * (nivel original / calibrado / vigente) y comentarios.
+     * Vista exclusiva RRHH (403 sin `EVALUACIONES:VER_TODAS`).
+     * Devuelve `data.datos` + `data.paginacion`.
+     */
+    const getAssignmentsDetail = async (
+        procesoId: string,
+        params?: AssignmentsDetailParams
+    ): Promise<FetchResponse | null> => {
+        return run(
+            (async () => {
+                const backendParams: Record<string, string | number | undefined> = {};
+                if (params?.asignacion_id) backendParams.asignacion_id = params.asignacion_id;
+                if (params?.colaborador_id) backendParams.colaborador_id = params.colaborador_id;
+                if (params?.evaluador_id) backendParams.evaluador_id = params.evaluador_id;
+                if (params?.estado) backendParams.estado = params.estado;
+                if (params?.tipo) backendParams.tipo = params.tipo;
+                if (params?.busqueda) backendParams.busqueda = params.busqueda;
+                if (params?.ordenar_por) backendParams.ordenar_por = params.ordenar_por;
+                if (params?.orden) backendParams.orden = params.orden;
+                if (params?.pagina) backendParams.pagina = params.pagina;
+                if (params?.limite) backendParams.limite = params.limite;
+
+                const response = (await fetchData({
+                    url: `${BASE_URL}/${procesoId}/assignments-detail`,
+                    params: Object.keys(backendParams).length > 0 ? backendParams : undefined,
+                    token: token || null,
+                })) as FetchResponse | null;
+
+                if (response?.success === false) {
+                    throw new Error(response.message || 'Error al obtener el detalle de asignaciones');
+                }
+                if (response?.success && response.data) {
+                    return {
+                        ...response,
+                        data: {
+                            datos: (response.data.datos ?? []) as AssignmentDetailItem[],
+                            paginacion: (response.data.paginacion ?? null) as Pagination | null,
+                        },
+                    };
+                }
+                return response;
+            })()
+        );
+    };
+
+    /**
+     * Detalle de una ÚNICA asignación vía §9.7 (`?asignacion_id=`, variante scoped).
+     * Devuelve `data.detalle` (null si no existe).
+     */
+    const getAssignmentDetail = async (
+        procesoId: string,
+        asignacionId: string
+    ): Promise<FetchResponse | null> => {
+        const res = await getAssignmentsDetail(procesoId, {
+            asignacion_id: asignacionId,
+            limite: 1,
+        });
+        if (res?.success && res.data) {
+            const datos = (res.data.datos ?? []) as AssignmentDetailItem[];
+            return { ...res, data: { detalle: datos[0] ?? null } };
+        }
+        return res;
+    };
+
     return {
         getCompetencyEvaluations,
         getMyAssignments,
@@ -924,5 +1279,11 @@ export const useCompetencyEvaluationService = () => {
         startAssignment,
         saveResponse,
         getResponseByAssignment,
+        getAssignments,
+        executeCalibracion,
+        getCompetencyLevels,
+        getReviewSummary,
+        getAssignmentsDetail,
+        getAssignmentDetail,
     };
 };
